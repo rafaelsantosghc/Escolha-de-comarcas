@@ -711,6 +711,9 @@
         <button id="tabBtnAdmin" style="display: none;" onclick="trocarAba('admin')" class="px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all text-emerald-100/90 hover:bg-white/10 hover:text-white">
           🔐 Painel do administrador
         </button>
+        <button id="tabBtnGas" style="display: none;" onclick="trocarAba('gas')" class="px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all text-emerald-100/90 hover:bg-white/10 hover:text-white">
+          📋 Arquivos do Google Apps Script
+        </button>
       </nav>
     </div>
   </header>
@@ -1444,6 +1447,86 @@
         </div>
 
         <div id="gridComarcasCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6"></div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- ABA 5: ARQUIVOS DO GOOGLE APPS SCRIPT      -->
+    <!-- ========================================== -->
+    <section id="secaoGas" style="display: none;" class="space-y-6">
+      <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="text-3xl">⚙️</span>
+          <div>
+            <h3 class="text-xl font-bold text-slate-900 font-serif">Arquivos para copiar no Google Apps Script</h3>
+            <p class="text-xs sm:text-sm text-slate-500">
+              Copie o código abaixo diretamente para o seu projeto no Google Apps Script (script.google.com).
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mt-6">
+          <!-- Card Código.gs -->
+          <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-bold text-slate-900 text-sm">Arquivo: Código.gs</span>
+                <span class="text-2xs bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded font-bold">Servidor</span>
+              </div>
+              <p class="text-xs text-slate-600 mb-4">
+                Contém as funções de servidor, gerenciamento de lotes múltiplos, travas de segurança e motor de simulação de lotações.
+              </p>
+            </div>
+            <button onclick="copiarCodigoServidor()" id="btnCopiarGs" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
+              📋 Copiar Código.gs
+            </button>
+          </div>
+
+          <!-- Card Index.html -->
+          <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-bold text-slate-900 text-sm">Arquivo: Index.html</span>
+                <span class="text-2xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">Frontend único</span>
+              </div>
+              <p class="text-xs text-slate-600 mb-4">
+                Interface completa com seletores de lotes, validação por senha, painéis gerais dinâmicos e arrastar e soltar puro.
+              </p>
+            </div>
+            <button onclick="copiarCodigoHtml()" id="btnCopiarHtml" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
+              📋 Copiar Index.html
+            </button>
+          </div>
+
+          <!-- Card appsscript.json (Elimina a verificação de planilhas do Google) -->
+          <div class="bg-blue-50/60 rounded-xl p-5 border border-blue-200 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-bold text-blue-950 text-sm">appsscript.json</span>
+                <span class="text-2xs bg-blue-200 text-blue-950 px-2 py-0.5 rounded font-bold">Sem Verificação</span>
+              </div>
+              <p class="text-xs text-blue-900 mb-2">
+                Manifesto que restringe os escopos exclusivamente a <code>userinfo.email</code>, <strong>dispensando envio de vídeo e verificação do Google</strong>.
+              </p>
+              <div class="text-3xs text-blue-800 bg-blue-100/70 p-2 rounded-lg border border-blue-200 leading-normal mb-3">
+                💡 <strong>Como usar no GAS:</strong> Clique na engrenagem ⚙️ (Configurações do Projeto) ➔ Marque <em>"Mostrar arquivo de manifesto 'appsscript.json' no editor"</em> ➔ Cole este conteúdo.
+              </div>
+            </div>
+            <button onclick="copiarManifestoAppsscript()" id="btnCopiarManifesto" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
+              📋 Copiar appsscript.json
+            </button>
+          </div>
+        </div>
+
+        <!-- Ações de teste / reset -->
+        <div class="mt-8 pt-6 border-t border-slate-100 flex flex-wrap gap-3">
+          <button onclick="carregarExemploInicial()" class="bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 px-4 py-2 rounded-xl text-xs font-semibold">
+            ✨ Recarregar dados de exemplo
+          </button>
+          <button onclick="zerarBancoDeDados()" class="bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 px-4 py-2 rounded-xl text-xs font-semibold">
+            🗑️ Zerar banco de dados (limparBancoDeDados)
+          </button>
+        </div>
       </div>
     </section>
 
@@ -2993,6 +3076,150 @@
       }
     }
 
+    async function carregarDadosSupabase() {
+      if (!supabaseClient) return;
+      try {
+        // 1. Carrega os lotes cadastrados no Supabase
+        var resLotes = await supabaseClient.from('lotes').select('*').order('created_at', { ascending: true });
+        if (resLotes && resLotes.data && Array.isArray(resLotes.data) && resLotes.data.length > 0) {
+          var listaLotesFormatada = resLotes.data.map(function(l) {
+            return {
+              id: l.id,
+              nome: l.nome,
+              ativo: !!l.ativo,
+              isRankingVisible: l.is_ranking_visible !== false,
+              isPrintingEnabled: !!l.is_printing_enabled,
+              travado: !!l.travado,
+              senha: l.senha || '',
+              temSenha: !!(l.senha && l.senha.trim() !== '')
+            };
+          });
+
+          LOTE_ESTADO.listaLotes = listaLotesFormatada;
+          var loteAtivoDb = listaLotesFormatada.find(function(l) { return l.ativo; }) || listaLotesFormatada[0];
+          
+          if (!ESTADO.loteAtivoId || ESTADO.loteAtivoId === 'lote_1') {
+            ESTADO.loteAtivoId = loteAtivoDb.id;
+            ESTADO.loteSelecionadoId = loteAtivoDb.id;
+            ESTADO.isRankingVisible = loteAtivoDb.isRankingVisible;
+            ESTADO.isPrintingEnabled = loteAtivoDb.isPrintingEnabled;
+            ESTADO.loteTravado = loteAtivoDb.travado;
+            ESTADO.loteTemSenha = loteAtivoDb.temSenha;
+            ESTADO.loteNome = loteAtivoDb.nome;
+          }
+
+          atualizarSelectLotesGlobal();
+          atualizarSelectLotesAdmin();
+          aplicarRegrasVisibilidadeLote();
+          aplicarBloqueioSenhaLote();
+        }
+
+        // 2. Carrega todas as respostas do Supabase
+        var resp = await supabaseClient.from('respostas').select('*');
+        if (resp && resp.data && Array.isArray(resp.data)) {
+          var loteAlvoId = ESTADO.loteSelecionadoId || ESTADO.loteAtivoId || 'lote_1';
+          var mapaGeral = {};
+          var mapaPorLote = {};
+
+          resp.data.forEach(function(row) {
+            var obj = (row.dados_completos && typeof row.dados_completos === 'object') ? Object.assign({}, row.dados_completos) : {};
+            obj.nome = row.nome || obj.nome;
+            obj.cpf = row.cpf || obj.cpf || '';
+            obj.email = row.email || obj.email || '';
+            obj.whatsapp = row.whatsapp || obj.whatsapp || '';
+            obj.escolhas = row.escolhas || obj.escolhas || [];
+            obj.intencao = row.intencao || obj.intencao || 'assumir';
+            obj.bloqueado = row.bloqueado !== false;
+            obj.loteId = row.lote_id || obj.loteId || 'lote_1';
+            
+            if (obj.nome) {
+              mapaGeral[obj.nome] = obj;
+              if (obj.loteId === loteAlvoId) {
+                mapaPorLote[obj.nome] = obj;
+              }
+            }
+          });
+
+          // Se o lote específico não tiver registros, usa todas as respostas para visualização geral
+          var mapaFinal = Object.keys(mapaPorLote).length > 0 ? mapaPorLote : mapaGeral;
+
+          ESTADO.respostas = mapaFinal;
+          // Salva no localStorage para sincronizar com qualquer motor local
+          try {
+            localStorage.setItem('tjrs_gas_respostas', JSON.stringify(mapaFinal));
+          } catch(eStore) {}
+
+          // Calcula a simulação real sem usar mock
+          if (typeof processarSimulacaoMock === 'function') {
+            ESTADO.simulacao = processarSimulacaoMock(mapaFinal);
+          }
+
+          atualizarContadorHeader();
+
+          // Sincroniza dados com o candidato autenticado no Google se houver
+          if (ESTADO.usuarioLogado && ESTADO.usuarioLogado.email) {
+            var emailLogado = ESTADO.usuarioLogado.email.toLowerCase().trim();
+            for (var candNome in mapaGeral) {
+              var candResp = mapaGeral[candNome];
+              if (candResp && candResp.email && candResp.email.toLowerCase().trim() === emailLogado) {
+                ESTADO.usuarioLogadoNome = candNome;
+                localStorage.setItem('tjrs_candidato_nome', candNome);
+                if (typeof popularSelectCandidatos === 'function' && ESTADO.candidatos) {
+                  popularSelectCandidatos(ESTADO.candidatos);
+                }
+                if (typeof carregarRespostaNoFormulario === 'function') {
+                  carregarRespostaNoFormulario(candResp);
+                }
+                if (typeof aplicarEstadoBloqueioFormulario === 'function') {
+                  aplicarEstadoBloqueioFormulario();
+                }
+                break;
+              }
+            }
+          }
+
+          // Se o lote ativo tiver candidatos específicos cadastrados nas respostas, assegura que apareçam na lista
+          var nomesNoLote = Object.keys(mapaFinal);
+          if (nomesNoLote.length > 0) {
+            var mapaExistentes = {};
+            (ESTADO.candidatos || []).forEach(function(c) { mapaExistentes[c.nome] = true; });
+            var novosCandidatos = (ESTADO.candidatos || window.DADOS_CANDIDATOS_BASE || []).slice();
+            nomesNoLote.forEach(function(nomeCand) {
+              if (!mapaExistentes[nomeCand]) {
+                novosCandidatos.push({
+                  vaga: novosCandidatos.length + 1,
+                  tipo: 'AC',
+                  nome: nomeCand
+                });
+                mapaExistentes[nomeCand] = true;
+              }
+            });
+            ESTADO.candidatos = novosCandidatos;
+          }
+
+          // Atualiza toda a interface com dados reais
+          if (typeof popularSelectCandidatos === 'function' && ESTADO.candidatos) popularSelectCandidatos(ESTADO.candidatos);
+          if (typeof renderizarTabelaGeral === 'function') renderizarTabelaGeral();
+          if (typeof renderizarPainelComarcas === 'function') renderizarPainelComarcas();
+          if (typeof renderizarTabelaAdmin === 'function') renderizarTabelaAdmin();
+          if (typeof atualizarPreviaInstantanea === 'function') atualizarPreviaInstantanea();
+        }
+      } catch (eLoad) {
+        console.warn('Aviso ao sincronizar respostas do Supabase:', eLoad);
+      }
+    }
+
+    // VARIÁVEIS INICIAIS DE AMBIENTE
+    var gasServerTemplateEvaluated = "<?= 'GAS_OK' ?>" === 'GAS_OK';
+    var gasServerEmail = "<?= typeof serverEmail !== 'undefined' ? serverEmail : '' ?>";
+    var gasServerIsAdmin = "<?= typeof serverIsAdmin !== 'undefined' && serverIsAdmin ? 'true' : 'false' ?>" === 'true';
+    var gasServerEnv = "<?= typeof serverEnv !== 'undefined' ? serverEnv : '' ?>";
+    if (!gasServerTemplateEvaluated) {
+      gasServerEmail = "";
+      gasServerIsAdmin = false;
+      gasServerEnv = "";
+    }
+
     // 3. Isolamento de Ambientes: Homologação vs Produção (detecta via servidor ou URL)
     var AMBIENTE_SISTEMA = (function() {
       if (gasServerEnv === 'homolog' || gasServerEnv === 'hml' || gasServerEnv === 'teste') return 'homolog';
@@ -3109,6 +3336,764 @@
 
     // DETECÇÃO DE AMBIENTE: GOOGLE APPS SCRIPT OU NAVEGADOR STANDALONE
     var isGoogleAppsScript = (typeof window !== 'undefined' && typeof window.google !== 'undefined' && typeof window.google.script !== 'undefined' && typeof window.google.script.run !== 'undefined');
+
+    // MOCK PARA TESTES FORA DO GAS (usa localStorage e o mesmo algoritmo)
+    if (!isGoogleAppsScript && typeof window !== 'undefined') {
+      window.google = window.google || {};
+      window.google.script = window.google.script || {};
+      function criarMockRunner(successHandler, failureHandler) {
+        var runner = Object.create(mockMetodosBackend);
+        runner._successHandler = successHandler || null;
+        runner._failureHandler = failureHandler || null;
+        runner.withSuccessHandler = function(handler) {
+          return criarMockRunner(handler, this._failureHandler);
+        };
+        runner.withFailureHandler = function(handler) {
+          return criarMockRunner(this._successHandler, handler);
+        };
+        return runner;
+      }
+
+      function sanitizarRespostasMock(bd) {
+        var sanitizadas = {};
+        if (!bd) return sanitizadas;
+        for (var k in bd) {
+          if (bd.hasOwnProperty(k)) {
+            var item = bd[k];
+            var perm = (item.possuiFgCc === 'Sim' && item.fgCcPretendeContinuar === 'Sim');
+            sanitizadas[k] = {
+              nome: item.nome,
+              intencao: item.intencao,
+              escolhas: item.escolhas || [],
+              possuiFgCc: perm ? 'Sim' : 'Não',
+              fgCcRegistroFuncional: '', // Proteção LGPD: oculto do painel geral
+              fgCcCargo: '',             // Proteção LGPD: oculto do painel geral
+              fgCcComarcaAtual: perm ? (item.fgCcComarcaAtual || '') : '',
+              fgCcPretendeContinuar: perm ? 'Sim' : '',
+              bloqueado: item.bloqueado !== false,
+              timestamp: item.timestamp,
+              dataCadastro: item.dataCadastro
+            };
+          }
+        }
+        return sanitizadas;
+      }
+
+      function obterMockLotesMetaLista() {
+        var lotes = JSON.parse(localStorage.getItem('tjrs_gas_lotes_meta') || 'null');
+        var ativoId = localStorage.getItem('tjrs_gas_lote_ativo_id') || 'lote_1';
+        if (!lotes || !Array.isArray(lotes) || lotes.length === 0) {
+          lotes = [{
+            id: 'lote_1',
+            nome: 'Lote 1 (1º Chamamento)',
+            dataCriacao: new Date().toISOString(),
+            ativo: (ativoId === 'lote_1'),
+            totalVagas: 166,
+            totalCandidatos: 189,
+            totalRespostas: Object.keys(JSON.parse(localStorage.getItem('tjrs_gas_respostas') || '{}')).length,
+            isRankingVisible: false,
+            isPrintingEnabled: false
+          }];
+          localStorage.setItem('tjrs_gas_lotes_meta', JSON.stringify(lotes));
+          if (!localStorage.getItem('tjrs_gas_lote_ativo_id')) {
+            localStorage.setItem('tjrs_gas_lote_ativo_id', 'lote_1');
+          }
+        }
+        lotes.forEach(function(l) {
+          l.ativo = (l.id === ativoId);
+          if (typeof l.isRankingVisible !== 'boolean') l.isRankingVisible = false;
+          if (typeof l.isPrintingEnabled !== 'boolean') l.isPrintingEnabled = false;
+        });
+        return lotes;
+      }
+
+      var mockMetodosBackend = {
+        _successHandler: null,
+        _failureHandler: null,
+        withSuccessHandler: function(handler) {
+          return criarMockRunner(handler, null);
+        },
+        withFailureHandler: function(handler) {
+          return criarMockRunner(null, handler);
+        },
+        getCandidatosCompletos: function() {
+          var handler = this._successHandler;
+          setTimeout(function() {
+            var savedLote = null;
+            try { savedLote = JSON.parse(localStorage.getItem('tjrs_gas_lote_config') || 'null'); } catch(e) {}
+            var cands = (savedLote && savedLote.candidatos && savedLote.candidatos.length > 0) ? savedLote.candidatos : window.DADOS_CANDIDATOS_BASE;
+            handler(cands);
+          }, 50);
+        },
+        getComarcasCompletas: function() {
+          var handler = this._successHandler;
+          setTimeout(function() {
+            var savedLote = null;
+            try { savedLote = JSON.parse(localStorage.getItem('tjrs_gas_lote_config') || 'null'); } catch(e) {}
+            var coms = (savedLote && savedLote.comarcas && savedLote.comarcas.length > 0) ? savedLote.comarcas : window.DADOS_COMARCAS_BASE;
+            handler(coms);
+          }, 50);
+        },
+        salvarLoteConfiguracaoServidor: function(dadosLote) {
+          var handler = this._successHandler;
+          setTimeout(function() {
+            localStorage.setItem('tjrs_gas_lote_config', JSON.stringify(dadosLote));
+            handler({ sucesso: true, mensagem: 'Lote salvo com sucesso.' });
+          }, 50);
+        },
+        getListaLotes: function() {
+          var handler = this._successHandler;
+          setTimeout(function() {
+            var lotes = obterMockLotesMetaLista();
+            handler(lotes);
+          }, 30);
+        },
+        getLoteAtivoId: function() {
+          var handler = this._successHandler;
+          setTimeout(function() {
+            var ativo = localStorage.getItem('tjrs_gas_lote_ativo_id') || 'lote_1';
+            handler(ativo);
+          }, 20);
+        },
+        definirLoteAtivo: function(loteId) {
+          var handler = this._successHandler;
+          setTimeout(function() {
+            var lotes = obterMockLotesMetaLista();
+            lotes.forEach(function(l) { l.ativo = (l.id === loteId); });
+            localStorage.setItem('tjrs_gas_lotes_meta', JSON.stringify(lotes));
+            localStorage.setItem('tjrs_gas_lote_ativo_id', loteId);
+            var bd = JSON.parse(localStorage.getItem('tjrs_gas_respostas') || '{}');
+            handler({
+              sucesso: true,
+              mensagem: 'Lote "' + loteId + '" definido como LOTE ATIVO para os candidatos!',
+              loteAtivoId: loteId,
+              listaLotes: lotes,
+              simulacaoCompleta: processarSimulacaoMock(bd)
+            });
+          }, 50);
+        },
+        criarNovoLote: function(nomeLote, copiarId) {
+          var handler = this._successHandler;
+          setTimeout(function() {
+            var lotes = obterMockLotesMetaLista();
+            var novoId = 'lote_' + new Date().getTime();
+            var coms = window.DADOS_COMARCAS_BASE;
+            var cands = window.DADOS_CANDIDATOS_BASE;
+            if (copiarId === 'atual') {
+              var saved = JSON.parse(localStorage.getItem('tjrs_gas_lote_config') || 'null');
+              if (saved) {
+                coms = saved.comarcas || coms;
+                cands = saved.candidatos || cands;
+              }
+            } else if (copiarId === 'em_branco') {
+              coms = [{ nome: 'Porto Alegre', vagas: 1 }];
+              cands = [{ vaga: 1, tipo: 'AC', nome: 'Denis Bairros Silva' }];
+            }
+            var novoMeta = {
+              id: novoId,
+              nome: nomeLote || ('Lote ' + (lotes.length + 1)),
+              dataCriacao: new Date().toISOString(),
+              ativo: false,
+              totalVagas: coms.reduce(function(acc, c) { return acc + (parseInt(c.vagas,10)||0); }, 0),
+              totalCandidatos: cands.length,
+              totalRespostas: 0,
+              isRankingVisible: false,
+              isPrintingEnabled: false
+            };
+            lotes.push(novoMeta);
+            localStorage.setItem('tjrs_gas_lotes_meta', JSON.stringify(lotes));
+            localStorage.setItem('tjrs_gas_lote_data_' + novoId, JSON.stringify({ id: novoId, nome: novoMeta.nome, comarcas: coms, candidatos: cands, respostas: {}, isRankingVisible: false, isPrintingEnabled: false }));
+            handler({ sucesso: true, mensagem: 'Novo lote "' + novoMeta.nome + '" criado com sucesso.', novoId: novoId, listaLotes: lotes });
+          }, 50);
+        },
+        renomearLote: function(loteId, novoNome) {
+          var handler = this._successHandler;
+          var failureHandler = this._failureHandler;
+          setTimeout(function() {
+            try {
+              if (!loteId) throw new Error('ID do lote não informado.');
+              var nomeTratado = String(novoNome || '').trim();
+              if (!nomeTratado) throw new Error('O nome do lote não pode ser vazio.');
+              nomeTratado = nomeTratado.replace(/\s*\[ATIVO\]/gi, '').replace(/\s*\(Histórico\)/gi, '').trim();
+
+              var lotes = obterMockLotesMetaLista();
+              var ativoId = localStorage.getItem('tjrs_gas_lote_ativo_id') || 'lote_1';
+              var encontrado = false;
+              lotes.forEach(function(l) {
+                if (l.id === loteId) {
+                  l.nome = nomeTratado;
+                  encontrado = true;
+                }
+                l.ativo = (l.id === ativoId);
+              });
+              if (!encontrado) {
+                throw new Error('Lote não encontrado: ' + loteId);
+              }
+              localStorage.setItem('tjrs_gas_lotes_meta', JSON.stringify(lotes));
+
+              var loteData = JSON.parse(localStorage.getItem('tjrs_gas_lote_data_' + loteId) || 'null');
+              if (loteData) {
+                loteData.nome = nomeTratado;
+                localStorage.setItem('tjrs_gas_lote_data_' + loteId, JSON.stringify(loteData));
+              }
+
+              if (handler) {
+                handler({
+                  sucesso: true,
+                  mensagem: 'Nome do lote atualizado para "' + nomeTratado + '" com sucesso!',
+                  loteId: loteId,
+                  novoNome: nomeTratado,
+                  listaLotes: lotes
+                });
+              }
+            } catch (err) {
+              if (failureHandler) failureHandler(err);
+            }
+          }, 40);
+        },
+        getDadosLote: function(loteId) {
+          var handler = this._successHandler;
+          setTimeout(function() {
+            var id = loteId || 'lote_1';
+            var ehAdmin = (ESTADO.usuarioLogado && ESTADO.usuarioLogado.isAdmin && ESTADO.perfilSimulado !== 'candidato');
+            var savedCfg = JSON.parse(localStorage.getItem('tjrs_gas_lote_data_' + id) || 'null');
+            var coms = (savedCfg && savedCfg.comarcas) ? savedCfg.comarcas : (id === 'lote_1' && localStorage.getItem('tjrs_gas_lote_config')) ? JSON.parse(localStorage.getItem('tjrs_gas_lote_config')).comarcas : window.DADOS_COMARCAS_BASE;
+            var cands = (savedCfg && savedCfg.candidatos) ? savedCfg.candidatos : (id === 'lote_1' && localStorage.getItem('tjrs_gas_lote_config')) ? JSON.parse(localStorage.getItem('tjrs_gas_lote_config')).candidatos : window.DADOS_CANDIDATOS_BASE;
+            var resps = (savedCfg && savedCfg.respostas) ? savedCfg.respostas : (id === 'lote_1') ? JSON.parse(localStorage.getItem('tjrs_gas_respostas') || '{}') : {};
+            var lotes = JSON.parse(localStorage.getItem('tjrs_gas_lotes_meta') || '[]');
+            var meta = lotes.find(function(l) { return l.id === id; });
+            var ativoId = localStorage.getItem('tjrs_gas_lote_ativo_id') || 'lote_1';
+            var rankVis = (meta && typeof meta.isRankingVisible === 'boolean') ? meta.isRankingVisible : (savedCfg && typeof savedCfg.isRankingVisible === 'boolean') ? savedCfg.isRankingVisible : false;
+            var impVis = (meta && typeof meta.isPrintingEnabled === 'boolean') ? meta.isPrintingEnabled : (savedCfg && typeof savedCfg.isPrintingEnabled === 'boolean') ? savedCfg.isPrintingEnabled : false;
+            var travado = (meta && typeof meta.travado === 'boolean') ? meta.travado : (savedCfg && typeof savedCfg.travado === 'boolean') ? savedCfg.travado : false;
+            var senhaRaw = (meta && typeof meta.senha === 'string') ? meta.senha : (savedCfg && typeof savedCfg.senha === 'string') ? savedCfg.senha : '';
+            var temSenha = !!(senhaRaw && senhaRaw.trim() !== '');
+            var senha = ehAdmin ? senhaRaw : '';
+            handler({
+              id: id,
+              nome: meta ? meta.nome : ('Lote ' + id),
+              ativo: (id === ativoId),
+              isRankingVisible: rankVis,
+              isPrintingEnabled: impVis,
+              travado: travado,
+              senha: senha,
+              temSenha: temSenha,
+              comarcas: coms,
+              candidatos: cands,
+              respostas: resps,
+              simulacao: processarSimulacaoMock(resps)
+            });
+          }, 50);
+        },
+        salvarConfiguracaoLote: function(loteId, dadosNovos) {
+          var handler = this._successHandler;
+          setTimeout(function() {
+            var id = loteId || 'lote_1';
+            localStorage.setItem('tjrs_gas_lote_config', JSON.stringify(dadosNovos));
+            localStorage.setItem('tjrs_gas_lote_data_' + id, JSON.stringify(dadosNovos));
+            var lotes = JSON.parse(localStorage.getItem('tjrs_gas_lotes_meta') || '[]');
+            var meta = lotes.find(function(l) { return l.id === id; });
+            if (meta) {
+              if (typeof dadosNovos.isRankingVisible === 'boolean') meta.isRankingVisible = dadosNovos.isRankingVisible;
+              if (typeof dadosNovos.isPrintingEnabled === 'boolean') meta.isPrintingEnabled = dadosNovos.isPrintingEnabled;
+              if (typeof dadosNovos.travado === 'boolean') meta.travado = dadosNovos.travado;
+              if (typeof dadosNovos.senha === 'string') meta.senha = dadosNovos.senha.trim();
+              localStorage.setItem('tjrs_gas_lotes_meta', JSON.stringify(lotes));
+            }
+            handler({ sucesso: true, mensagem: 'Configuração do lote salva com sucesso!', loteId: id });
+          }, 50);
+        },
+        atualizarVisibilidadeLote: function(loteId, isRankingVisible, isPrintingEnabled, senha, travado) {
+          var handler = this._successHandler;
+          setTimeout(function() {
+            var id = loteId || localStorage.getItem('tjrs_gas_lote_ativo_id') || 'lote_1';
+            var lotes = JSON.parse(localStorage.getItem('tjrs_gas_lotes_meta') || '[]');
+            var meta = lotes.find(function(l) { return l.id === id; });
+            if (meta) {
+              meta.isRankingVisible = !!isRankingVisible;
+              meta.isPrintingEnabled = !!isPrintingEnabled;
+              if (typeof senha === 'string') meta.senha = senha.trim();
+              if (typeof travado === 'boolean') meta.travado = travado;
+              localStorage.setItem('tjrs_gas_lotes_meta', JSON.stringify(lotes));
+            }
+            var savedCfg = JSON.parse(localStorage.getItem('tjrs_gas_lote_data_' + id) || '{}');
+            savedCfg.isRankingVisible = !!isRankingVisible;
+            savedCfg.isPrintingEnabled = !!isPrintingEnabled;
+            if (typeof senha === 'string') savedCfg.senha = senha.trim();
+            if (typeof travado === 'boolean') savedCfg.travado = travado;
+            localStorage.setItem('tjrs_gas_lote_data_' + id, JSON.stringify(savedCfg));
+            handler({
+              sucesso: true,
+              mensagem: 'Configurações de visibilidade, trava e senha do lote salvas com sucesso!',
+              loteId: id,
+              isRankingVisible: !!isRankingVisible,
+              isPrintingEnabled: !!isPrintingEnabled,
+              travado: !!(meta && meta.travado),
+              senha: (meta && meta.senha) || '',
+              temSenha: !!(meta && meta.senha && meta.senha.trim() !== ''),
+              listaLotes: lotes
+            });
+          }, 50);
+        },
+        validarSenhaLote: function(loteId, senhaInformada) {
+          var handler = this._successHandler;
+          setTimeout(function() {
+            var id = loteId || localStorage.getItem('tjrs_gas_lote_ativo_id') || 'lote_1';
+            var lotes = JSON.parse(localStorage.getItem('tjrs_gas_lotes_meta') || '[]');
+            var meta = lotes.find(function(l) { return l.id === id; });
+            var senhaDefinida = (meta && typeof meta.senha === 'string') ? meta.senha.trim() : '';
+            if (!senhaDefinida) {
+              handler({ valido: true, temSenha: false, mensagem: 'Lote sem senha configurada.' });
+            } else {
+              var ok = (String(senhaInformada || '').trim() === senhaDefinida);
+              handler({
+                valido: ok,
+                temSenha: true,
+                mensagem: ok ? 'Senha validada com sucesso!' : 'Senha do lote incorreta.'
+              });
+            }
+          }, 50);
+        },
+        exportarLoteParaPlanilha: function(loteId) {
+          var handler = this._successHandler;
+          setTimeout(function() {
+            var lotes = JSON.parse(localStorage.getItem('tjrs_gas_lotes_meta') || '[]');
+            var meta = lotes.find(function(l) { return l.id === loteId; });
+            var id = loteId || 'lote_1';
+            var bd = JSON.parse(localStorage.getItem('tjrs_gas_respostas') || '{}');
+            var savedCfg = JSON.parse(localStorage.getItem('tjrs_gas_lote_data_' + id) || '{}');
+            var cands = savedCfg.candidatos || window.DADOS_CANDIDATOS_BASE || [];
+            var cabecalho = 'Ordem;Nome;Cota;Status;Comarca Alocada;Email;Telefone';
+            var linhasCsv = [cabecalho];
+            cands.forEach(function(c, i) {
+              var r = bd[c.nome] || {};
+              linhasCsv.push([(i+1), c.nome, c.tipo, r.intencao || 'pendente', r.comarcaAlocada || '-', r.email || '-', r.whatsapp || '-'].join(';'));
+            });
+            handler({
+              sucesso: true,
+              mensagem: 'Planilha do ' + (meta ? meta.nome : ('Lote ' + id)) + ' exportada com sucesso (formato CSV / Excel)!',
+              nomeArquivo: 'TJRS_' + (meta ? meta.nome.replace(/[^a-zA-Z0-9_-]/g, '_') : id) + '.csv',
+              csv: '\uFEFF' + linhasCsv.join('\r\n')
+            });
+          }, 100);
+        },
+        obterSimulacaoCompleta: function() {
+          var handler = this._successHandler;
+          var failureHandler = this._failureHandler;
+          setTimeout(function() {
+            var bd = JSON.parse(localStorage.getItem('tjrs_gas_respostas') || '{}');
+            var lotes = JSON.parse(localStorage.getItem('tjrs_gas_lotes_meta') || '[]');
+            var ativoId = localStorage.getItem('tjrs_gas_lote_ativo_id') || 'lote_1';
+            var meta = lotes.find(function(l) { return l.id === ativoId; });
+            var ehAdmin = (ESTADO.usuarioLogado && ESTADO.usuarioLogado.isAdmin && ESTADO.perfilSimulado !== 'candidato');
+            if (!ehAdmin && meta && !meta.isRankingVisible) {
+              if (failureHandler) failureHandler(new Error('A lista oficial de comarcas ainda não foi publicada. Esta funcionalidade estará disponível em breve.'));
+              return;
+            }
+            handler(processarSimulacaoMock(bd));
+          }, 50);
+        },
+        obterDadosCadernoImpressao: function(loteId) {
+          var handler = this._successHandler;
+          var failureHandler = this._failureHandler;
+          setTimeout(function() {
+            var lotes = JSON.parse(localStorage.getItem('tjrs_gas_lotes_meta') || '[]');
+            var id = loteId || localStorage.getItem('tjrs_gas_lote_ativo_id') || 'lote_1';
+            var meta = lotes.find(function(l) { return l.id === id; });
+            var ehAdmin = (ESTADO.usuarioLogado && ESTADO.usuarioLogado.isAdmin && ESTADO.perfilSimulado !== 'candidato');
+            if (!ehAdmin && meta && !meta.isPrintingEnabled) {
+              if (failureHandler) failureHandler(new Error('A lista oficial de comarcas ainda não foi publicada. Esta funcionalidade estará disponível em breve.'));
+              return;
+            }
+            handler({ sucesso: true, candidatos: ESTADO.candidatos, comarcas: ESTADO.comarcas });
+          }, 50);
+        },
+        verificarRespostaUsuario: function(emailInformado) {
+          var handler = this._successHandler;
+          var failureHandler = this._failureHandler;
+          setTimeout(function() {
+            try {
+              var bd = JSON.parse(localStorage.getItem('tjrs_gas_respostas') || '{}');
+              if (Object.keys(bd).length === 0) {
+                bd = gerarRespostasExemploMock();
+                localStorage.setItem('tjrs_gas_respostas', JSON.stringify(bd));
+              }
+
+              var emailAtivo = (typeof emailInformado === 'string' && emailInformado.trim() !== '')
+                ? emailInformado.trim()
+                : ((ESTADO.usuarioLogado && typeof ESTADO.usuarioLogado.email === 'string' && ESTADO.usuarioLogado.email.trim() !== '') ? ESTADO.usuarioLogado.email.trim() : (localStorage.getItem('tjrs_usuario_email') || 'rafasms0@hotmail.com'));
+              emailAtivo = String(emailAtivo || 'rafasms0@hotmail.com').toLowerCase().trim();
+              var ehAdmin = (emailAtivo === 'rafasms0@hotmail.com');
+
+              var candidatoEncontrado = null;
+              for (var candNome in bd) {
+                if (bd[candNome].email && bd[candNome].email.toLowerCase().trim() === emailAtivo) {
+                  candidatoEncontrado = candNome;
+                  break;
+                }
+              }
+
+              // No perfil de administrador em mock, se nenhum candidato tiver seu e-mail, seleciona o primeiro para testes
+              if (ehAdmin && !candidatoEncontrado) {
+                candidatoEncontrado = Object.keys(bd)[0] || window.DADOS_CANDIDATOS_BASE[0].nome;
+              }
+
+              var lotes = obterMockLotesMetaLista();
+              var ativoId = localStorage.getItem('tjrs_gas_lote_ativo_id') || 'lote_1';
+              lotes.forEach(function(l) { l.ativo = (l.id === ativoId); });
+              var metaAtivo = lotes.find(function(l) { return l.id === ativoId; }) || {
+                id: ativoId,
+                nome: 'Lote 1 (1º Chamamento)',
+                isRankingVisible: false,
+                isPrintingEnabled: false
+              };
+
+              var respostasRetorno = ehAdmin ? bd : sanitizarRespostasMock(bd);
+              var simCompleta = processarSimulacaoMock(bd);
+              var simRetorno = (ehAdmin || metaAtivo.isRankingVisible) ? simCompleta : {
+                isRankingVisible: false,
+                estatisticas: simCompleta.estatisticas,
+                respostas: respostasRetorno,
+                vagasRestantes: simCompleta.vagasRestantes || {},
+                distribuicao: {},
+                detalhesFila: []
+              };
+              var dash = candidatoEncontrado ? processarDashboardMock(candidatoEncontrado, bd, simCompleta) : null;
+              var savedCfg = JSON.parse(localStorage.getItem('tjrs_gas_admin_config') || 'null');
+              if (savedCfg) ESTADO.adminConfig = savedCfg;
+
+              var tsAtual = localStorage.getItem('tjrs_gas_timestamp') || '0';
+
+              if (handler) {
+                handler({
+                  resposta: candidatoEncontrado ? (bd[candidatoEncontrado] || null) : null,
+                  dash: dash,
+                  simulacao: simRetorno,
+                  respostas: respostasRetorno,
+                  estatisticas: simCompleta.estatisticas,
+                  usuario: { email: emailAtivo, isAdmin: ehAdmin },
+                  configAdmin: ehAdmin ? ESTADO.adminConfig : null,
+                  listaLotes: lotes,
+                  loteAtivoId: ativoId,
+                  loteAtivo: {
+                    id: ativoId,
+                    nome: metaAtivo.nome,
+                    isRankingVisible: !!metaAtivo.isRankingVisible,
+                    isPrintingEnabled: !!metaAtivo.isPrintingEnabled,
+                    travado: !!metaAtivo.travado,
+                    senha: metaAtivo.senha || '',
+                    temSenha: !!(metaAtivo.senha && metaAtivo.senha.trim() !== '')
+                  },
+                  timestamp: tsAtual
+                });
+              }
+            } catch (errMockVerif) {
+              console.error('Erro em verificarRespostaUsuario mock:', errMockVerif);
+              if (failureHandler) failureHandler(errMockVerif);
+              else if (handler) handler({ resposta: null, simulacao: null, respostas: {}, estatisticas: {} });
+            }
+          }, 60);
+        },
+        salvarPreferencias: function(dados) {
+          var handler = this._successHandler;
+          var failHandler = this._failureHandler;
+          setTimeout(function() {
+            try {
+              var bd = JSON.parse(localStorage.getItem('tjrs_gas_respostas') || '{}');
+              var existente = bd[dados.nome];
+              var emailLogado = (ESTADO.usuarioLogado && ESTADO.usuarioLogado.email) ? ESTADO.usuarioLogado.email.toLowerCase().trim() : '';
+              var ehAdmin = (emailLogado === 'rafasms0@hotmail.com' && ESTADO.perfilSimulado === 'admin');
+
+              var lotes = JSON.parse(localStorage.getItem('tjrs_gas_lotes_meta') || '[]');
+              var ativoId = localStorage.getItem('tjrs_gas_lote_ativo_id') || 'lote_1';
+              var metaAtivo = lotes.find(function(l) { return l.id === ativoId; }) || { isRankingVisible: false };
+
+              // 1. Trava do Lote: se estiver travado, bloqueia envios de candidatos comuns
+              if (!ehAdmin && metaAtivo && metaAtivo.travado === true) {
+                if (handler) {
+                  handler({
+                    sucesso: false,
+                    bloqueado: true,
+                    mensagem: 'Acesso bloqueado: este lote está temporariamente travado pelo administrador para consolidação de dados. O envio e a alteração de preferências estão suspensos.'
+                  });
+                }
+                return;
+              }
+
+              // 2. Senha de Acesso do Lote: se definida, exige senha válida
+              var senhaDefinida = (metaAtivo && metaAtivo.senha) ? String(metaAtivo.senha).trim() : '';
+              if (!ehAdmin && senhaDefinida !== '') {
+                var senhaInformada = String(dados.senhaLote || '').trim();
+                if (senhaInformada !== senhaDefinida) {
+                  if (handler) {
+                    handler({
+                      sucesso: false,
+                      mensagem: 'Acesso negado: a senha do lote está incorreta. Desbloqueie o formulário com a senha oficial do lote vigente.'
+                    });
+                  }
+                  return;
+                }
+              }
+
+              if (!ehAdmin && emailLogado) {
+                for (var outroCand in bd) {
+                  if (outroCand !== dados.nome && bd[outroCand] && bd[outroCand].bloqueado && bd[outroCand].email && bd[outroCand].email.toLowerCase().trim() === emailLogado) {
+                    if (handler) {
+                      handler({
+                        sucesso: false,
+                        bloqueado: true,
+                        mensagem: 'Acesso negado: seu e-mail (' + emailLogado + ') já está registrado e vinculado ao candidato ' + outroCand + '. Cada usuário pode manifestar preferências apenas para seu próprio cadastro.'
+                      });
+                    }
+                    return;
+                  }
+                }
+              }
+
+              if (existente && existente.bloqueado && !ehAdmin) {
+                var emailExistente = (existente.email || '').toLowerCase().trim();
+                if (emailExistente && emailLogado && emailExistente !== emailLogado && dados.nome !== ESTADO.usuarioLogadoNome) {
+                  if (handler) {
+                    handler({
+                      sucesso: false,
+                      bloqueado: true,
+                      mensagem: 'Acesso negado: os dados de ' + dados.nome + ' já foram confirmados e não podem ser alterados por outro usuário.'
+                    });
+                  }
+                  return;
+                }
+                // É o próprio candidato
+                dados.nome = existente.nome;
+                dados.cpf = existente.cpf;
+                dados.whatsapp = existente.whatsapp;
+                dados.possuiFgCc = existente.possuiFgCc || dados.possuiFgCc;
+                dados.fgCcRegistroFuncional = existente.fgCcRegistroFuncional || dados.fgCcRegistroFuncional;
+                dados.fgCcCargo = existente.fgCcCargo || dados.fgCcCargo;
+                  dados.fgCcComarcaAtual = existente.fgCcComarcaAtual || dados.fgCcComarcaAtual;
+                  dados.fgCcPretendeContinuar = existente.fgCcPretendeContinuar || dados.fgCcPretendeContinuar;
+                  dados.dataCadastro = existente.dataCadastro || existente.timestamp;
+                  dados.bloqueado = true;
+                  dados.dadosCadastraisBloqueados = true;
+                  dados.timestamp = new Date().toISOString();
+                  dados.dataUltimaAlteracaoComarcas = new Date().toISOString();
+
+                  bd[dados.nome] = dados;
+                  localStorage.setItem('tjrs_gas_respostas', JSON.stringify(bd));
+                  var novoTs1 = new Date().getTime().toString();
+                  localStorage.setItem('tjrs_gas_timestamp', novoTs1);
+                  var simOk = processarSimulacaoMock(bd);
+                  var dashOk = processarDashboardMock(dados.nome, bd, simOk);
+                  if (handler) {
+                    handler({
+                      sucesso: true,
+                      bloqueado: true,
+                      dadosCadastraisBloqueados: true,
+                      mensagem: 'Opções de comarcas atualizadas com sucesso. Seus dados cadastrais (Nome, CPF e WhatsApp) permanecem protegidos.',
+                      dashboard: dashOk,
+                      simulacaoCompleta: (ehAdmin || metaAtivo.isRankingVisible) ? simOk : null,
+                      respostas: ehAdmin ? bd : sanitizarRespostasMock(bd)
+                    });
+                  }
+                  return;
+              }
+
+              dados.timestamp = new Date().toISOString();
+              dados.email = dados.email || (ehAdmin ? 'rafasms0@hotmail.com' : emailLogado || 'candidato@tjrs.jus.br');
+              dados.bloqueado = true;
+              dados.dadosCadastraisBloqueados = true;
+              dados.dataBloqueio = new Date().toISOString();
+              if (!dados.dataCadastro) dados.dataCadastro = dados.dataBloqueio;
+
+              bd[dados.nome] = dados;
+              localStorage.setItem('tjrs_gas_respostas', JSON.stringify(bd));
+              localStorage.setItem('tjrs_candidato_nome', dados.nome);
+              var novoTs2 = new Date().getTime().toString();
+              localStorage.setItem('tjrs_gas_timestamp', novoTs2);
+              var simOk2 = processarSimulacaoMock(bd);
+              var dashOk2 = processarDashboardMock(dados.nome, bd, simOk2);
+              if (handler) {
+                handler({
+                  sucesso: true,
+                  bloqueado: true,
+                  dadosCadastraisBloqueados: true,
+                  mensagem: 'Cadastro inicial e preferências salvos com sucesso. Seus dados de identificação foram protegidos e suas comarcas podem ser ajustadas a qualquer momento.',
+                  dashboard: dashOk2,
+                  simulacaoCompleta: (ehAdmin || metaAtivo.isRankingVisible) ? simOk2 : null,
+                  respostas: ehAdmin ? bd : sanitizarRespostasMock(bd)
+                });
+              }
+            } catch (errSalvar) {
+              console.error('Erro ao salvar preferências no mock:', errSalvar);
+              if (failHandler) {
+                failHandler(errSalvar);
+              } else if (handler) {
+                handler({ sucesso: false, mensagem: 'Erro interno ao salvar preferências: ' + (errSalvar.message || errSalvar) });
+              }
+            }
+          }, 80);
+        },
+        desbloquearCandidato: function(nome, emailOperador) {
+          var handler = this._successHandler;
+          setTimeout(function() {
+            var emailVerificar = emailOperador || (ESTADO.usuarioLogado ? ESTADO.usuarioLogado.email : '');
+            if (String(emailVerificar).toLowerCase().trim() !== 'rafasms0@hotmail.com') {
+              handler({ sucesso: false, mensagem: 'Acesso negado: apenas rafasms0@hotmail.com possui permissão para desbloquear candidatos.' });
+              return;
+            }
+            var bd = JSON.parse(localStorage.getItem('tjrs_gas_respostas') || '{}');
+            if (bd[nome]) {
+              bd[nome].bloqueado = false;
+              delete bd[nome].dataBloqueio;
+              localStorage.setItem('tjrs_gas_respostas', JSON.stringify(bd));
+              if (ESTADO.adminConfig.solicitacoesAlteracao) {
+                ESTADO.adminConfig.solicitacoesAlteracao.forEach(function(s) {
+                  if (s.nome === nome && s.status === 'pendente') s.status = 'atendida';
+                });
+                localStorage.setItem('tjrs_gas_admin_config', JSON.stringify(ESTADO.adminConfig));
+              }
+              var sim = processarSimulacaoMock(bd);
+              handler({ sucesso: true, mensagem: 'Cadastro de ' + nome + ' desbloqueado com sucesso.', simulacaoCompleta: sim });
+            } else {
+              handler({ sucesso: false, mensagem: 'Candidato não encontrado.' });
+            }
+          }, 60);
+        },
+        bloquearCandidato: function(nome, emailOperador) {
+          var handler = this._successHandler;
+          setTimeout(function() {
+            var emailVerificar = emailOperador || (ESTADO.usuarioLogado ? ESTADO.usuarioLogado.email : '');
+            if (String(emailVerificar).toLowerCase().trim() !== 'rafasms0@hotmail.com') {
+              handler({ sucesso: false, mensagem: 'Acesso negado: apenas rafasms0@hotmail.com possui permissão para bloquear candidatos.' });
+              return;
+            }
+            var bd = JSON.parse(localStorage.getItem('tjrs_gas_respostas') || '{}');
+            if (bd[nome]) {
+              bd[nome].bloqueado = true;
+              bd[nome].dataBloqueio = new Date().toISOString();
+              localStorage.setItem('tjrs_gas_respostas', JSON.stringify(bd));
+              var sim = processarSimulacaoMock(bd);
+              handler({ sucesso: true, mensagem: 'Cadastro de ' + nome + ' bloqueado com sucesso.', simulacaoCompleta: sim });
+            } else {
+              handler({ sucesso: false, mensagem: 'Candidato não encontrado.' });
+            }
+          }, 60);
+        },
+        excluirRespostaCandidato: function(nome, emailOperador) {
+          var handler = this._successHandler;
+          setTimeout(function() {
+            var emailVerificar = emailOperador || (ESTADO.usuarioLogado ? ESTADO.usuarioLogado.email : '');
+            if (String(emailVerificar).toLowerCase().trim() !== 'rafasms0@hotmail.com') {
+              handler({ sucesso: false, mensagem: 'Acesso negado: apenas rafasms0@hotmail.com possui permissão para excluir respostas.' });
+              return;
+            }
+            var bd = JSON.parse(localStorage.getItem('tjrs_gas_respostas') || '{}');
+            if (bd[nome]) {
+              delete bd[nome];
+              localStorage.setItem('tjrs_gas_respostas', JSON.stringify(bd));
+              var sim = processarSimulacaoMock(bd);
+              handler({ sucesso: true, mensagem: 'Resposta de ' + nome + ' excluída com sucesso.', simulacaoCompleta: sim });
+            } else {
+              handler({ sucesso: false, mensagem: 'Candidato não encontrado.' });
+            }
+          }, 60);
+        },
+        registrarSolicitacaoAlteracao: function(dados) {
+          var handler = this._successHandler;
+          setTimeout(function() {
+            ESTADO.adminConfig.solicitacoesAlteracao = ESTADO.adminConfig.solicitacoesAlteracao || [];
+            ESTADO.adminConfig.solicitacoesAlteracao.unshift({
+              id: 'solic_' + new Date().getTime(),
+              nome: dados.nome,
+              cpf: dados.cpf || '',
+              whatsapp: dados.whatsapp || '',
+              mensagem: dados.mensagem || 'Solicitação de desbloqueio para retificação de dados.',
+              data: new Date().toISOString(),
+              status: 'pendente'
+            });
+            localStorage.setItem('tjrs_gas_admin_config', JSON.stringify(ESTADO.adminConfig));
+            handler({ sucesso: true, mensagem: 'Solicitação registrada com sucesso. Aguarde liberação pelo administrador.' });
+          }, 50);
+        },
+        salvarCadastroAdmin: function(dados, emailOperador) {
+          var handler = this._successHandler;
+          setTimeout(function() {
+            var emailVerificar = emailOperador || (ESTADO.usuarioLogado ? ESTADO.usuarioLogado.email : '');
+            if (String(emailVerificar).toLowerCase().trim() !== 'rafasms0@hotmail.com') {
+              handler({ sucesso: false, mensagem: 'Acesso negado: apenas rafasms0@hotmail.com pode alterar dados do administrador.' });
+              return;
+            }
+            ESTADO.adminConfig.adminPrincipal = Object.assign(ESTADO.adminConfig.adminPrincipal, dados);
+            ESTADO.adminConfig.adminPrincipal.email = 'rafasms0@hotmail.com';
+            ESTADO.adminConfig.administradores = [ESTADO.adminConfig.adminPrincipal];
+            localStorage.setItem('tjrs_gas_admin_config', JSON.stringify(ESTADO.adminConfig));
+            handler({ sucesso: true, mensagem: 'Cadastro do administrador atualizado com sucesso.', config: ESTADO.adminConfig });
+          }, 50);
+        },
+        limparBancoDeDados: function(emailOperador) {
+          var handler = this._successHandler;
+          setTimeout(function() {
+            var emailVerificar = emailOperador || (ESTADO.usuarioLogado ? ESTADO.usuarioLogado.email : '');
+            if (String(emailVerificar).toLowerCase().trim() !== 'rafasms0@hotmail.com') {
+              handler({ sucesso: false, mensagem: 'Acesso negado: apenas rafasms0@hotmail.com pode zerar o banco de dados.' });
+              return;
+            }
+            localStorage.removeItem('tjrs_gas_respostas');
+            localStorage.setItem('tjrs_gas_timestamp', new Date().getTime().toString());
+            handler({ sucesso: true });
+          }, 50);
+        },
+        verificarAtualizacoesTempoReal: function(timestampCliente) {
+          var handler = this._successHandler;
+          var failHandler = this._failureHandler;
+          setTimeout(function() {
+            try {
+              var tsAtual = localStorage.getItem('tjrs_gas_timestamp') || '0';
+              if (String(tsAtual) !== String(timestampCliente)) {
+                var bd = JSON.parse(localStorage.getItem('tjrs_gas_respostas') || '{}');
+                var simCompleta = processarSimulacaoMock(bd);
+                var emailLogado = (ESTADO.usuarioLogado && ESTADO.usuarioLogado.email) ? ESTADO.usuarioLogado.email.toLowerCase().trim() : '';
+                var ehAdmin = (emailLogado === 'rafasms0@hotmail.com' && ESTADO.perfilSimulado === 'admin');
+                var lotes = JSON.parse(localStorage.getItem('tjrs_gas_lotes_meta') || '[]');
+                var ativoId = localStorage.getItem('tjrs_gas_lote_ativo_id') || 'lote_1';
+                var metaAtivo = lotes.find(function(l) { return l.id === ativoId; }) || { isRankingVisible: false };
+
+                var respostasRetorno = ehAdmin ? bd : sanitizarRespostasMock(bd);
+                var simRetorno = (ehAdmin || metaAtivo.isRankingVisible) ? simCompleta : {
+                  isRankingVisible: false,
+                  estatisticas: simCompleta.estatisticas,
+                  respostas: respostasRetorno,
+                  vagasRestantes: simCompleta.vagasRestantes || {},
+                  distribuicao: {},
+                  detalhesFila: []
+                };
+
+                if (handler) {
+                  handler({
+                    atualizado: true,
+                    timestamp: tsAtual,
+                    simulacao: simRetorno,
+                    respostas: respostasRetorno
+                  });
+                }
+              } else {
+                if (handler) {
+                  handler({
+                    atualizado: false,
+                    timestamp: tsAtual
+                  });
+                }
+              }
+            } catch (errSync) {
+              if (failHandler) failHandler(errSync);
+              else if (handler) handler({ atualizado: false, timestamp: timestampCliente });
+            }
+          }, 30);
+        }
+      };
+
+      window.google.script.run = criarMockRunner();
+    }
+    var google = (typeof window !== 'undefined' && window.google) ? window.google : {};
 
     // CÁLCULO DINÂMICO DE VAGAS DE COMARCAS E LOTE ATUAL
     function calcularTotalVagas(comarcas) {
@@ -3234,11 +4219,19 @@
     function verificarAtualizacoesServidorTempoReal() {
       if (SINCRONIZANDO_ATUALMENTE) return;
       SINCRONIZANDO_ATUALMENTE = true;
+
       try {
-        // Usa o Supabase em vez do Apps Script para atualizar em tempo real
-        carregarDadosSupabase().finally(() => {
-          SINCRONIZANDO_ATUALMENTE = false;
-        });
+        google.script.run
+          .withSuccessHandler(function(res) {
+            SINCRONIZANDO_ATUALMENTE = false;
+            if (res && res.atualizado) {
+              aplicarDadosAtualizadosEmTempoReal(res);
+            }
+          })
+          .withFailureHandler(function(err) {
+            SINCRONIZANDO_ATUALMENTE = false;
+          })
+          .verificarAtualizacoesTempoReal(ESTADO.ultimoTimestampSincronizacao);
       } catch (e) {
         SINCRONIZANDO_ATUALMENTE = false;
       }
@@ -3337,50 +4330,199 @@
     });
 
     function iniciarAplicacao() {
-      // A identidade do utilizador depende agora exclusivamente da sessão do Supabase
-      var emailAutenticado = (ESTADO.usuarioLogado && ESTADO.usuarioLogado.email) ? ESTADO.usuarioLogado.email.toLowerCase().trim() : '';
-      var ehAdmin = (emailAutenticado === 'rafasms0@hotmail.com');
-      
-      ESTADO.usuarioLogado.email = emailAutenticado;
+      // Determina o e-mail ativo com base no Google Apps Script ou no Supabase Auth
+      var emailInicial = '';
+      var ehAdmin = false;
+
+      if (gasServerTemplateEvaluated) {
+        // PRODUÇÃO NO GOOGLE APPS SCRIPT:
+        // Apenas é administrador se o servidor do Google validar as credenciais de rafasms0@hotmail.com
+        if (gasServerIsAdmin) {
+          emailInicial = gasServerEmail || 'rafasms0@hotmail.com';
+          ehAdmin = true;
+        } else {
+          // Candidato comum acessando o sistema no Google Apps Script
+          emailInicial = gasServerEmail || '';
+          ehAdmin = false;
+        }
+      } else {
+        // AMBIENTE ESTÁTICO / SUPABASE:
+        // A identidade do usuário depende da sessão ativa do Google Auth via Supabase
+        var emailAutenticado = (ESTADO.usuarioLogado && ESTADO.usuarioLogado.email) ? ESTADO.usuarioLogado.email.toLowerCase().trim() : '';
+        emailInicial = emailAutenticado;
+        ehAdmin = (emailInicial === 'rafasms0@hotmail.com');
+      }
+
+      emailInicial = emailInicial.toLowerCase().trim();
+      ESTADO.usuarioLogado.email = emailInicial;
       ESTADO.usuarioLogado.isAdmin = ehAdmin;
-      
       if (ehAdmin) {
         ESTADO.perfilSimulado = 'admin';
         var selModoPre = document.getElementById('selectModoVisaoAdmin');
         if (selModoPre) selModoPre.value = 'admin';
-      } else {
-        ESTADO.perfilSimulado = 'candidato';
       }
-      
+
       aplicarPermissoesUsuario();
-      
-      // Esconder o ecrã de carregamento e mostrar o formulário
-      var elLoading = document.getElementById('loadingGeral');
-      var elForm = document.getElementById('secaoFormulario');
-      if (elLoading) elLoading.style.display = 'none';
-      if (elForm) elForm.style.display = 'block';
-      
-      // Se o candidato já tiver respondido, carrega os dados dele
-      if (emailAutenticado && ESTADO.respostas) {
-        for (var candNome in ESTADO.respostas) {
-          if (ESTADO.respostas[candNome].email === emailAutenticado) {
-            ESTADO.usuarioLogadoNome = candNome;
-            localStorage.setItem('tjrs_candidato_nome', candNome);
-            if (typeof carregarRespostaNoFormulario === 'function') {
-              carregarRespostaNoFormulario(ESTADO.respostas[candNome]);
-            }
-            break;
+
+      function finalizarInicioApp(candidatos, comarcas, resultadoInicial) {
+        try {
+          var elLoading = document.getElementById('loadingGeral');
+          var elForm = document.getElementById('secaoFormulario');
+          if (elLoading) elLoading.style.display = 'none';
+          if (elForm) elForm.style.display = 'block';
+
+          if (candidatos && candidatos.length > 0) {
+            ESTADO.candidatos = candidatos;
+          } else if (!ESTADO.candidatos || ESTADO.candidatos.length === 0) {
+            ESTADO.candidatos = window.DADOS_CANDIDATOS_BASE || [];
           }
+
+          if (comarcas && comarcas.length > 0) {
+            ESTADO.comarcas = comarcas;
+          } else if (!ESTADO.comarcas || ESTADO.comarcas.length === 0) {
+            ESTADO.comarcas = window.DADOS_COMARCAS_BASE || [];
+          }
+
+          renderizarListaTodasComarcas();
+          atualizarDatalistComarcas();
+
+          if (resultadoInicial && resultadoInicial.usuario) {
+            var emailRetornado = String(resultadoInicial.usuario.email || '').toLowerCase().trim();
+            if (emailRetornado) {
+              ESTADO.usuarioLogado.email = emailRetornado;
+            }
+            ESTADO.usuarioLogado.isAdmin = (emailRetornado === 'rafasms0@hotmail.com');
+            if (ESTADO.usuarioLogado.isAdmin && (!gasServerTemplateEvaluated || ESTADO.perfilSimulado !== 'candidato')) {
+              ESTADO.perfilSimulado = 'admin';
+              var selM = document.getElementById('selectModoVisaoAdmin');
+              if (selM) selM.value = 'admin';
+            }
+            aplicarPermissoesUsuario();
+          }
+
+          if (resultadoInicial && resultadoInicial.loteAtivo && gasServerTemplateEvaluated) {
+            ESTADO.loteAtivoId = resultadoInicial.loteAtivo.id || 'lote_1';
+            ESTADO.loteSelecionadoId = ESTADO.loteAtivoId;
+            ESTADO.isRankingVisible = !!resultadoInicial.loteAtivo.isRankingVisible;
+            ESTADO.isPrintingEnabled = !!resultadoInicial.loteAtivo.isPrintingEnabled;
+            ESTADO.loteTravado = !!resultadoInicial.loteAtivo.travado;
+            ESTADO.loteTemSenha = !!resultadoInicial.loteAtivo.temSenha;
+            ESTADO.loteNome = resultadoInicial.loteAtivo.nome || 'Lote 1';
+          } else if (resultadoInicial && resultadoInicial.loteAtivoId && gasServerTemplateEvaluated) {
+            ESTADO.loteAtivoId = resultadoInicial.loteAtivoId;
+            ESTADO.loteSelecionadoId = resultadoInicial.loteAtivoId;
+          }
+
+          if (resultadoInicial && resultadoInicial.listaLotes && gasServerTemplateEvaluated) {
+            LOTE_ESTADO.listaLotes = resultadoInicial.listaLotes;
+            var idAtivoAtual = ESTADO.loteAtivoId || 'lote_1';
+            LOTE_ESTADO.listaLotes.forEach(function(l) {
+              l.ativo = (l.id === idAtivoAtual);
+            });
+            atualizarSelectLotesGlobal();
+            atualizarSelectLotesAdmin();
+          }
+          aplicarRegrasVisibilidadeLote();
+          aplicarBloqueioSenhaLote();
+          atualizarLabelsTotalVagas();
+
+          if (resultadoInicial && resultadoInicial.configAdmin && ESTADO.usuarioLogado.isAdmin) {
+            ESTADO.adminConfig = resultadoInicial.configAdmin;
+          }
+
+          if (resultadoInicial && resultadoInicial.respostas && Object.keys(resultadoInicial.respostas).length > 0) {
+            // Se o servidor for Apps Script real (não mock), atualiza
+            if (gasServerTemplateEvaluated) {
+              ESTADO.respostas = resultadoInicial.respostas;
+            }
+          }
+          if (resultadoInicial && resultadoInicial.simulacao && gasServerTemplateEvaluated) {
+            ESTADO.simulacao = resultadoInicial.simulacao;
+            if (resultadoInicial.simulacao.respostas) {
+              ESTADO.respostas = Object.assign({}, ESTADO.respostas || {}, resultadoInicial.simulacao.respostas);
+            }
+          }
+          if (!ESTADO.respostas) ESTADO.respostas = {};
+
+          // Atualiza imediatamente o contador do cabeçalho
+          atualizarContadorHeader();
+
+          var candidatoSalvoLocal = localStorage.getItem('tjrs_candidato_nome');
+          if (resultadoInicial && resultadoInicial.resposta && gasServerTemplateEvaluated) {
+            ESTADO.usuarioLogadoNome = resultadoInicial.resposta.nome;
+            localStorage.setItem('tjrs_candidato_nome', resultadoInicial.resposta.nome);
+            popularSelectCandidatos(ESTADO.candidatos);
+            carregarRespostaNoFormulario(resultadoInicial.resposta);
+          } else if (candidatoSalvoLocal && ESTADO.respostas && ESTADO.respostas[candidatoSalvoLocal]) {
+            ESTADO.usuarioLogadoNome = candidatoSalvoLocal;
+            popularSelectCandidatos(ESTADO.candidatos);
+            carregarRespostaNoFormulario(ESTADO.respostas[candidatoSalvoLocal]);
+          } else {
+            ESTADO.usuarioLogadoNome = '';
+            ESTADO.usuarioAtivoNome = '';
+            popularSelectCandidatos(ESTADO.candidatos);
+            var selC = document.getElementById('selectCandidato');
+            if (selC) selC.value = '';
+            limparFormularioParaNovoCandidato();
+            aplicarEstadoBloqueioFormulario();
+          }
+
+          if (resultadoInicial && resultadoInicial.timestamp) {
+            ESTADO.ultimoTimestampSincronizacao = resultadoInicial.timestamp;
+          }
+
+          inicializarSortableJS();
+          atualizarPreviaInstantanea();
+          iniciarSincronizacaoTempoReal();
+        } catch (errFin) {
+          console.error('Erro em finalizarInicioApp:', errFin);
+          atualizarContadorHeader();
         }
       }
 
+      // Pré-inicialização instantânea garantida: remove imediatamente a tela de loading geral
+      var elLoadingPre = document.getElementById('loadingGeral');
+      var elFormPre = document.getElementById('secaoFormulario');
+      if (elLoadingPre) elLoadingPre.style.display = 'none';
+      if (elFormPre) elFormPre.style.display = 'block';
+
+      if (!ESTADO.candidatos || ESTADO.candidatos.length === 0) {
+        ESTADO.candidatos = window.DADOS_CANDIDATOS_BASE || [];
+      }
+      if (!ESTADO.comarcas || ESTADO.comarcas.length === 0) {
+        ESTADO.comarcas = window.DADOS_COMARCAS_BASE || [];
+      }
+      renderizarListaTodasComarcas();
+      atualizarDatalistComarcas();
       popularSelectCandidatos(ESTADO.candidatos);
       atualizarContadorHeader();
       atualizarVisibilidadeBadgeAmbiente();
       inicializarSortableJS();
-      aplicarRegrasVisibilidadeLote();
-      aplicarEstadoBloqueioFormulario();
-      iniciarSincronizacaoTempoReal();
+
+      var timeoutFallback = setTimeout(function() {
+        console.warn('Aguardando resposta do servidor excedeu o tempo limite, mantendo dados locais.');
+        finalizarInicioApp(ESTADO.candidatos, ESTADO.comarcas, null);
+      }, 3500);
+
+      try {
+        google.script.run
+          .withSuccessHandler(function(resultadoInicial) {
+            clearTimeout(timeoutFallback);
+            var cands = (resultadoInicial && resultadoInicial.candidatos && resultadoInicial.candidatos.length > 0) ? resultadoInicial.candidatos : ESTADO.candidatos;
+            var coms = (resultadoInicial && resultadoInicial.comarcas && resultadoInicial.comarcas.length > 0) ? resultadoInicial.comarcas : ESTADO.comarcas;
+            finalizarInicioApp(cands, coms, resultadoInicial);
+          })
+          .withFailureHandler(function(err) {
+            clearTimeout(timeoutFallback);
+            console.warn('Falha ao conectar com verificarRespostaUsuario, usando modo local:', err);
+            finalizarInicioApp(ESTADO.candidatos, ESTADO.comarcas, null);
+          })
+          .verificarRespostaUsuario(ESTADO.usuarioLogado.email, AMBIENTE_SISTEMA);
+      } catch (eInit) {
+        clearTimeout(timeoutFallback);
+        console.warn('Erro ao chamar verificarRespostaUsuario:', eInit);
+        finalizarInicioApp(ESTADO.candidatos, ESTADO.comarcas, null);
+      }
     }
 
     // INICIALIZA ARRASTAR E SOLTAR (SORTABLE JS OTIMIZADO PARA DESKTOP E DISPOSITIVOS MÓVEIS)
@@ -9881,25 +11023,108 @@
       mostrarAlerta(novosSuplentes.length + ' suplentes importados com sucesso!', 'aviso');
     }
 
-// --- SALVAMENTO, RESTAURAÇÃO E EXPORTAÇÃO DO LOTE ---
-    async function salvarConfiguracaoLoteSupabase() {
-      try {
-        // Exemplo de salvamento direto na tabela do Supabase
-        const { error } = await supabaseClient
-          .from('comarcas')
-          .upsert(ESTADO.comarcas);
-
-        if (error) {
-          console.error("Erro ao salvar comarcas:", error);
-          alert("Erro ao salvar no Supabase. Verifique a consola.");
-          return;
-        }
-
-        alert("Alterações salvas com sucesso no Supabase!");
-        location.reload();
-      } catch (err) {
-        console.error("Erro inesperado:", err);
+    // --- SALVAMENTO, RESTAURAÇÃO E EXPORTAÇÃO DO LOTE ---
+    function salvarLoteConfiguracao() {
+      if (!LOTE_ESTADO.comarcas || LOTE_ESTADO.comarcas.length === 0) {
+        mostrarAlerta('O lote deve possuir pelo menos uma comarca cadastrada.', 'aviso');
+        return;
       }
+      if (!LOTE_ESTADO.titulares || LOTE_ESTADO.titulares.length === 0) {
+        mostrarAlerta('O lote deve possuir pelo menos um candidato titular cadastrado.', 'aviso');
+        return;
+      }
+
+      var id = LOTE_ESTADO.loteSelecionadoId || 'lote_1';
+      var item = (LOTE_ESTADO.listaLotes || []).find(function(l) { return l.id === id; });
+      var nomeLote = item ? item.nome : ('Lote ' + id);
+      nomeLote = String(nomeLote).replace(/\s*\[ATIVO\]/gi, '').replace(/\s*\(Histórico\)/gi, '').trim();
+
+      if (!confirm('Deseja salvar as alterações no "' + nomeLote + '"?\n\n' +
+        '• ' + LOTE_ESTADO.comarcas.length + ' comarcas\n' +
+        '• ' + LOTE_ESTADO.titulares.length + ' titulares\n' +
+        '• ' + LOTE_ESTADO.suplentes.length + ' suplentes\n\n' +
+        'Caso alguma comarca tenha sido removida, o sistema ajustará as escolhas salvas dos candidatos automaticamente em cascata (subindo as opções seguintes sem criar lacunas na ordem de preferência).')) {
+        return;
+      }
+
+      var todosCandidatosNovos = LOTE_ESTADO.titulares.concat(LOTE_ESTADO.suplentes);
+
+      // =============================================================
+      // REQUISITO 3: AJUSTE AUTOMÁTICO DE ESCOLHAS EM CASCATA
+      // =============================================================
+      var setComarcas = {};
+      LOTE_ESTADO.comarcas.forEach(function(c) {
+        setComarcas[c.nome] = true;
+        setComarcas[c.nome.replace(/\*/g, '').trim()] = true;
+      });
+
+      var totalAjustados = 0;
+      var respostasAtuais = ESTADO.respostas || {};
+      for (var candNome in respostasAtuais) {
+        var r = respostasAtuais[candNome];
+        if (r && r.escolhas && Array.isArray(r.escolhas)) {
+          var antesQtd = r.escolhas.length;
+          var novasEscolhas = r.escolhas.filter(function(op) {
+            var opLimpo = op.replace(/\*/g, '').trim();
+            return setComarcas[op] || setComarcas[opLimpo];
+          });
+          if (novasEscolhas.length !== antesQtd) {
+            r.escolhas = novasEscolhas;
+            r.dataUltimoAjusteCascata = new Date().toISOString();
+            totalAjustados++;
+          }
+        }
+      }
+
+      var payload = {
+        id: id,
+        nome: nomeLote,
+        candidatos: todosCandidatosNovos,
+        comarcas: LOTE_ESTADO.comarcas,
+        isRankingVisible: !!LOTE_ESTADO.isRankingVisible,
+        isPrintingEnabled: !!LOTE_ESTADO.isPrintingEnabled,
+        timestamp: new Date().toISOString()
+      };
+
+      try {
+        localStorage.setItem('tjrs_gas_lote_config', JSON.stringify(payload));
+        localStorage.setItem('tjrs_gas_lote_data_' + id, JSON.stringify(payload));
+        localStorage.setItem('tjrs_gas_respostas', JSON.stringify(respostasAtuais));
+      } catch(e) {}
+
+      // Se este lote for o ativo, sincroniza no estado
+      if (id === (ESTADO.loteAtivoId || 'lote_1')) {
+        ESTADO.candidatos = todosCandidatosNovos;
+        ESTADO.comarcas = LOTE_ESTADO.comarcas;
+        ESTADO.isRankingVisible = !!LOTE_ESTADO.isRankingVisible;
+        ESTADO.isPrintingEnabled = !!LOTE_ESTADO.isPrintingEnabled;
+        ESTADO.simulacao = processarSimulacaoMock(ESTADO.respostas);
+
+        popularSelectCandidatos(ESTADO.candidatos);
+        renderizarListaTodasComarcas();
+        renderizarTabelaGeral();
+        renderizarPainelComarcas();
+        renderizarTabelaAdmin();
+        atualizarContadorHeader();
+        aplicarRegrasVisibilidadeLote();
+      }
+
+      atualizarPainelLoteCompleto();
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          var msg = '✓ Configurações do "' + nomeLote + '" salvas com sucesso!';
+          if (res && res.candidatosAjustados > 0) {
+            msg += '\n\n' + res.candidatosAjustados + ' candidato(s) com comarcas excluídas tiveram suas opções recalculadas e elevadas em cascata automaticamente.';
+          } else if (totalAjustados > 0) {
+            msg += '\n\n' + totalAjustados + ' candidato(s) tiveram suas escolhas ajustadas e elevadas em cascata automaticamente.';
+          }
+          mostrarAlerta(msg, 'aviso');
+        })
+        .withFailureHandler(function(err) {
+          mostrarAlerta('Erro ao salvar lote no servidor: ' + (err.message || err), 'erro');
+        })
+        .salvarConfiguracaoLote(id, payload);
     }
 
     function restaurarLotePadraoEdital() {
