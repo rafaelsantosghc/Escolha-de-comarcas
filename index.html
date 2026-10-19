@@ -3234,19 +3234,11 @@
     function verificarAtualizacoesServidorTempoReal() {
       if (SINCRONIZANDO_ATUALMENTE) return;
       SINCRONIZANDO_ATUALMENTE = true;
-
       try {
-        google.script.run
-          .withSuccessHandler(function(res) {
-            SINCRONIZANDO_ATUALMENTE = false;
-            if (res && res.atualizado) {
-              aplicarDadosAtualizadosEmTempoReal(res);
-            }
-          })
-          .withFailureHandler(function(err) {
-            SINCRONIZANDO_ATUALMENTE = false;
-          })
-          .verificarAtualizacoesTempoReal(ESTADO.ultimoTimestampSincronizacao);
+        // Usa o Supabase em vez do Apps Script para atualizar em tempo real
+        carregarDadosSupabase().finally(() => {
+          SINCRONIZANDO_ATUALMENTE = false;
+        });
       } catch (e) {
         SINCRONIZANDO_ATUALMENTE = false;
       }
@@ -3345,199 +3337,50 @@
     });
 
     function iniciarAplicacao() {
-      // Determina o e-mail ativo com base no Google Apps Script ou no Supabase Auth
-      var emailInicial = '';
-      var ehAdmin = false;
-
-      if (gasServerTemplateEvaluated) {
-        // PRODUÇÃO NO GOOGLE APPS SCRIPT:
-        // Apenas é administrador se o servidor do Google validar as credenciais de rafasms0@hotmail.com
-        if (gasServerIsAdmin) {
-          emailInicial = gasServerEmail || 'rafasms0@hotmail.com';
-          ehAdmin = true;
-        } else {
-          // Candidato comum acessando o sistema no Google Apps Script
-          emailInicial = gasServerEmail || '';
-          ehAdmin = false;
-        }
-      } else {
-        // AMBIENTE ESTÁTICO / SUPABASE:
-        // A identidade do usuário depende da sessão ativa do Google Auth via Supabase
-        var emailAutenticado = (ESTADO.usuarioLogado && ESTADO.usuarioLogado.email) ? ESTADO.usuarioLogado.email.toLowerCase().trim() : '';
-        emailInicial = emailAutenticado;
-        ehAdmin = (emailInicial === 'rafasms0@hotmail.com');
-      }
-
-      emailInicial = emailInicial.toLowerCase().trim();
-      ESTADO.usuarioLogado.email = emailInicial;
+      // A identidade do utilizador depende agora exclusivamente da sessão do Supabase
+      var emailAutenticado = (ESTADO.usuarioLogado && ESTADO.usuarioLogado.email) ? ESTADO.usuarioLogado.email.toLowerCase().trim() : '';
+      var ehAdmin = (emailAutenticado === 'rafasms0@hotmail.com');
+      
+      ESTADO.usuarioLogado.email = emailAutenticado;
       ESTADO.usuarioLogado.isAdmin = ehAdmin;
+      
       if (ehAdmin) {
         ESTADO.perfilSimulado = 'admin';
         var selModoPre = document.getElementById('selectModoVisaoAdmin');
         if (selModoPre) selModoPre.value = 'admin';
+      } else {
+        ESTADO.perfilSimulado = 'candidato';
       }
-
+      
       aplicarPermissoesUsuario();
-
-      function finalizarInicioApp(candidatos, comarcas, resultadoInicial) {
-        try {
-          var elLoading = document.getElementById('loadingGeral');
-          var elForm = document.getElementById('secaoFormulario');
-          if (elLoading) elLoading.style.display = 'none';
-          if (elForm) elForm.style.display = 'block';
-
-          if (candidatos && candidatos.length > 0) {
-            ESTADO.candidatos = candidatos;
-          } else if (!ESTADO.candidatos || ESTADO.candidatos.length === 0) {
-            ESTADO.candidatos = window.DADOS_CANDIDATOS_BASE || [];
-          }
-
-          if (comarcas && comarcas.length > 0) {
-            ESTADO.comarcas = comarcas;
-          } else if (!ESTADO.comarcas || ESTADO.comarcas.length === 0) {
-            ESTADO.comarcas = window.DADOS_COMARCAS_BASE || [];
-          }
-
-          renderizarListaTodasComarcas();
-          atualizarDatalistComarcas();
-
-          if (resultadoInicial && resultadoInicial.usuario) {
-            var emailRetornado = String(resultadoInicial.usuario.email || '').toLowerCase().trim();
-            if (emailRetornado) {
-              ESTADO.usuarioLogado.email = emailRetornado;
+      
+      // Esconder o ecrã de carregamento e mostrar o formulário
+      var elLoading = document.getElementById('loadingGeral');
+      var elForm = document.getElementById('secaoFormulario');
+      if (elLoading) elLoading.style.display = 'none';
+      if (elForm) elForm.style.display = 'block';
+      
+      // Se o candidato já tiver respondido, carrega os dados dele
+      if (emailAutenticado && ESTADO.respostas) {
+        for (var candNome in ESTADO.respostas) {
+          if (ESTADO.respostas[candNome].email === emailAutenticado) {
+            ESTADO.usuarioLogadoNome = candNome;
+            localStorage.setItem('tjrs_candidato_nome', candNome);
+            if (typeof carregarRespostaNoFormulario === 'function') {
+              carregarRespostaNoFormulario(ESTADO.respostas[candNome]);
             }
-            ESTADO.usuarioLogado.isAdmin = (emailRetornado === 'rafasms0@hotmail.com');
-            if (ESTADO.usuarioLogado.isAdmin && (!gasServerTemplateEvaluated || ESTADO.perfilSimulado !== 'candidato')) {
-              ESTADO.perfilSimulado = 'admin';
-              var selM = document.getElementById('selectModoVisaoAdmin');
-              if (selM) selM.value = 'admin';
-            }
-            aplicarPermissoesUsuario();
+            break;
           }
-
-          if (resultadoInicial && resultadoInicial.loteAtivo && gasServerTemplateEvaluated) {
-            ESTADO.loteAtivoId = resultadoInicial.loteAtivo.id || 'lote_1';
-            ESTADO.loteSelecionadoId = ESTADO.loteAtivoId;
-            ESTADO.isRankingVisible = !!resultadoInicial.loteAtivo.isRankingVisible;
-            ESTADO.isPrintingEnabled = !!resultadoInicial.loteAtivo.isPrintingEnabled;
-            ESTADO.loteTravado = !!resultadoInicial.loteAtivo.travado;
-            ESTADO.loteTemSenha = !!resultadoInicial.loteAtivo.temSenha;
-            ESTADO.loteNome = resultadoInicial.loteAtivo.nome || 'Lote 1';
-          } else if (resultadoInicial && resultadoInicial.loteAtivoId && gasServerTemplateEvaluated) {
-            ESTADO.loteAtivoId = resultadoInicial.loteAtivoId;
-            ESTADO.loteSelecionadoId = resultadoInicial.loteAtivoId;
-          }
-
-          if (resultadoInicial && resultadoInicial.listaLotes && gasServerTemplateEvaluated) {
-            LOTE_ESTADO.listaLotes = resultadoInicial.listaLotes;
-            var idAtivoAtual = ESTADO.loteAtivoId || 'lote_1';
-            LOTE_ESTADO.listaLotes.forEach(function(l) {
-              l.ativo = (l.id === idAtivoAtual);
-            });
-            atualizarSelectLotesGlobal();
-            atualizarSelectLotesAdmin();
-          }
-          aplicarRegrasVisibilidadeLote();
-          aplicarBloqueioSenhaLote();
-          atualizarLabelsTotalVagas();
-
-          if (resultadoInicial && resultadoInicial.configAdmin && ESTADO.usuarioLogado.isAdmin) {
-            ESTADO.adminConfig = resultadoInicial.configAdmin;
-          }
-
-          if (resultadoInicial && resultadoInicial.respostas && Object.keys(resultadoInicial.respostas).length > 0) {
-            // Se o servidor for Apps Script real (não mock), atualiza
-            if (gasServerTemplateEvaluated) {
-              ESTADO.respostas = resultadoInicial.respostas;
-            }
-          }
-          if (resultadoInicial && resultadoInicial.simulacao && gasServerTemplateEvaluated) {
-            ESTADO.simulacao = resultadoInicial.simulacao;
-            if (resultadoInicial.simulacao.respostas) {
-              ESTADO.respostas = Object.assign({}, ESTADO.respostas || {}, resultadoInicial.simulacao.respostas);
-            }
-          }
-          if (!ESTADO.respostas) ESTADO.respostas = {};
-
-          // Atualiza imediatamente o contador do cabeçalho
-          atualizarContadorHeader();
-
-          var candidatoSalvoLocal = localStorage.getItem('tjrs_candidato_nome');
-          if (resultadoInicial && resultadoInicial.resposta && gasServerTemplateEvaluated) {
-            ESTADO.usuarioLogadoNome = resultadoInicial.resposta.nome;
-            localStorage.setItem('tjrs_candidato_nome', resultadoInicial.resposta.nome);
-            popularSelectCandidatos(ESTADO.candidatos);
-            carregarRespostaNoFormulario(resultadoInicial.resposta);
-          } else if (candidatoSalvoLocal && ESTADO.respostas && ESTADO.respostas[candidatoSalvoLocal]) {
-            ESTADO.usuarioLogadoNome = candidatoSalvoLocal;
-            popularSelectCandidatos(ESTADO.candidatos);
-            carregarRespostaNoFormulario(ESTADO.respostas[candidatoSalvoLocal]);
-          } else {
-            ESTADO.usuarioLogadoNome = '';
-            ESTADO.usuarioAtivoNome = '';
-            popularSelectCandidatos(ESTADO.candidatos);
-            var selC = document.getElementById('selectCandidato');
-            if (selC) selC.value = '';
-            limparFormularioParaNovoCandidato();
-            aplicarEstadoBloqueioFormulario();
-          }
-
-          if (resultadoInicial && resultadoInicial.timestamp) {
-            ESTADO.ultimoTimestampSincronizacao = resultadoInicial.timestamp;
-          }
-
-          inicializarSortableJS();
-          atualizarPreviaInstantanea();
-          iniciarSincronizacaoTempoReal();
-        } catch (errFin) {
-          console.error('Erro em finalizarInicioApp:', errFin);
-          atualizarContadorHeader();
         }
       }
 
-      // Pré-inicialização instantânea garantida: remove imediatamente a tela de loading geral
-      var elLoadingPre = document.getElementById('loadingGeral');
-      var elFormPre = document.getElementById('secaoFormulario');
-      if (elLoadingPre) elLoadingPre.style.display = 'none';
-      if (elFormPre) elFormPre.style.display = 'block';
-
-      if (!ESTADO.candidatos || ESTADO.candidatos.length === 0) {
-        ESTADO.candidatos = window.DADOS_CANDIDATOS_BASE || [];
-      }
-      if (!ESTADO.comarcas || ESTADO.comarcas.length === 0) {
-        ESTADO.comarcas = window.DADOS_COMARCAS_BASE || [];
-      }
-      renderizarListaTodasComarcas();
-      atualizarDatalistComarcas();
       popularSelectCandidatos(ESTADO.candidatos);
       atualizarContadorHeader();
       atualizarVisibilidadeBadgeAmbiente();
       inicializarSortableJS();
-
-      var timeoutFallback = setTimeout(function() {
-        console.warn('Aguardando resposta do servidor excedeu o tempo limite, mantendo dados locais.');
-        finalizarInicioApp(ESTADO.candidatos, ESTADO.comarcas, null);
-      }, 3500);
-
-      try {
-        google.script.run
-          .withSuccessHandler(function(resultadoInicial) {
-            clearTimeout(timeoutFallback);
-            var cands = (resultadoInicial && resultadoInicial.candidatos && resultadoInicial.candidatos.length > 0) ? resultadoInicial.candidatos : ESTADO.candidatos;
-            var coms = (resultadoInicial && resultadoInicial.comarcas && resultadoInicial.comarcas.length > 0) ? resultadoInicial.comarcas : ESTADO.comarcas;
-            finalizarInicioApp(cands, coms, resultadoInicial);
-          })
-          .withFailureHandler(function(err) {
-            clearTimeout(timeoutFallback);
-            console.warn('Falha ao conectar com verificarRespostaUsuario, usando modo local:', err);
-            finalizarInicioApp(ESTADO.candidatos, ESTADO.comarcas, null);
-          })
-          .verificarRespostaUsuario(ESTADO.usuarioLogado.email, AMBIENTE_SISTEMA);
-      } catch (eInit) {
-        clearTimeout(timeoutFallback);
-        console.warn('Erro ao chamar verificarRespostaUsuario:', eInit);
-        finalizarInicioApp(ESTADO.candidatos, ESTADO.comarcas, null);
-      }
+      aplicarRegrasVisibilidadeLote();
+      aplicarEstadoBloqueioFormulario();
+      iniciarSincronizacaoTempoReal();
     }
 
     // INICIALIZA ARRASTAR E SOLTAR (SORTABLE JS OTIMIZADO PARA DESKTOP E DISPOSITIVOS MÓVEIS)
