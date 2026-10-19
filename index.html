@@ -9882,132 +9882,23 @@
     }
 
 // --- SALVAMENTO, RESTAURAÇÃO E EXPORTAÇÃO DO LOTE ---
-    async function salvarLoteConfiguracao() {
-      if (!supabaseClient) {
-        mostrarAlerta('Erro: Conexão com o banco de dados falhou.', 'erro');
-        return;
-      }
-      
-      if (!LOTE_ESTADO.comarcas || LOTE_ESTADO.comarcas.length === 0) {
-        mostrarAlerta('O lote deve possuir pelo menos uma comarca cadastrada.', 'aviso');
-        return;
-      }
-      if (!LOTE_ESTADO.titulares || LOTE_ESTADO.titulares.length === 0) {
-        mostrarAlerta('O lote deve possuir pelo menos um candidato titular cadastrado.', 'aviso');
-        return;
-      }
-
-      var id = LOTE_ESTADO.loteSelecionadoId || 'lote_1';
-      var item = (LOTE_ESTADO.listaLotes || []).find(function(l) { return l.id === id; });
-      var nomeLote = item ? item.nome : ('Lote ' + id);
-      nomeLote = String(nomeLote).replace(/\s*\[ATIVO\]/gi, '').replace(/\s*\(Histórico\)/gi, '').trim();
-
-      if (!confirm('Deseja salvar as alterações no "' + nomeLote + '" no Supabase?\n\n' +
-        '• ' + LOTE_ESTADO.comarcas.length + ' comarcas\n' +
-        '• ' + LOTE_ESTADO.titulares.length + ' titulares\n' +
-        '• ' + LOTE_ESTADO.suplentes.length + ' suplentes\n\n' +
-        'Caso alguma comarca tenha sido removida, o sistema ajustará as escolhas salvas dos candidatos automaticamente em cascata.')) {
-        return;
-      }
-
-      var todosCandidatosNovos = LOTE_ESTADO.titulares.concat(LOTE_ESTADO.suplentes);
-
-      // =============================================================
-      // REQUISITO 3: AJUSTE AUTOMÁTICO DE ESCOLHAS EM CASCATA
-      // =============================================================
-      var setComarcas = {};
-      LOTE_ESTADO.comarcas.forEach(function(c) {
-        setComarcas[c.nome] = true;
-        setComarcas[c.nome.replace(/\*/g, '').trim()] = true;
-      });
-
-      var totalAjustados = 0;
-      var respostasAtuais = ESTADO.respostas || {};
-      var respostasParaAtualizar = [];
-      
-      for (var candNome in respostasAtuais) {
-        var r = respostasAtuais[candNome];
-        if (r && r.escolhas && Array.isArray(r.escolhas)) {
-          var antesQtd = r.escolhas.length;
-          var novasEscolhas = r.escolhas.filter(function(op) {
-            var opLimpo = op.replace(/\*/g, '').trim();
-            return setComarcas[op] || setComarcas[opLimpo];
-          });
-          if (novasEscolhas.length !== antesQtd) {
-            r.escolhas = novasEscolhas;
-            r.dataUltimoAjusteCascata = new Date().toISOString();
-            respostasParaAtualizar.push(r);
-            totalAjustados++;
-          }
-        }
-      }
-
+    async function salvarConfiguracaoLoteSupabase() {
       try {
-        mostrarAlerta('Salvando dados no Supabase... Aguarde.', 'aviso');
-        
-        // 1. Apagar e reinserir Comarcas
-        await supabaseClient.from('comarcas').delete().eq('lote_id', id);
-        const comarcasInsert = LOTE_ESTADO.comarcas.map(c => ({
-          lote_id: id,
-          nome: c.nome,
-          vagas: parseInt(c.vagas, 10) || 1
-        }));
-        if(comarcasInsert.length > 0) {
-          const { error: errC } = await supabaseClient.from('comarcas').insert(comarcasInsert);
-          if (errC) throw errC;
+        // Exemplo de salvamento direto na tabela do Supabase
+        const { error } = await supabaseClient
+          .from('comarcas')
+          .upsert(ESTADO.comarcas);
+
+        if (error) {
+          console.error("Erro ao salvar comarcas:", error);
+          alert("Erro ao salvar no Supabase. Verifique a consola.");
+          return;
         }
 
-        // 2. Apagar e reinserir Candidatos
-        await supabaseClient.from('candidatos').delete().eq('lote_id', id);
-        const candidatosInsert = todosCandidatosNovos.map(c => ({
-          lote_id: id,
-          nome: c.nome,
-          vaga: c.vaga || null,
-          tipo: c.tipo || 'AC'
-        }));
-        if(candidatosInsert.length > 0) {
-          const { error: errCand } = await supabaseClient.from('candidatos').insert(candidatosInsert);
-          if (errCand) throw errCand;
-        }
-
-        // 3. Atualizar Respostas modificadas pela cascata
-        for(const resp of respostasParaAtualizar) {
-          const docId = CONCURSO_ID_PADRAO + '__' + id + '__' + encodeURIComponent(resp.nome);
-          await supabaseClient.from('respostas').update({
-            escolhas: resp.escolhas,
-            dados_completos: resp
-          }).eq('id', docId);
-        }
-
-        // 4. Atualizar o Estado Visual do Sistema
-        if (id === (ESTADO.loteAtivoId || 'lote_1')) {
-          ESTADO.candidatos = todosCandidatosNovos;
-          ESTADO.comarcas = LOTE_ESTADO.comarcas;
-          
-          if(typeof processarSimulacaoMock === 'function') {
-             ESTADO.simulacao = processarSimulacaoMock(ESTADO.respostas);
-          }
-          
-          popularSelectCandidatos(ESTADO.candidatos);
-          renderizarListaTodasComarcas();
-          if(typeof renderizarTabelaGeral === 'function') renderizarTabelaGeral();
-          if(typeof renderizarPainelComarcas === 'function') renderizarPainelComarcas();
-          if(typeof renderizarTabelaAdmin === 'function') renderizarTabelaAdmin();
-          atualizarContadorHeader();
-          aplicarRegrasVisibilidadeLote();
-        }
-
-        atualizarPainelLoteCompleto();
-
-        var msg = '✓ Configurações do "' + nomeLote + '" salvas com sucesso no Supabase!';
-        if (totalAjustados > 0) {
-          msg += '\n\n' + totalAjustados + ' candidato(s) tiveram suas escolhas ajustadas e elevadas em cascata automaticamente.';
-        }
-        mostrarAlerta(msg, 'sucesso');
-
-      } catch(err) {
-        console.error('Erro ao salvar lote no Supabase:', err);
-        mostrarAlerta('Erro ao salvar lote no banco de dados: ' + (err.message || err), 'erro');
+        alert("Alterações salvas com sucesso no Supabase!");
+        location.reload();
+      } catch (err) {
+        console.error("Erro inesperado:", err);
       }
     }
 
