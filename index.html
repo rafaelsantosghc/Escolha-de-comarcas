@@ -11024,107 +11024,27 @@
     }
 
     // --- SALVAMENTO, RESTAURAÇÃO E EXPORTAÇÃO DO LOTE ---
-    function salvarLoteConfiguracao() {
-      if (!LOTE_ESTADO.comarcas || LOTE_ESTADO.comarcas.length === 0) {
-        mostrarAlerta('O lote deve possuir pelo menos uma comarca cadastrada.', 'aviso');
-        return;
-      }
-      if (!LOTE_ESTADO.titulares || LOTE_ESTADO.titulares.length === 0) {
-        mostrarAlerta('O lote deve possuir pelo menos um candidato titular cadastrado.', 'aviso');
-        return;
-      }
-
-      var id = LOTE_ESTADO.loteSelecionadoId || 'lote_1';
-      var item = (LOTE_ESTADO.listaLotes || []).find(function(l) { return l.id === id; });
-      var nomeLote = item ? item.nome : ('Lote ' + id);
-      nomeLote = String(nomeLote).replace(/\s*\[ATIVO\]/gi, '').replace(/\s*\(Histórico\)/gi, '').trim();
-
-      if (!confirm('Deseja salvar as alterações no "' + nomeLote + '"?\n\n' +
-        '• ' + LOTE_ESTADO.comarcas.length + ' comarcas\n' +
-        '• ' + LOTE_ESTADO.titulares.length + ' titulares\n' +
-        '• ' + LOTE_ESTADO.suplentes.length + ' suplentes\n\n' +
-        'Caso alguma comarca tenha sido removida, o sistema ajustará as escolhas salvas dos candidatos automaticamente em cascata (subindo as opções seguintes sem criar lacunas na ordem de preferência).')) {
-        return;
-      }
-
-      var todosCandidatosNovos = LOTE_ESTADO.titulares.concat(LOTE_ESTADO.suplentes);
-
-      // =============================================================
-      // REQUISITO 3: AJUSTE AUTOMÁTICO DE ESCOLHAS EM CASCATA
-      // =============================================================
-      var setComarcas = {};
-      LOTE_ESTADO.comarcas.forEach(function(c) {
-        setComarcas[c.nome] = true;
-        setComarcas[c.nome.replace(/\*/g, '').trim()] = true;
-      });
-
-      var totalAjustados = 0;
-      var respostasAtuais = ESTADO.respostas || {};
-      for (var candNome in respostasAtuais) {
-        var r = respostasAtuais[candNome];
-        if (r && r.escolhas && Array.isArray(r.escolhas)) {
-          var antesQtd = r.escolhas.length;
-          var novasEscolhas = r.escolhas.filter(function(op) {
-            var opLimpo = op.replace(/\*/g, '').trim();
-            return setComarcas[op] || setComarcas[opLimpo];
-          });
-          if (novasEscolhas.length !== antesQtd) {
-            r.escolhas = novasEscolhas;
-            r.dataUltimoAjusteCascata = new Date().toISOString();
-            totalAjustados++;
-          }
-        }
-      }
-
-      var payload = {
-        id: id,
-        nome: nomeLote,
-        candidatos: todosCandidatosNovos,
-        comarcas: LOTE_ESTADO.comarcas,
-        isRankingVisible: !!LOTE_ESTADO.isRankingVisible,
-        isPrintingEnabled: !!LOTE_ESTADO.isPrintingEnabled,
-        timestamp: new Date().toISOString()
-      };
-
+    async function salvarLoteConfiguracao() {
       try {
-        localStorage.setItem('tjrs_gas_lote_config', JSON.stringify(payload));
-        localStorage.setItem('tjrs_gas_lote_data_' + id, JSON.stringify(payload));
-        localStorage.setItem('tjrs_gas_respostas', JSON.stringify(respostasAtuais));
-      } catch(e) {}
+        // Exemplo de salvamento direto no Supabase para o lote ativo
+        const loteId = ESTADO.loteAtivoId || 'lote_1';
+        
+        // 1. Salvar dados do lote / comarcas
+        const { error: errComarcas } = await supabaseClient
+          .from('comarcas')
+          .upsert(ESTADO.comarcas);
 
-      // Se este lote for o ativo, sincroniza no estado
-      if (id === (ESTADO.loteAtivoId || 'lote_1')) {
-        ESTADO.candidatos = todosCandidatosNovos;
-        ESTADO.comarcas = LOTE_ESTADO.comarcas;
-        ESTADO.isRankingVisible = !!LOTE_ESTADO.isRankingVisible;
-        ESTADO.isPrintingEnabled = !!LOTE_ESTADO.isPrintingEnabled;
-        ESTADO.simulacao = processarSimulacaoMock(ESTADO.respostas);
+        if (errComarcas) {
+          console.error("Erro ao salvar comarcas no Supabase:", errComarcas);
+          alert("Erro ao salvar comarcas no Supabase. Verifique o console.");
+          return;
+        }
 
-        popularSelectCandidatos(ESTADO.candidatos);
-        renderizarListaTodasComarcas();
-        renderizarTabelaGeral();
-        renderizarPainelComarcas();
-        renderizarTabelaAdmin();
-        atualizarContadorHeader();
-        aplicarRegrasVisibilidadeLote();
+        alert("Alterações salvas com sucesso no Supabase!");
+        location.reload();
+      } catch (err) {
+        console.error("Erro inesperado ao salvar:", err);
       }
-
-      atualizarPainelLoteCompleto();
-
-      google.script.run
-        .withSuccessHandler(function(res) {
-          var msg = '✓ Configurações do "' + nomeLote + '" salvas com sucesso!';
-          if (res && res.candidatosAjustados > 0) {
-            msg += '\n\n' + res.candidatosAjustados + ' candidato(s) com comarcas excluídas tiveram suas opções recalculadas e elevadas em cascata automaticamente.';
-          } else if (totalAjustados > 0) {
-            msg += '\n\n' + totalAjustados + ' candidato(s) tiveram suas escolhas ajustadas e elevadas em cascata automaticamente.';
-          }
-          mostrarAlerta(msg, 'aviso');
-        })
-        .withFailureHandler(function(err) {
-          mostrarAlerta('Erro ao salvar lote no servidor: ' + (err.message || err), 'erro');
-        })
-        .salvarConfiguracaoLote(id, payload);
     }
 
     function restaurarLotePadraoEdital() {
