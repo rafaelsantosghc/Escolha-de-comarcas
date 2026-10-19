@@ -2993,139 +2993,6 @@
       }
     }
 
-    async function carregarDadosSupabase() {
-      if (!supabaseClient) return;
-      try {
-        // 1. Carrega os lotes cadastrados no Supabase
-        var resLotes = await supabaseClient.from('lotes').select('*').order('created_at', { ascending: true });
-        if (resLotes && resLotes.data && Array.isArray(resLotes.data) && resLotes.data.length > 0) {
-          var listaLotesFormatada = resLotes.data.map(function(l) {
-            return {
-              id: l.id,
-              nome: l.nome,
-              ativo: !!l.ativo,
-              isRankingVisible: l.is_ranking_visible !== false,
-              isPrintingEnabled: !!l.is_printing_enabled,
-              travado: !!l.travado,
-              senha: l.senha || '',
-              temSenha: !!(l.senha && l.senha.trim() !== '')
-            };
-          });
-
-          LOTE_ESTADO.listaLotes = listaLotesFormatada;
-          var loteAtivoDb = listaLotesFormatada.find(function(l) { return l.ativo; }) || listaLotesFormatada[0];
-          
-          if (!ESTADO.loteAtivoId || ESTADO.loteAtivoId === 'lote_1') {
-            ESTADO.loteAtivoId = loteAtivoDb.id;
-            ESTADO.loteSelecionadoId = loteAtivoDb.id;
-            ESTADO.isRankingVisible = loteAtivoDb.isRankingVisible;
-            ESTADO.isPrintingEnabled = loteAtivoDb.isPrintingEnabled;
-            ESTADO.loteTravado = loteAtivoDb.travado;
-            ESTADO.loteTemSenha = loteAtivoDb.temSenha;
-            ESTADO.loteNome = loteAtivoDb.nome;
-          }
-
-          atualizarSelectLotesGlobal();
-          atualizarSelectLotesAdmin();
-          aplicarRegrasVisibilidadeLote();
-          aplicarBloqueioSenhaLote();
-        }
-
-        // 2. Carrega todas as respostas do Supabase
-        var resp = await supabaseClient.from('respostas').select('*');
-        if (resp && resp.data && Array.isArray(resp.data)) {
-          var loteAlvoId = ESTADO.loteSelecionadoId || ESTADO.loteAtivoId || 'lote_1';
-          var mapaGeral = {};
-          var mapaPorLote = {};
-
-          resp.data.forEach(function(row) {
-            var obj = (row.dados_completos && typeof row.dados_completos === 'object') ? Object.assign({}, row.dados_completos) : {};
-            obj.nome = row.nome || obj.nome;
-            obj.cpf = row.cpf || obj.cpf || '';
-            obj.email = row.email || obj.email || '';
-            obj.whatsapp = row.whatsapp || obj.whatsapp || '';
-            obj.escolhas = row.escolhas || obj.escolhas || [];
-            obj.intencao = row.intencao || obj.intencao || 'assumir';
-            obj.bloqueado = row.bloqueado !== false;
-            obj.loteId = row.lote_id || obj.loteId || 'lote_1';
-            
-            if (obj.nome) {
-              mapaGeral[obj.nome] = obj;
-              if (obj.loteId === loteAlvoId) {
-                mapaPorLote[obj.nome] = obj;
-              }
-            }
-          });
-
-          // Se o lote específico não tiver registros, usa todas as respostas para visualização geral
-          var mapaFinal = Object.keys(mapaPorLote).length > 0 ? mapaPorLote : mapaGeral;
-
-          ESTADO.respostas = mapaFinal;
-          // Salva no localStorage para sincronizar com qualquer motor local
-          try {
-            localStorage.setItem('tjrs_gas_respostas', JSON.stringify(mapaFinal));
-          } catch(eStore) {}
-
-          // Calcula a simulação real sem usar mock
-          if (typeof processarSimulacaoMock === 'function') {
-            ESTADO.simulacao = processarSimulacaoMock(mapaFinal);
-          }
-
-          atualizarContadorHeader();
-
-          // Sincroniza dados com o candidato autenticado no Google se houver
-          if (ESTADO.usuarioLogado && ESTADO.usuarioLogado.email) {
-            var emailLogado = ESTADO.usuarioLogado.email.toLowerCase().trim();
-            for (var candNome in mapaGeral) {
-              var candResp = mapaGeral[candNome];
-              if (candResp && candResp.email && candResp.email.toLowerCase().trim() === emailLogado) {
-                ESTADO.usuarioLogadoNome = candNome;
-                localStorage.setItem('tjrs_candidato_nome', candNome);
-                if (typeof popularSelectCandidatos === 'function' && ESTADO.candidatos) {
-                  popularSelectCandidatos(ESTADO.candidatos);
-                }
-                if (typeof carregarRespostaNoFormulario === 'function') {
-                  carregarRespostaNoFormulario(candResp);
-                }
-                if (typeof aplicarEstadoBloqueioFormulario === 'function') {
-                  aplicarEstadoBloqueioFormulario();
-                }
-                break;
-              }
-            }
-          }
-
-          // Se o lote ativo tiver candidatos específicos cadastrados nas respostas, assegura que apareçam na lista
-          var nomesNoLote = Object.keys(mapaFinal);
-          if (nomesNoLote.length > 0) {
-            var mapaExistentes = {};
-            (ESTADO.candidatos || []).forEach(function(c) { mapaExistentes[c.nome] = true; });
-            var novosCandidatos = (ESTADO.candidatos || window.DADOS_CANDIDATOS_BASE || []).slice();
-            nomesNoLote.forEach(function(nomeCand) {
-              if (!mapaExistentes[nomeCand]) {
-                novosCandidatos.push({
-                  vaga: novosCandidatos.length + 1,
-                  tipo: 'AC',
-                  nome: nomeCand
-                });
-                mapaExistentes[nomeCand] = true;
-              }
-            });
-            ESTADO.candidatos = novosCandidatos;
-          }
-
-          // Atualiza toda a interface com dados reais
-          if (typeof popularSelectCandidatos === 'function' && ESTADO.candidatos) popularSelectCandidatos(ESTADO.candidatos);
-          if (typeof renderizarTabelaGeral === 'function') renderizarTabelaGeral();
-          if (typeof renderizarPainelComarcas === 'function') renderizarPainelComarcas();
-          if (typeof renderizarTabelaAdmin === 'function') renderizarTabelaAdmin();
-          if (typeof atualizarPreviaInstantanea === 'function') atualizarPreviaInstantanea();
-        }
-      } catch (eLoad) {
-        console.warn('Aviso ao sincronizar respostas do Supabase:', eLoad);
-      }
-    }
-
     // 3. Isolamento de Ambientes: Homologação vs Produção (detecta via servidor ou URL)
     var AMBIENTE_SISTEMA = (function() {
       if (gasServerEnv === 'homolog' || gasServerEnv === 'hml' || gasServerEnv === 'teste') return 'homolog';
@@ -10171,8 +10038,13 @@
       mostrarAlerta(novosSuplentes.length + ' suplentes importados com sucesso!', 'aviso');
     }
 
-    // --- SALVAMENTO, RESTAURAÇÃO E EXPORTAÇÃO DO LOTE ---
-    function salvarLoteConfiguracao() {
+// --- SALVAMENTO, RESTAURAÇÃO E EXPORTAÇÃO DO LOTE ---
+    async function salvarLoteConfiguracao() {
+      if (!supabaseClient) {
+        mostrarAlerta('Erro: Conexão com o banco de dados falhou.', 'erro');
+        return;
+      }
+      
       if (!LOTE_ESTADO.comarcas || LOTE_ESTADO.comarcas.length === 0) {
         mostrarAlerta('O lote deve possuir pelo menos uma comarca cadastrada.', 'aviso');
         return;
@@ -10187,11 +10059,11 @@
       var nomeLote = item ? item.nome : ('Lote ' + id);
       nomeLote = String(nomeLote).replace(/\s*\[ATIVO\]/gi, '').replace(/\s*\(Histórico\)/gi, '').trim();
 
-      if (!confirm('Deseja salvar as alterações no "' + nomeLote + '"?\n\n' +
+      if (!confirm('Deseja salvar as alterações no "' + nomeLote + '" no Supabase?\n\n' +
         '• ' + LOTE_ESTADO.comarcas.length + ' comarcas\n' +
         '• ' + LOTE_ESTADO.titulares.length + ' titulares\n' +
         '• ' + LOTE_ESTADO.suplentes.length + ' suplentes\n\n' +
-        'Caso alguma comarca tenha sido removida, o sistema ajustará as escolhas salvas dos candidatos automaticamente em cascata (subindo as opções seguintes sem criar lacunas na ordem de preferência).')) {
+        'Caso alguma comarca tenha sido removida, o sistema ajustará as escolhas salvas dos candidatos automaticamente em cascata.')) {
         return;
       }
 
@@ -10208,6 +10080,8 @@
 
       var totalAjustados = 0;
       var respostasAtuais = ESTADO.respostas || {};
+      var respostasParaAtualizar = [];
+      
       for (var candNome in respostasAtuais) {
         var r = respostasAtuais[candNome];
         if (r && r.escolhas && Array.isArray(r.escolhas)) {
@@ -10219,60 +10093,79 @@
           if (novasEscolhas.length !== antesQtd) {
             r.escolhas = novasEscolhas;
             r.dataUltimoAjusteCascata = new Date().toISOString();
+            respostasParaAtualizar.push(r);
             totalAjustados++;
           }
         }
       }
 
-      var payload = {
-        id: id,
-        nome: nomeLote,
-        candidatos: todosCandidatosNovos,
-        comarcas: LOTE_ESTADO.comarcas,
-        isRankingVisible: !!LOTE_ESTADO.isRankingVisible,
-        isPrintingEnabled: !!LOTE_ESTADO.isPrintingEnabled,
-        timestamp: new Date().toISOString()
-      };
-
       try {
-        localStorage.setItem('tjrs_gas_lote_config', JSON.stringify(payload));
-        localStorage.setItem('tjrs_gas_lote_data_' + id, JSON.stringify(payload));
-        localStorage.setItem('tjrs_gas_respostas', JSON.stringify(respostasAtuais));
-      } catch(e) {}
+        mostrarAlerta('Salvando dados no Supabase... Aguarde.', 'aviso');
+        
+        // 1. Apagar e reinserir Comarcas
+        await supabaseClient.from('comarcas').delete().eq('lote_id', id);
+        const comarcasInsert = LOTE_ESTADO.comarcas.map(c => ({
+          lote_id: id,
+          nome: c.nome,
+          vagas: parseInt(c.vagas, 10) || 1
+        }));
+        if(comarcasInsert.length > 0) {
+          const { error: errC } = await supabaseClient.from('comarcas').insert(comarcasInsert);
+          if (errC) throw errC;
+        }
 
-      // Se este lote for o ativo, sincroniza no estado
-      if (id === (ESTADO.loteAtivoId || 'lote_1')) {
-        ESTADO.candidatos = todosCandidatosNovos;
-        ESTADO.comarcas = LOTE_ESTADO.comarcas;
-        ESTADO.isRankingVisible = !!LOTE_ESTADO.isRankingVisible;
-        ESTADO.isPrintingEnabled = !!LOTE_ESTADO.isPrintingEnabled;
-        ESTADO.simulacao = processarSimulacaoMock(ESTADO.respostas);
+        // 2. Apagar e reinserir Candidatos
+        await supabaseClient.from('candidatos').delete().eq('lote_id', id);
+        const candidatosInsert = todosCandidatosNovos.map(c => ({
+          lote_id: id,
+          nome: c.nome,
+          vaga: c.vaga || null,
+          tipo: c.tipo || 'AC'
+        }));
+        if(candidatosInsert.length > 0) {
+          const { error: errCand } = await supabaseClient.from('candidatos').insert(candidatosInsert);
+          if (errCand) throw errCand;
+        }
 
-        popularSelectCandidatos(ESTADO.candidatos);
-        renderizarListaTodasComarcas();
-        renderizarTabelaGeral();
-        renderizarPainelComarcas();
-        renderizarTabelaAdmin();
-        atualizarContadorHeader();
-        aplicarRegrasVisibilidadeLote();
-      }
+        // 3. Atualizar Respostas modificadas pela cascata
+        for(const resp of respostasParaAtualizar) {
+          const docId = CONCURSO_ID_PADRAO + '__' + id + '__' + encodeURIComponent(resp.nome);
+          await supabaseClient.from('respostas').update({
+            escolhas: resp.escolhas,
+            dados_completos: resp
+          }).eq('id', docId);
+        }
 
-      atualizarPainelLoteCompleto();
-
-      google.script.run
-        .withSuccessHandler(function(res) {
-          var msg = '✓ Configurações do "' + nomeLote + '" salvas com sucesso!';
-          if (res && res.candidatosAjustados > 0) {
-            msg += '\n\n' + res.candidatosAjustados + ' candidato(s) com comarcas excluídas tiveram suas opções recalculadas e elevadas em cascata automaticamente.';
-          } else if (totalAjustados > 0) {
-            msg += '\n\n' + totalAjustados + ' candidato(s) tiveram suas escolhas ajustadas e elevadas em cascata automaticamente.';
+        // 4. Atualizar o Estado Visual do Sistema
+        if (id === (ESTADO.loteAtivoId || 'lote_1')) {
+          ESTADO.candidatos = todosCandidatosNovos;
+          ESTADO.comarcas = LOTE_ESTADO.comarcas;
+          
+          if(typeof processarSimulacaoMock === 'function') {
+             ESTADO.simulacao = processarSimulacaoMock(ESTADO.respostas);
           }
-          mostrarAlerta(msg, 'aviso');
-        })
-        .withFailureHandler(function(err) {
-          mostrarAlerta('Erro ao salvar lote no servidor: ' + (err.message || err), 'erro');
-        })
-        .salvarConfiguracaoLote(id, payload);
+          
+          popularSelectCandidatos(ESTADO.candidatos);
+          renderizarListaTodasComarcas();
+          if(typeof renderizarTabelaGeral === 'function') renderizarTabelaGeral();
+          if(typeof renderizarPainelComarcas === 'function') renderizarPainelComarcas();
+          if(typeof renderizarTabelaAdmin === 'function') renderizarTabelaAdmin();
+          atualizarContadorHeader();
+          aplicarRegrasVisibilidadeLote();
+        }
+
+        atualizarPainelLoteCompleto();
+
+        var msg = '✓ Configurações do "' + nomeLote + '" salvas com sucesso no Supabase!';
+        if (totalAjustados > 0) {
+          msg += '\n\n' + totalAjustados + ' candidato(s) tiveram suas escolhas ajustadas e elevadas em cascata automaticamente.';
+        }
+        mostrarAlerta(msg, 'sucesso');
+
+      } catch(err) {
+        console.error('Erro ao salvar lote no Supabase:', err);
+        mostrarAlerta('Erro ao salvar lote no banco de dados: ' + (err.message || err), 'erro');
+      }
     }
 
     function restaurarLotePadraoEdital() {
