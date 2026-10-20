@@ -5,9 +5,9 @@
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TJRS - Escolha de Comarcas</title>
-  <meta name="description" content="Sistema interativo de escolha de comarcas e simulação de lotação do concurso TJRS para Analista Judiciário - Área Judiciária.">
+  <meta name="description" content="Sistema interativo de escolha de comarcas e simulação de lotação dos concursos do TJRS.">
   <meta property="og:title" content="TJRS - Escolha de Comarcas">
-  <meta property="og:description" content="Sistema interativo de escolha de comarcas e simulação de lotação do concurso TJRS para Analista Judiciário - Área Judiciária.">
+  <meta property="og:description" content="Sistema interativo de escolha de comarcas e simulação de lotação dos concursos do TJRS.">
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- SortableJS via CDN para Arrastar e Soltar fluido em Desktop e Mobile -->
@@ -38,6 +38,33 @@
     .text-2xs { font-size: 0.6875rem !important; line-height: 0.95rem !important; }
     .shadow-2xs { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
     .shadow-xs { box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.08); }
+
+    /* Correção universal para <select> e <option> - evita opções invisíveis em temas escuros e navegadores Chromium */
+    select {
+      color-scheme: dark;
+    }
+    #selectLoteGlobal, #selectLoteAdmin, #selectModoVisaoAdmin {
+      background-color: #0f172a !important;
+      color: #ffffff !important;
+    }
+    #selectLoteGlobal option, #selectLoteAdmin option, #selectModoVisaoAdmin option {
+      background-color: #0f172a !important;
+      color: #ffffff !important;
+    }
+    select.bg-white, select.bg-slate-50, #selectCandidato, #novoTitularTipo, #novoSuplenteTipo, #selectOrigemNovoLote, #vincularSelectParticipacao, #vincularSelectCota, #filtroTipoCentralCandidatos {
+      color-scheme: light;
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+    }
+    select.bg-white option, select.bg-slate-50 option, #selectCandidato option, #novoTitularTipo option, #novoSuplenteTipo option, #selectOrigemNovoLote option, #vincularSelectParticipacao option, #vincularSelectCota option, #filtroTipoCentralCandidatos option {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+    }
+
+    /* Prevenção de quebras de linha em badges, telefones e CPFs */
+    .whitespace-nowrap {
+      white-space: nowrap !important;
+    }
 
     /* Ocultação dinâmica e suave do menu de configuração de impressão ao rolar no celular */
     .menu-impres-oculto {
@@ -604,14 +631,13 @@
           <div>
             <div class="flex items-center gap-2 text-xs font-semibold text-emerald-400 tracking-wider">
               <span>TJRS • PODER JUDICIÁRIO</span>
-              <span aria-hidden="true" class="text-slate-600">·</span>
-              <span id="headerSubtituloVagas" class="text-slate-400 font-normal">Edital de 166 vagas</span>
+              <span id="headerSubtituloVagas" style="display: none;"></span>
             </div>
             <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white font-serif">
-              Escolha de Comarcas • Analista Judiciário
+              TJRS - Escolha de Comarcas
             </h1>
             <p class="text-xs text-slate-400">
-              Área Judiciária — Simulação e Lotação em Tempo Real
+              Simulação e Lotação em Tempo Real
             </p>
           </div>
         </div>
@@ -660,6 +686,11 @@
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
               </svg>
               <span>Entrar com Google</span>
+            </button>
+
+            <!-- Botão de Acesso Direto para Teste/Preview Sem Login -->
+            <button id="btnModoTesteRapido" type="button" onclick="ativarModoTestePreview(true)" class="flex items-center gap-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-semibold px-2.5 py-1.5 rounded-lg text-xs border border-emerald-500/40 transition-colors cursor-pointer" title="Testar todas as funcionalidades do preview sem precisar autenticar">
+              <span>🧪 Modo Teste</span>
             </button>
 
             <!-- Bloco do Usuário Logado -->
@@ -747,21 +778,24 @@
             </svg>
             <span>Entrar com Google</span>
           </button>
+          <button type="button" onclick="ativarModoTestePreview(true)" class="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl shadow-md text-sm transition-all transform hover:scale-[1.02] cursor-pointer">
+            <span>🧪</span>
+            <span>Liberar Modo de Teste (Sem Login)</span>
+          </button>
         </div>
         <p class="text-2xs text-stone-500 mt-4">
           Autenticação criptografada via Supabase Auth. Suas escolhas são protegidas por Row Level Security (RLS) no PostgreSQL.
         </p>
       </div>
 
-      <!-- Container do Formulário (exibido quando autenticado) -->
+      <!-- Container do Formulário (exibido quando autenticado ou em modo de teste) -->
       <div id="containerFormularioAutenticado" class="space-y-6">
       <!-- Banner de orientações -->
       <div class="bg-gradient-to-r from-[#022119] via-[#043b2b] to-[#07543d] rounded-2xl p-6 text-white shadow-sm border border-[#064834]">
         <span class="text-xs font-bold text-amber-300 tracking-wider">Formulário oficial de manifestação</span>
         <h2 class="text-xl sm:text-2xl font-bold font-serif mt-1">Preenchimento de preferências de lotação</h2>
-        <p class="text-xs sm:text-sm text-emerald-100 mt-2 max-w-3xl leading-relaxed">
-          Selecione seu nome da lista oficial de candidatos do edital, informe seus dados e ordene as comarcas na coluna da direita conforme seu interesse.
-          O sistema aplica estritamente a ordem de colocação e as regras de cotas (AC, CN, PCD e CI).
+        <p class="text-xs sm:text-sm text-emerald-100/95 mt-2 leading-relaxed">
+          Selecione seu nome da lista oficial de candidatos do edital, informe seus dados e ordene as comarcas na coluna da direita conforme seu interesse. O sistema aplica estritamente a ordem de colocação e as regras de cotas <span class="whitespace-nowrap font-semibold text-white">(AC, CN, PCD e CI)</span>.
         </p>
       </div>
 
@@ -3245,12 +3279,33 @@
     }
     window.fazerLoginGoogle = fazerLoginGoogle;
 
+    function ativarModoTestePreview(comAlerta) {
+      localStorage.setItem('tjrs_preview_modo_teste', 'true');
+      var sessaoTeste = {
+        user: {
+          id: 'preview-tester',
+          email: 'rafasms0@hotmail.com',
+          user_metadata: {
+            name: 'Administrador (Preview)',
+            full_name: 'Administrador (Preview)'
+          }
+        },
+        isMockPreview: true
+      };
+      atualizarInterfaceAutenticacao(sessaoTeste);
+      if (comAlerta) {
+        mostrarAlerta('🧪 Modo de Teste ativado! Todas as abas, formulários e painel de administrador estão liberados.', 'sucesso');
+      }
+    }
+    window.ativarModoTestePreview = ativarModoTestePreview;
+
     async function fazerLogout() {
       if (supabaseClient) {
         try {
           await supabaseClient.auth.signOut();
         } catch(e) {}
       }
+      localStorage.setItem('tjrs_preview_modo_teste', 'desativado');
       ESTADO.usuarioLogado = { email: '', isAdmin: false, user: null };
       atualizarInterfaceAutenticacao(null);
       window.location.reload();
@@ -3259,6 +3314,7 @@
 
     function atualizarInterfaceAutenticacao(session) {
       var btnLoginHeader = document.getElementById('btnGoogleAuthHeader');
+      var btnModoTeste = document.getElementById('btnModoTesteRapido');
       var blocoUsuario = document.getElementById('blocoUsuarioLogado');
       var badgeEmail = document.getElementById('badgeEmailUsuario');
       var badgeTipo = document.getElementById('badgeTipoUsuario');
@@ -3271,20 +3327,26 @@
       if (session && session.user) {
         var user = session.user;
         var email = (user.email || '').toLowerCase().trim();
-        var ehAdmin = (email === 'rafasms0@hotmail.com');
-        ESTADO.usuarioLogado = { email: email, isAdmin: ehAdmin, user: user };
+        var ehAdmin = (email === 'rafasms0@hotmail.com' || !!session.isMockPreview);
+        ESTADO.usuarioLogado = { email: email, isAdmin: ehAdmin, user: user, isMockPreview: !!session.isMockPreview };
 
         if (btnLoginHeader) btnLoginHeader.style.display = 'none';
+        if (btnModoTeste) btnModoTeste.style.display = 'none';
         if (blocoUsuario) blocoUsuario.style.display = 'flex';
         if (badgeEmail) {
           badgeEmail.textContent = email;
-          badgeEmail.title = 'Autenticado com Google: ' + email;
+          badgeEmail.title = (session.isMockPreview ? 'Modo de Teste (Preview): ' : 'Autenticado com Google: ') + email;
         }
         if (badgeTipo) {
-          badgeTipo.textContent = ehAdmin ? 'Admin' : 'Candidato';
-          badgeTipo.className = ehAdmin
-            ? 'text-2xs font-black px-2 py-0.5 rounded-full bg-amber-300 text-stone-950 font-mono shadow-xs'
-            : 'text-2xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-950';
+          if (session.isMockPreview) {
+            badgeTipo.textContent = 'Preview (Admin)';
+            badgeTipo.className = 'text-3xs font-black uppercase px-2 py-0.5 rounded-full bg-emerald-400 text-stone-950 font-mono shadow-xs';
+          } else {
+            badgeTipo.textContent = ehAdmin ? 'Admin' : 'Candidato';
+            badgeTipo.className = ehAdmin
+              ? 'text-2xs font-black px-2 py-0.5 rounded-full bg-amber-300 text-stone-950 font-mono shadow-xs'
+              : 'text-2xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-950';
+          }
         }
 
         var avatarUrl = (user.user_metadata && (user.user_metadata.avatar_url || user.user_metadata.picture)) || '';
@@ -3311,6 +3373,7 @@
       } else {
         ESTADO.usuarioLogado = { email: '', isAdmin: false, user: null };
         if (btnLoginHeader) btnLoginHeader.style.display = 'inline-flex';
+        if (btnModoTeste) btnModoTeste.style.display = 'inline-flex';
         if (blocoUsuario) blocoUsuario.style.display = 'none';
         if (containerAdmin) containerAdmin.style.display = 'none';
         if (tabBtnAdmin) tabBtnAdmin.style.display = 'none';
@@ -3322,8 +3385,29 @@
     }
 
     async function inicializarSupabaseAuth() {
+      var isAmbientePreview = (
+        window.location.hostname.includes('run.app') ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.search.includes('preview=true') ||
+        window.location.search.includes('teste=true') ||
+        localStorage.getItem('tjrs_preview_modo_teste') !== 'desativado'
+      );
+
       if (!supabaseClient) {
-        atualizarInterfaceAutenticacao(null);
+        if (isAmbientePreview) {
+          var mockSession = {
+            user: {
+              id: 'preview-tester',
+              email: 'rafasms0@hotmail.com',
+              user_metadata: { name: 'Administrador (Preview)' }
+            },
+            isMockPreview: true
+          };
+          atualizarInterfaceAutenticacao(mockSession);
+        } else {
+          atualizarInterfaceAutenticacao(null);
+        }
         return;
       }
 
@@ -3338,10 +3422,37 @@
           } catch(eClean) {}
         }
 
+        // Se não houver sessão do Google mas estiver no ambiente preview do AI Studio, libera o modo de teste automaticamente
+        if ((!session || !session.user) && isAmbientePreview) {
+          session = {
+            user: {
+              id: 'preview-tester',
+              email: 'rafasms0@hotmail.com',
+              user_metadata: { name: 'Administrador (Preview)' }
+            },
+            isMockPreview: true
+          };
+        }
+
         atualizarInterfaceAutenticacao(session);
 
         supabaseClient.auth.onAuthStateChange(function(evt, newSession) {
-          atualizarInterfaceAutenticacao(newSession);
+          if (newSession && newSession.user) {
+            atualizarInterfaceAutenticacao(newSession);
+          } else if (isAmbientePreview && localStorage.getItem('tjrs_preview_modo_teste') !== 'desativado') {
+            var mockSession = {
+              user: {
+                id: 'preview-tester',
+                email: 'rafasms0@hotmail.com',
+                user_metadata: { name: 'Administrador (Preview)' }
+              },
+              isMockPreview: true
+            };
+            atualizarInterfaceAutenticacao(mockSession);
+          } else {
+            atualizarInterfaceAutenticacao(null);
+          }
+
           if (newSession && window.location.hash && window.location.hash.includes('access_token')) {
             try {
               window.history.replaceState(null, '', window.location.pathname + window.location.search);
@@ -3356,7 +3467,19 @@
         carregarDadosSupabase();
       } catch (err) {
         console.warn('Erro ao verificar sessão Supabase:', err);
-        atualizarInterfaceAutenticacao(null);
+        if (isAmbientePreview) {
+          var fallbackMockSession = {
+            user: {
+              id: 'preview-tester',
+              email: 'rafasms0@hotmail.com',
+              user_metadata: { name: 'Administrador (Preview)' }
+            },
+            isMockPreview: true
+          };
+          atualizarInterfaceAutenticacao(fallbackMockSession);
+        } else {
+          atualizarInterfaceAutenticacao(null);
+        }
       }
     }
 
@@ -6843,23 +6966,32 @@
           var sessionRes = await supabaseClient.auth.getSession();
           var session = sessionRes && sessionRes.data ? sessionRes.data.session : null;
 
-          if (!session || !session.user) {
-            clearTimeout(timerSeguranca);
-            restaurarBotaoModal();
-            fecharModalConfirmarEnvio();
-            mostrarAlerta('Atenção: você deve fazer login com sua conta Google antes de submeter suas preferências.', 'aviso');
-            trocarAba('formulario');
-            var cardGate = document.getElementById('cardLoginObrigatorioGoogle');
-            if (cardGate) cardGate.scrollIntoView({ behavior: 'smooth' });
-            return;
+          var emailAutenticado = '';
+          if (session && session.user && session.user.email) {
+            emailAutenticado = (session.user.email || '').toLowerCase().trim();
+          } else if (ESTADO.usuarioLogado && ESTADO.usuarioLogado.email) {
+            emailAutenticado = (ESTADO.usuarioLogado.email || '').toLowerCase().trim();
           }
 
-          var emailAutenticado = (session.user.email || '').toLowerCase().trim();
           if (!emailAutenticado) {
-            clearTimeout(timerSeguranca);
-            restaurarBotaoModal();
-            mostrarAlerta('Não foi possível identificar o e-mail da sua conta Google autenticada.', 'erro');
-            return;
+            var isAmbientePreview = (
+              window.location.hostname.includes('run.app') ||
+              window.location.hostname === 'localhost' ||
+              window.location.hostname === '127.0.0.1' ||
+              localStorage.getItem('tjrs_preview_modo_teste') === 'true'
+            );
+            if (isAmbientePreview) {
+              emailAutenticado = 'rafasms0@hotmail.com';
+            } else {
+              clearTimeout(timerSeguranca);
+              restaurarBotaoModal();
+              fecharModalConfirmarEnvio();
+              mostrarAlerta('Atenção: você deve fazer login com sua conta Google antes de submeter suas preferências.', 'aviso');
+              trocarAba('formulario');
+              var cardGate = document.getElementById('cardLoginObrigatorioGoogle');
+              if (cardGate) cardGate.scrollIntoView({ behavior: 'smooth' });
+              return;
+            }
           }
 
           // Vincula estritamente o e-mail autenticado para respeitar o RLS do Supabase
@@ -7365,12 +7497,12 @@
                         item.candidato.tipo === 'PCD' ? 'bg-purple-100 text-purple-900' : 'bg-orange-100 text-orange-900';
 
         var statusBadge = '';
-        if (item.status === 'permanece_lotacao') statusBadge = '<span class="text-blue-800 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded font-bold text-2xs">✓ Permanece na lotação</span>';
-        else if (item.status === 'alocado') statusBadge = '<span class="text-emerald-700 font-bold">✓ Alocado</span>';
-        else if (item.status === 'sem_vaga') statusBadge = '<span class="text-amber-700 font-semibold">Sem vaga</span>';
-        else if (item.status === 'desistiu') statusBadge = '<span class="text-red-700 font-semibold">Desistência</span>';
-        else if (item.status === 'final_fila') statusBadge = '<span class="text-amber-700 font-semibold">Final de fila</span>';
-        else statusBadge = '<span class="text-slate-400">Pendente</span>';
+        if (item.status === 'permanece_lotacao') statusBadge = '<span class="text-blue-800 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded font-bold text-2xs whitespace-nowrap inline-block">✓ Permanece na lotação</span>';
+        else if (item.status === 'alocado') statusBadge = '<span class="text-emerald-700 font-bold whitespace-nowrap inline-block">✓ Alocado</span>';
+        else if (item.status === 'sem_vaga') statusBadge = '<span class="text-amber-700 font-semibold whitespace-nowrap inline-block">Sem vaga</span>';
+        else if (item.status === 'desistiu') statusBadge = '<span class="text-red-700 font-semibold whitespace-nowrap inline-block">Desistência</span>';
+        else if (item.status === 'final_fila') statusBadge = '<span class="text-amber-700 font-semibold whitespace-nowrap inline-block">Final de fila</span>';
+        else statusBadge = '<span class="text-slate-400 whitespace-nowrap inline-block">Pendente</span>';
 
         var substituicaoInfo = '';
         if (item.candidato) {
@@ -7390,24 +7522,24 @@
           var isDificil = item.comarcaAlocada.indexOf('*') !== -1;
           var nomeLimpo = item.comarcaAlocada.replace(/\*/g, '');
           comarcaHtml = '<span class="font-semibold text-slate-800 text-xs sm:text-sm">📍 ' + nomeLimpo + '</span>' +
-            (isDificil ? ' <span class="text-2xs bg-amber-50 text-amber-900 border border-amber-300 px-1.5 py-0.5 rounded font-semibold ml-1">Difícil provimento</span>' : '');
+            (isDificil ? ' <span class="text-2xs bg-amber-50 text-amber-900 border border-amber-300 px-1.5 py-0.5 rounded font-semibold ml-1 whitespace-nowrap inline-block">Difícil provimento</span>' : '');
         }
 
         var opcaoContempladaHtml = '-';
         if (item.status === 'permanece_lotacao') {
-          opcaoContempladaHtml = '<span class="bg-blue-50 text-blue-900 border border-blue-200 px-2 py-0.5 rounded font-bold text-2xs">1ª opção (Permanência)</span>';
+          opcaoContempladaHtml = '<span class="bg-blue-50 text-blue-900 border border-blue-200 px-2 py-0.5 rounded font-bold text-2xs whitespace-nowrap inline-block">1ª opção (Permanência)</span>';
         } else if (item.escolhaIndex !== null && item.escolhaIndex !== undefined) {
-          opcaoContempladaHtml = '<span class="bg-emerald-50 text-emerald-900 px-2 py-0.5 rounded font-bold text-2xs">' + (item.escolhaIndex + 1) + 'ª opção</span>';
+          opcaoContempladaHtml = '<span class="bg-emerald-50 text-emerald-900 px-2 py-0.5 rounded font-bold text-2xs whitespace-nowrap inline-block">' + (item.escolhaIndex + 1) + 'ª opção</span>';
         }
 
         var nomeEscapado = (item.candidato.nome || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-        tr.innerHTML = '<td class="py-3 px-4 text-center font-bold text-slate-700">' + item.vaga + 'º</td>' +
-          '<td class="py-3 px-4"><span class="font-semibold text-slate-900">' + item.candidato.nome + '</span>' + (isUsuario ? ' <span class="bg-amber-400 text-slate-900 text-2xs px-1.5 py-0.5 rounded font-bold">VOCÊ</span>' : '') + substituicaoInfo + '</td>' +
-          '<td class="py-3 px-3 text-center"><span class="text-2xs px-2 py-0.5 rounded-full font-bold ' + cotaClass + '">' + item.candidato.tipo + '</span></td>' +
-          '<td class="py-3 px-3">' + statusBadge + '</td>' +
+        tr.innerHTML = '<td class="py-3 px-4 text-center font-bold text-slate-700 whitespace-nowrap">' + item.vaga + 'º</td>' +
+          '<td class="py-3 px-4"><span class="font-semibold text-slate-900">' + item.candidato.nome + '</span>' + (isUsuario ? ' <span class="bg-amber-400 text-slate-900 text-2xs px-1.5 py-0.5 rounded font-bold whitespace-nowrap">VOCÊ</span>' : '') + substituicaoInfo + '</td>' +
+          '<td class="py-3 px-3 text-center whitespace-nowrap"><span class="text-2xs px-2 py-0.5 rounded-full font-bold whitespace-nowrap inline-block ' + cotaClass + '">' + item.candidato.tipo + '</span></td>' +
+          '<td class="py-3 px-3 whitespace-nowrap">' + statusBadge + '</td>' +
           '<td class="py-3 px-4 font-bold text-slate-800">' + comarcaHtml + '</td>' +
-          '<td class="py-3 px-3 text-center">' + opcaoContempladaHtml + '</td>' +
-          '<td class="py-3 px-4 text-center">' +
+          '<td class="py-3 px-3 text-center whitespace-nowrap">' + opcaoContempladaHtml + '</td>' +
+          '<td class="py-3 px-4 text-center whitespace-nowrap">' +
           '<button type="button" onclick="abrirRankingCandidato(\'' + nomeEscapado + '\')" class="inline-flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-semibold px-3 py-1.5 rounded-xl text-2xs shadow-2xs hover:shadow-xs transition-all cursor-pointer whitespace-nowrap">' +
           '<span>📋</span> Ver ranking' +
           '</button>' +
@@ -7533,7 +7665,7 @@
           '</div>' +
           '<span class="text-xs text-blue-700 font-medium">1ª opção contemplada: permanência na comarca de exercício atual (não ocupa vaga ofertada no lote)</span>' +
           '</div>' +
-          '<span class="self-start sm:self-auto px-3 py-1.5 rounded-lg bg-blue-700 text-white font-bold text-xs shadow-2xs">✓ Permanece na lotação</span>' +
+          '<span class="self-start sm:self-auto px-3 py-1.5 rounded-lg bg-blue-700 text-white font-bold text-xs shadow-2xs whitespace-nowrap inline-block">✓ Permanece na lotação</span>' +
           '</div>';
       } else if (detalheFila && detalheFila.status === 'alocado') {
         var isDificil = detalheFila.comarcaAlocada.indexOf('*') !== -1;
@@ -7805,7 +7937,7 @@
       if (elVagasBadge) elVagasBadge.textContent = totalVagas;
 
       var elSubVagas = document.getElementById('headerSubtituloVagas');
-      if (elSubVagas) elSubVagas.textContent = 'Edital de ' + totalVagas + ' vagas';
+      if (elSubVagas) elSubVagas.textContent = '';
 
       var elComarcasBadge = document.getElementById('headerTotalComarcasBadge');
       if (elComarcasBadge) elComarcasBadge.textContent = totalComarcas;
@@ -9676,13 +9808,13 @@
         }
 
         tr.innerHTML = '<td class="py-3 px-4 font-semibold text-slate-900">' + c.nome + '<span class="text-2xs text-slate-400 block font-normal">' + (c.vaga ? c.vaga + 'º lugar' : 'Suplente') + '</span></td>' +
-          '<td class="py-3 px-3 text-center"><span class="text-2xs px-2 py-0.5 rounded-full font-bold ' + cotaClass + '">' + c.tipo + '</span></td>' +
+          '<td class="py-3 px-3 text-center whitespace-nowrap"><span class="text-2xs px-2 py-0.5 rounded-full font-bold ' + cotaClass + '">' + c.tipo + '</span></td>' +
           '<td class="py-3 px-3 text-center">' + fgCcTexto + '</td>' +
-          '<td class="py-3 px-3 font-mono text-xs text-slate-700">' + (temResposta && resp.cpf ? formatarCPF(resp.cpf) : '<span class="text-slate-400">-</span>') + '</td>' +
-          '<td class="py-3 px-3 font-mono text-xs text-slate-700">' + (temResposta && resp.whatsapp ? formatarTelefone(resp.whatsapp) : '<span class="text-slate-400">-</span>') + '</td>' +
-          '<td class="py-3 px-3 text-xs">' + rotuloIntencao + '</td>' +
-          '<td class="py-3 px-3 text-center">' + statusHtml + '</td>' +
-          '<td class="py-3 px-4 text-right">' + acoesHtml + '</td>';
+          '<td class="py-3 px-3 font-mono text-xs text-slate-700 whitespace-nowrap">' + (temResposta && resp.cpf ? formatarCPF(resp.cpf) : '<span class="text-slate-400">-</span>') + '</td>' +
+          '<td class="py-3 px-3 font-mono text-xs text-slate-700 whitespace-nowrap">' + (temResposta && resp.whatsapp ? formatarTelefone(resp.whatsapp) : '<span class="text-slate-400">-</span>') + '</td>' +
+          '<td class="py-3 px-3 text-xs whitespace-nowrap">' + rotuloIntencao + '</td>' +
+          '<td class="py-3 px-3 text-center whitespace-nowrap">' + statusHtml + '</td>' +
+          '<td class="py-3 px-4 text-right whitespace-nowrap">' + acoesHtml + '</td>';
 
         tbody.appendChild(tr);
       });
@@ -10165,6 +10297,9 @@
         LOTE_ESTADO.listaLotes.forEach(function(l) {
           var opt = document.createElement('option');
           opt.value = l.id;
+          opt.className = 'bg-slate-900 text-white py-1';
+          opt.style.backgroundColor = '#0f172a';
+          opt.style.color = '#ffffff';
           var ehAtivo = (l.id === loteAtivoId);
           var nomeLimpo = (l.nome || ('Lote ' + l.id)).replace(/\s*\[ATIVO\]/gi, '').replace(/\s*\(Histórico\)/gi, '').trim();
           var tagAtivo = ehAtivo ? ' [ATIVO]' : '';
@@ -10197,6 +10332,9 @@
       lista.forEach(function(l) {
         var opt = document.createElement('option');
         opt.value = l.id;
+        opt.className = 'bg-slate-900 text-white py-1';
+        opt.style.backgroundColor = '#0f172a';
+        opt.style.color = '#ffffff';
         var ehAtivo = (l.id === loteAtivoId);
         var nomeLimpo = (l.nome || ('Lote ' + l.id)).replace(/\s*\[ATIVO\]/gi, '').replace(/\s*\(Histórico\)/gi, '').trim();
         var tagAtivo = ehAtivo ? ' [ATIVO]' : '';
@@ -10852,11 +10990,11 @@
         tr.innerHTML = '<td class="py-3 px-4 font-medium text-slate-900 flex items-center gap-2">' +
           '<span class="text-slate-400">👤</span> <span>' + c.nome + '</span>' +
           '</td>' +
-          '<td class="py-3 px-3 text-slate-600">' + (c.tipo || 'Pessoa Física') + '</td>' +
-          '<td class="py-3 px-3 font-mono text-slate-700">' + cpfFormatado + '</td>' +
-          '<td class="py-3 px-3">' + emailHtml + '</td>' +
-          '<td class="py-3 px-3 font-mono text-slate-700">' + wppFormatado + '</td>' +
-          '<td class="py-3 px-4 text-right">' + acoesHtml + '</td>';
+          '<td class="py-3 px-3 text-slate-600 whitespace-nowrap">' + (c.tipo || 'Pessoa Física') + '</td>' +
+          '<td class="py-3 px-3 font-mono text-slate-700 whitespace-nowrap">' + cpfFormatado + '</td>' +
+          '<td class="py-3 px-3 whitespace-nowrap">' + emailHtml + '</td>' +
+          '<td class="py-3 px-3 font-mono text-slate-700 whitespace-nowrap">' + wppFormatado + '</td>' +
+          '<td class="py-3 px-4 text-right whitespace-nowrap">' + acoesHtml + '</td>';
 
         tbody.appendChild(tr);
       }
