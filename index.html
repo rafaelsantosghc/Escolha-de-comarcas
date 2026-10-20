@@ -591,71 +591,68 @@
     }
   </style>
 </head>
-<body class="bg-[#f4f6f4] text-stone-800 min-h-screen flex flex-col antialiased overflow-x-hidden w-full max-w-full">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased overflow-x-hidden w-full max-w-full">
 
-  <!-- Header TJRS -->
-  <header class="bg-gradient-to-r from-[#021c15] via-[#043325] to-[#074d39] text-white shadow-lg border-b border-[#053828] overflow-hidden max-w-full">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-5">
+  <!-- Header TJRS - Padrão Moderno & Limpo -->
+  <header class="bg-slate-900 text-white shadow-xs border-b border-slate-800 overflow-hidden max-w-full">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div class="flex items-center space-x-3.5">
-          <div class="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-amber-300 text-2xl shadow-inner font-serif">
+          <div class="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-lg shadow-2xs font-serif shrink-0">
             ⚖️
           </div>
           <div>
-            <div class="flex items-center gap-2">
-              <span class="text-2xs tracking-wider font-bold text-emerald-200 bg-emerald-950/70 px-2 py-0.5 rounded border border-emerald-800/50">
-                TJRS • Poder Judiciário
-              </span>
-              <span class="text-xs text-emerald-300 font-medium hidden sm:inline" id="headerSubtituloVagas">
-                Edital de 166 vagas
-              </span>
+            <div class="flex items-center gap-2 text-xs font-semibold text-emerald-400 tracking-wider">
+              <span>TJRS • PODER JUDICIÁRIO</span>
+              <span aria-hidden="true" class="text-slate-600">·</span>
+              <span id="headerSubtituloVagas" class="text-slate-400 font-normal">Edital de 166 vagas</span>
             </div>
-            <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white font-serif">
-              Escolha de comarcas • Analista judiciário
+            <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white font-serif">
+              Escolha de Comarcas • Analista Judiciário
             </h1>
-            <p class="text-xs sm:text-sm text-emerald-100/90">
-              Área judiciária — Sistema de simulação e escolha de comarcas
+            <p class="text-xs text-slate-400">
+              Área Judiciária — Simulação e Lotação em Tempo Real
             </p>
           </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
-          <!-- Seletor de Lote Global (Permite alternar entre lotes e inspecionar histórico em todo o site) -->
-          <div class="flex items-center gap-1.5 bg-emerald-950/90 border border-emerald-400/40 px-3 py-1.5 rounded-lg shadow-inner">
-            <span class="text-xs font-bold text-amber-300">📦 Lote:</span>
-            <select id="selectLoteGlobal" onchange="aoTrocarLoteGlobal(this.value)" class="bg-[#021f17] text-amber-300 font-bold px-2 py-0.5 rounded text-xs border border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-amber-400 cursor-pointer">
-              <option value="lote_1">Lote 1 (1º Chamamento)</option>
+        <div class="flex flex-wrap items-center gap-2.5 sm:gap-3 text-xs">
+          <!-- Metadados em formato limpo (Sem pills pesadas) -->
+          <div class="hidden xl:flex items-center gap-2 text-xs text-slate-400 font-medium border-r border-slate-800 pr-3">
+            <span><strong id="headerTotalVagasBadge" class="text-slate-200">166</strong> vagas</span>
+            <span aria-hidden="true" class="text-slate-600">·</span>
+            <span><strong id="headerTotalComarcasBadge" class="text-slate-200">98</strong> comarcas</span>
+            <span aria-hidden="true" class="text-slate-600">·</span>
+            <span id="headerRespostasContador" class="text-emerald-400 font-semibold">122 respostas</span>
+          </div>
+
+          <!-- Seletor de Lote Global Clean -->
+          <div class="flex items-center gap-1.5 bg-slate-800 border border-slate-700/80 px-2.5 py-1 rounded-lg">
+            <span class="text-xs font-medium text-slate-300">Lote:</span>
+            <select id="selectLoteGlobal" onchange="aoTrocarLoteGlobal(this.value)" class="bg-transparent text-white font-semibold text-xs focus:outline-none cursor-pointer">
+              <option value="lote_1" class="bg-slate-800 text-white">Lote 1 (1º Chamamento)</option>
             </select>
-            <span id="badgeLoteGlobalStatus" class="text-3xs font-black uppercase px-2 py-0.5 rounded-full bg-emerald-400 text-stone-950 font-mono">ATIVO</span>
-            <button id="btnRenomearLoteHeader" type="button" onclick="abrirModalRenomearLote()" style="display: none;" class="text-2xs bg-white/15 hover:bg-white/25 text-amber-300 hover:text-amber-200 px-2 py-0.5 rounded border border-white/25 font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-2xs" title="Renomear lote selecionado">
-              ✏️ Renomear
+            <span id="badgeLoteGlobalStatus" class="text-3xs font-semibold uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">ATIVO</span>
+            <button id="btnRenomearLoteHeader" type="button" onclick="abrirModalRenomearLote()" style="display: none;" class="text-2xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-2 py-0.5 rounded font-medium transition-colors cursor-pointer flex items-center gap-1" title="Renomear lote selecionado">
+              ✏️
             </button>
           </div>
 
-          <!-- Indicador de Ambiente de Homologação (Requisito 3) -->
-          <div id="badgeAmbienteHomolog" style="display: none;" class="bg-amber-400 text-stone-950 font-black px-2.5 py-1.5 rounded-lg text-2xs uppercase tracking-wider font-mono shadow-sm items-center gap-1.5 animate-pulse" title="Ambiente de Homologação ativo (?env=homolog). Seus testes não alteram os dados de produção.">
-            <span>🧪</span>
-            <span>HOMOLOGAÇÃO</span>
+          <!-- Indicador de Ambiente de Homologação -->
+          <div id="badgeAmbienteHomolog" style="display: none;" class="bg-amber-400 text-slate-950 font-bold px-2 py-1 rounded-lg text-2xs uppercase tracking-wider font-mono items-center gap-1" title="Ambiente de Homologação ativo (?env=homolog). Seus testes não alteram os dados de produção.">
+            <span>🧪 HOMOLOGAÇÃO</span>
           </div>
 
-          <div class="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/15">
-            <strong id="headerTotalVagasBadge">166</strong> vagas no lote
+          <!-- Indicador de Sincronização em Tempo Real (Supabase) -->
+          <div id="badgeTempoReal" class="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg text-2xs font-medium shrink-0" title="Sincronização em tempo real ativa com o Supabase">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span id="textoTempoReal">Tempo Real</span>
           </div>
-          <div class="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/15">
-            <strong id="headerTotalComarcasBadge">98</strong> comarcas
-          </div>
-          <div class="bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/15 text-emerald-300" id="headerRespostasContador">
-            Carregando respostas...
-          </div>
-          <!-- Indicador de Sincronização em Tempo Real -->
-          <div id="badgeTempoReal" class="flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2.5 py-1.5 rounded-lg text-2xs font-semibold backdrop-blur-md transition-all shrink-0" title="Sincronização automática em tempo real ativa">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span id="textoTempoReal">Tempo real ativo</span>
-          </div>
+
           <!-- Bloco de Autenticação Supabase / Google Auth -->
           <div id="containerAuthHeader" class="flex items-center gap-2">
-            <!-- Botão Entrar com Google (exibido quando desconectado) -->
-            <button id="btnGoogleAuthHeader" type="button" onclick="fazerLoginGoogle()" class="flex items-center gap-1.5 bg-white hover:bg-stone-50 text-stone-800 font-bold px-3 py-1.5 rounded-lg text-xs shadow-sm transition-all cursor-pointer border border-stone-200">
+            <!-- Botão Entrar com Google -->
+            <button id="btnGoogleAuthHeader" type="button" onclick="fazerLoginGoogle()" class="flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-800 font-medium px-3.5 py-1.5 rounded-lg text-xs shadow-2xs transition-colors cursor-pointer border border-slate-200">
               <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -665,28 +662,28 @@
               <span>Entrar com Google</span>
             </button>
 
-            <!-- Bloco do Usuário Logado (exibido quando autenticado) -->
-            <div id="blocoUsuarioLogado" style="display: none;" class="flex items-center gap-2 bg-white/10 backdrop-blur-md px-2.5 py-1.5 rounded-lg border border-white/20 text-xs">
+            <!-- Bloco do Usuário Logado -->
+            <div id="blocoUsuarioLogado" style="display: none;" class="flex items-center gap-2 bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700 text-xs">
               <div class="flex items-center gap-1.5">
-                <img id="imgAvatarUsuario" src="" alt="Avatar" style="display: none;" class="w-5 h-5 rounded-full border border-emerald-300 object-cover" />
+                <img id="imgAvatarUsuario" src="" alt="Avatar" style="display: none;" class="w-4 h-4 rounded-full border border-slate-600 object-cover" />
                 <span id="iconeTipoUsuario">👤</span>
-                <span id="badgeEmailUsuario" class="font-mono text-2xs font-semibold text-emerald-100 max-w-[130px] sm:max-w-[180px] truncate" title="E-mail autenticado"></span>
-                <span id="badgeTipoUsuario" class="text-2xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-950">Candidato</span>
+                <span id="badgeEmailUsuario" class="font-mono text-2xs font-medium text-slate-200 max-w-[130px] sm:max-w-[180px] truncate" title="E-mail autenticado"></span>
+                <span id="badgeTipoUsuario" class="text-3xs font-semibold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">Candidato</span>
               </div>
 
-              <!-- Seletor de visão e simulação: disponível exclusivamente quando autenticado como rafasms0@hotmail.com -->
-              <div id="containerModoVisaoAdmin" style="display: none;" class="items-center gap-1.5 border-l border-white/20 pl-2">
-                <select id="selectModoVisaoAdmin" onchange="aoMudarModoVisaoAdmin(this.value)" class="bg-[#021f17] text-amber-300 font-semibold px-2 py-0.5 rounded text-2xs border border-amber-400/30 focus:outline-none cursor-pointer" title="Alternar visão">
-                  <option value="admin" selected>Modo Admin</option>
-                  <option value="candidato">Visão Candidato</option>
+              <!-- Seletor de visão admin -->
+              <div id="containerModoVisaoAdmin" style="display: none;" class="items-center gap-1.5 border-l border-slate-700 pl-2">
+                <select id="selectModoVisaoAdmin" onchange="aoMudarModoVisaoAdmin(this.value)" class="bg-transparent text-amber-300 font-medium px-1 py-0.5 rounded text-2xs border border-amber-400/30 focus:outline-none cursor-pointer" title="Alternar visão">
+                  <option value="admin" selected class="bg-slate-800 text-amber-300">Modo Admin</option>
+                  <option value="candidato" class="bg-slate-800 text-slate-200">Visão Candidato</option>
                 </select>
-                <button id="btnTrocarEmailSimulado" type="button" onclick="aoClicarTrocarEmailSimulado()" style="display: none;" class="text-2xs bg-white/15 hover:bg-white/25 text-emerald-100 px-2 py-0.5 rounded border border-white/20 cursor-pointer font-medium transition-colors" title="Simular acesso com outro e-mail">
-                  🔄 Trocar
+                <button id="btnTrocarEmailSimulado" type="button" onclick="aoClicarTrocarEmailSimulado()" style="display: none;" class="text-2xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-1.5 py-0.5 rounded border border-slate-600 cursor-pointer font-medium transition-colors" title="Simular acesso com outro e-mail">
+                  🔄
                 </button>
               </div>
 
               <!-- Botão Sair -->
-              <button id="btnLogoutHeader" type="button" onclick="fazerLogout()" class="text-2xs bg-white/10 hover:bg-red-500/30 text-emerald-100 hover:text-red-200 px-2 py-1 rounded border border-white/15 transition-colors cursor-pointer" title="Desconectar">
+              <button id="btnLogoutHeader" type="button" onclick="fazerLogout()" class="text-2xs text-slate-400 hover:text-rose-400 px-1.5 py-0.5 transition-colors cursor-pointer" title="Desconectar">
                 Sair
               </button>
             </div>
@@ -694,25 +691,25 @@
         </div>
       </div>
 
-      <!-- Navegação por abas -->
-      <nav class="flex overflow-x-auto gap-2 mt-6 pt-3 border-t border-white/15 text-sm no-scrollbar">
-        <button id="tabBtnFormulario" onclick="trocarAba('formulario')" class="px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all bg-amber-400 text-stone-950 shadow-md font-semibold">
+      <!-- Navegação por abas - Estilo Segmentado Clean -->
+      <nav class="flex overflow-x-auto gap-1 mt-4 pt-3 border-t border-slate-800 text-xs sm:text-sm no-scrollbar">
+        <button id="tabBtnFormulario" onclick="trocarAba('formulario')" class="px-3.5 py-2 rounded-lg font-semibold whitespace-nowrap transition-all bg-emerald-600 text-white shadow-xs">
           📝 Formulário de escolha
         </button>
-        <button id="tabBtnDashboard" onclick="trocarAba('dashboard')" class="px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all text-emerald-100/90 hover:bg-white/10 hover:text-white">
+        <button id="tabBtnDashboard" onclick="trocarAba('dashboard')" class="px-3.5 py-2 rounded-lg font-medium whitespace-nowrap transition-all text-slate-300 hover:text-white hover:bg-slate-800">
           📊 Meu dashboard provisório
         </button>
-        <button id="tabBtnGeral" onclick="trocarAba('geral')" class="px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all text-emerald-100/90 hover:bg-white/10 hover:text-white">
+        <button id="tabBtnGeral" onclick="trocarAba('geral')" class="px-3.5 py-2 rounded-lg font-medium whitespace-nowrap transition-all text-slate-300 hover:text-white hover:bg-slate-800">
           <span id="tabTituloGeral">🏛️ Painel geral (166 vagas)</span>
         </button>
-        <button id="tabBtnComarcas" onclick="trocarAba('comarcas')" class="px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all text-emerald-100/90 hover:bg-white/10 hover:text-white">
+        <button id="tabBtnComarcas" onclick="trocarAba('comarcas')" class="px-3.5 py-2 rounded-lg font-medium whitespace-nowrap transition-all text-slate-300 hover:text-white hover:bg-slate-800">
           🗺️ Vagas por comarca
         </button>
-        <button id="tabBtnAdmin" style="display: none;" onclick="trocarAba('admin')" class="px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all text-emerald-100/90 hover:bg-white/10 hover:text-white">
+        <button id="tabBtnAdmin" style="display: none;" onclick="trocarAba('admin')" class="px-3.5 py-2 rounded-lg font-medium whitespace-nowrap transition-all text-slate-300 hover:text-white hover:bg-slate-800">
           🔐 Painel do administrador
         </button>
-        <button id="tabBtnGas" style="display: none;" onclick="trocarAba('gas')" class="px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all text-emerald-100/90 hover:bg-white/10 hover:text-white">
-          📋 Arquivos do Google Apps Script
+        <button id="tabBtnGas" style="display: none;" onclick="trocarAba('gas')" class="px-3.5 py-2 rounded-lg font-medium whitespace-nowrap transition-all text-slate-300 hover:text-white hover:bg-slate-800">
+          ⚙️ Infraestrutura & Banco
         </button>
       </nav>
     </div>
@@ -1450,81 +1447,84 @@
       </div>
     </section>
 
-    <!-- ========================================== -->
-    <!-- ABA 5: ARQUIVOS DO GOOGLE APPS SCRIPT      -->
-    <!-- ========================================== -->
+    <!-- ================================================= -->
+    <!-- ABA 5: INFRAESTRUTURA EM NUVEM & BANCO (SUPABASE)   -->
+    <!-- ================================================= -->
     <section id="secaoGas" style="display: none;" class="space-y-6">
-      <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+      <div class="bg-white rounded-xl p-6 sm:p-8 shadow-xs border border-slate-200/90">
         <div class="flex items-center gap-3 mb-2">
-          <span class="text-3xl">⚙️</span>
+          <div class="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-700 text-lg font-serif">
+            ⚙️
+          </div>
           <div>
-            <h3 class="text-xl font-bold text-slate-900 font-serif">Arquivos para copiar no Google Apps Script</h3>
-            <p class="text-xs sm:text-sm text-slate-500">
-              Copie o código abaixo diretamente para o seu projeto no Google Apps Script (script.google.com).
+            <h3 class="text-lg font-bold text-slate-900 font-serif">Infraestrutura em Nuvem & Banco de Dados</h3>
+            <p class="text-xs text-slate-500">
+              Sistema moderno operando na <strong>Vercel</strong> com banco PostgreSQL relacional e sincronização em tempo real no <strong>Supabase</strong>.
             </p>
           </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mt-6">
-          <!-- Card Código.gs -->
-          <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 flex flex-col justify-between">
+          <!-- Card 1: supabase_setup.sql -->
+          <div class="bg-slate-50/80 rounded-xl p-5 border border-slate-200/80 flex flex-col justify-between">
             <div>
               <div class="flex items-center justify-between mb-2">
-                <span class="font-bold text-slate-900 text-sm">Arquivo: Código.gs</span>
-                <span class="text-2xs bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded font-bold">Servidor</span>
+                <span class="font-bold text-slate-900 text-sm">supabase_setup.sql</span>
+                <span class="text-2xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md font-semibold">PostgreSQL</span>
               </div>
               <p class="text-xs text-slate-600 mb-4">
-                Contém as funções de servidor, gerenciamento de lotes múltiplos, travas de segurança e motor de simulação de lotações.
+                Estrutura completa das tabelas (concursos, lotes, respostas, comarcas_tjrs, candidatos_base) e políticas de segurança RLS ativas.
               </p>
             </div>
-            <button onclick="copiarCodigoServidor()" id="btnCopiarGs" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
+            <button onclick="copiarSqlSetup()" id="btnCopiarSqlSetup" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-4 rounded-lg text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
+              📋 Copiar supabase_setup.sql
+            </button>
+          </div>
+
+          <!-- Card 2: Código.gs (Script de Migração) -->
+          <div class="bg-slate-50/80 rounded-xl p-5 border border-slate-200/80 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-bold text-slate-900 text-sm">Código.gs</span>
+                <span class="text-2xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded-md font-semibold">Migrador</span>
+              </div>
+              <p class="text-xs text-slate-600 mb-4">
+                Script de exportação que resgata dados históricos salvos no PropertiesService do Google Apps Script e sincroniza com o Supabase.
+              </p>
+            </div>
+            <button onclick="copiarCodigoServidor()" id="btnCopiarGs" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-2.5 px-4 rounded-lg text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
               📋 Copiar Código.gs
             </button>
           </div>
 
-          <!-- Card Index.html -->
-          <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 flex flex-col justify-between">
+          <!-- Card 3: Status Vercel + Supabase -->
+          <div class="bg-slate-50/80 rounded-xl p-5 border border-slate-200/80 flex flex-col justify-between">
             <div>
               <div class="flex items-center justify-between mb-2">
-                <span class="font-bold text-slate-900 text-sm">Arquivo: Index.html</span>
-                <span class="text-2xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">Frontend único</span>
+                <span class="font-bold text-slate-900 text-sm">Vercel & Supabase</span>
+                <span class="text-2xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md font-semibold">Tempo Real</span>
               </div>
-              <p class="text-xs text-slate-600 mb-4">
-                Interface completa com seletores de lotes, validação por senha, painéis gerais dinâmicos e arrastar e soltar puro.
+              <p class="text-xs text-slate-600 mb-2">
+                O frontend é servido globalmente via Vercel Edge e os dados são sincronizados bidirecionalmente via WebSockets do Supabase Realtime.
               </p>
-            </div>
-            <button onclick="copiarCodigoHtml()" id="btnCopiarHtml" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
-              📋 Copiar Index.html
-            </button>
-          </div>
-
-          <!-- Card appsscript.json (Elimina a verificação de planilhas do Google) -->
-          <div class="bg-blue-50/60 rounded-xl p-5 border border-blue-200 flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between mb-2">
-                <span class="font-bold text-blue-950 text-sm">appsscript.json</span>
-                <span class="text-2xs bg-blue-200 text-blue-950 px-2 py-0.5 rounded font-bold">Sem Verificação</span>
-              </div>
-              <p class="text-xs text-blue-900 mb-2">
-                Manifesto que restringe os escopos exclusivamente a <code>userinfo.email</code>, <strong>dispensando envio de vídeo e verificação do Google</strong>.
-              </p>
-              <div class="text-3xs text-blue-800 bg-blue-100/70 p-2 rounded-lg border border-blue-200 leading-normal mb-3">
-                💡 <strong>Como usar no GAS:</strong> Clique na engrenagem ⚙️ (Configurações do Projeto) ➔ Marque <em>"Mostrar arquivo de manifesto 'appsscript.json' no editor"</em> ➔ Cole este conteúdo.
+              <div class="text-2xs text-slate-600 bg-white p-2.5 rounded-lg border border-slate-200/80 space-y-1 mb-4">
+                <div class="flex justify-between"><span>Status:</span> <strong class="text-emerald-700">Conectado (200 OK)</strong></div>
+                <div class="flex justify-between"><span>Projeto:</span> <span class="font-mono text-3xs text-slate-500">qeriodszxddmzmnjzipz</span></div>
               </div>
             </div>
-            <button onclick="copiarManifestoAppsscript()" id="btnCopiarManifesto" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs">
-              📋 Copiar appsscript.json
+            <button onclick="verificarConexaoSupabaseUI()" id="btnVerificarConexao" class="w-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-medium py-2.5 px-4 rounded-lg text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-2xs">
+              ⚡ Testar Conexão Supabase
             </button>
           </div>
         </div>
 
         <!-- Ações de teste / reset -->
         <div class="mt-8 pt-6 border-t border-slate-100 flex flex-wrap gap-3">
-          <button onclick="carregarExemploInicial()" class="bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 px-4 py-2 rounded-xl text-xs font-semibold">
-            ✨ Recarregar dados de exemplo
+          <button onclick="carregarExemploInicial()" class="bg-slate-50 text-slate-700 border border-slate-300 hover:bg-slate-100 px-4 py-2 rounded-lg text-xs font-medium cursor-pointer transition-colors shadow-2xs">
+            ✨ Recarregar dados de exemplo (teste)
           </button>
-          <button onclick="zerarBancoDeDados()" class="bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 px-4 py-2 rounded-xl text-xs font-semibold">
-            🗑️ Zerar banco de dados (limparBancoDeDados)
+          <button onclick="zerarBancoDeDados()" class="bg-white text-rose-700 border border-rose-200 hover:bg-rose-50 px-4 py-2 rounded-lg text-xs font-medium cursor-pointer transition-colors shadow-2xs">
+            🗑️ Limpar dados de teste
           </button>
         </div>
       </div>
@@ -1549,18 +1549,18 @@
           </div>
         </div>
 
-        <!-- Navegação de Sub-Abas do Painel do Administrador -->
-        <div class="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3">
-          <button type="button" id="subAbaBtnCadastros" onclick="trocarSubAbaAdmin('cadastros')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-emerald-800 text-white shadow-xs cursor-pointer flex items-center gap-1.5">
-            <span>📋</span> Gestão de Cadastros e Respostas
+        <!-- Navegação de Sub-Abas do Painel do Administrador (Clean Segmented Control) -->
+        <div class="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200/80 mb-6">
+          <button type="button" id="subAbaBtnCadastros" onclick="trocarSubAbaAdmin('cadastros')" class="px-4 py-2 rounded-lg text-xs font-semibold transition-all bg-white text-slate-900 shadow-xs cursor-pointer flex items-center gap-1.5">
+            <span>📋</span> Cadastros & Respostas
           </button>
-          <button type="button" id="subAbaBtnLote" onclick="trocarSubAbaAdmin('lote')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer flex items-center gap-1.5">
-            <span>⚙️</span> Configuração de Lote (Candidatos, Comarcas e Vagas)
-            <span id="badgeStatusLoteTopo" class="ml-1 text-3xs font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">Padrão</span>
+          <button type="button" id="subAbaBtnLote" onclick="trocarSubAbaAdmin('lote')" class="px-4 py-2 rounded-lg text-xs font-medium transition-all text-slate-600 hover:text-slate-900 cursor-pointer flex items-center gap-1.5">
+            <span>⚙️</span> Gestão de Lotes
+            <span id="badgeStatusLoteTopo" class="ml-1 text-2xs font-semibold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800">Padrão</span>
           </button>
-          <button type="button" id="subAbaBtnCentralCandidatos" onclick="trocarSubAbaAdmin('central_candidatos')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer flex items-center gap-1.5">
-            <span>👥</span> Central Global de Candidatos (Multi-Concurso)
-            <span id="badgeTotalCentralCandidatos" class="ml-1 text-3xs font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">0</span>
+          <button type="button" id="subAbaBtnCentralCandidatos" onclick="trocarSubAbaAdmin('central_candidatos')" class="px-4 py-2 rounded-lg text-xs font-medium transition-all text-slate-600 hover:text-slate-900 cursor-pointer flex items-center gap-1.5">
+            <span>👥</span> Central de Candidatos
+            <span id="badgeTotalCentralCandidatos" class="ml-1 text-2xs font-mono font-bold text-slate-500">0</span>
           </button>
         </div>
 
@@ -1686,7 +1686,7 @@
                 </div>
                 <div class="flex items-center justify-between">
                   <span class="text-slate-500">Validação dupla:</span>
-                  <span class="text-slate-700 font-medium">Interface (JS) + Servidor (Apps Script)</span>
+                  <span class="text-slate-700 font-medium">Interface (Vercel) + Banco em Nuvem (Supabase)</span>
                 </div>
               </div>
             </div>
@@ -2197,47 +2197,47 @@
       <div id="conteudoSubAbaCentralCandidatos" style="display: none;" class="space-y-4">
         <!-- Barra de Ações Superior estilo Tabela de Gestão (conforme imagem do usuário) -->
         <div class="bg-[#1e232a] text-slate-100 rounded-2xl p-4 shadow-md border border-slate-700/60 space-y-3">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 bg-white border-b border-slate-100">
             <div class="flex items-center gap-3 flex-wrap">
-              <!-- Botão + NOVO estilo sistema de referência -->
-              <button type="button" onclick="abrirModalNovoCandidatoCentral()" class="bg-[#dc2626] hover:bg-[#b91c1c] text-white font-bold px-3.5 py-1.5 rounded-lg text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all cursor-pointer">
-                <span class="text-sm font-black">⊕</span> NOVO
+              <!-- Botão + NOVO elegante e profissional -->
+              <button type="button" onclick="abrirModalNovoCandidatoCentral()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer">
+                <span class="text-sm font-bold">+</span> NOVO CANDIDATO
               </button>
 
               <!-- Filtro tipo -->
-              <div class="flex items-center gap-1.5 bg-[#2a303c] px-3 py-1.5 rounded-lg border border-slate-600 text-xs text-slate-200">
-                <span>🌪️</span>
-                <select id="filtroTipoCentralCandidatos" onchange="filtrarCandidatosCentral()" class="bg-transparent text-xs font-semibold focus:outline-none cursor-pointer">
-                  <option value="todos" class="bg-[#2a303c] text-white">Todos</option>
-                  <option value="PF" class="bg-[#2a303c] text-white">Pessoa Física</option>
-                  <option value="com_email" class="bg-[#2a303c] text-white">Com E-mail Vinculado</option>
-                  <option value="sem_email" class="bg-[#2a303c] text-white">Sem E-mail Vinculado</option>
+              <div class="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs text-slate-700">
+                <span class="text-slate-400">Filtrar:</span>
+                <select id="filtroTipoCentralCandidatos" onchange="filtrarCandidatosCentral()" class="bg-transparent text-xs font-medium text-slate-800 focus:outline-none cursor-pointer">
+                  <option value="todos">Todos os registros</option>
+                  <option value="PF">Pessoa Física</option>
+                  <option value="com_email">Com E-mail Google</option>
+                  <option value="sem_email">Sem E-mail Vinculado</option>
                 </select>
               </div>
 
               <!-- Campo de busca rápida -->
               <div class="relative w-full sm:w-72">
-                <input type="text" id="buscaInputCentralCandidatos" oninput="filtrarCandidatosCentral()" placeholder="Buscar por Nome ou CPF..." class="w-full bg-[#2a303c] border border-slate-600 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-400">
+                <input type="text" id="buscaInputCentralCandidatos" oninput="filtrarCandidatosCentral()" placeholder="Buscar por Nome ou CPF..." class="w-full bg-white border border-slate-300 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-colors">
                 <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
               </div>
             </div>
 
             <!-- Controles de paginação e contagem -->
-            <div class="flex items-center gap-3 text-xs text-slate-300 self-end md:self-auto">
-              <span id="centralCandidatosPaginacaoTexto" class="font-mono text-2xs text-slate-400">1 - 0 de 0</span>
+            <div class="flex items-center gap-3 text-xs text-slate-600 self-end md:self-auto">
+              <span id="centralCandidatosPaginacaoTexto" class="font-mono text-2xs text-slate-500">1 - 0 de 0</span>
               <div class="flex items-center gap-1">
-                <button type="button" onclick="mudarPaginaCentralCandidatos(-1)" id="btnPagAntCentral" class="px-2 py-1 bg-[#2a303c] hover:bg-slate-600 rounded text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">‹</button>
-                <button type="button" onclick="mudarPaginaCentralCandidatos(1)" id="btnPagProxCentral" class="px-2 py-1 bg-[#2a303c] hover:bg-slate-600 rounded text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">›</button>
-                <button type="button" onclick="carregarCandidatosCentral(true)" class="px-2 py-1 bg-[#2a303c] hover:bg-slate-600 rounded text-slate-300 cursor-pointer" title="Atualizar lista">🔄</button>
+                <button type="button" onclick="mudarPaginaCentralCandidatos(-1)" id="btnPagAntCentral" class="px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer text-xs shadow-2xs">‹</button>
+                <button type="button" onclick="mudarPaginaCentralCandidatos(1)" id="btnPagProxCentral" class="px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer text-xs shadow-2xs">›</button>
+                <button type="button" onclick="carregarCandidatosCentral(true)" class="px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700 cursor-pointer text-xs shadow-2xs" title="Atualizar lista">🔄</button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Tabela Central de Candidatos -->
-        <div class="overflow-x-auto rounded-2xl border border-slate-700/60 bg-[#161a22] shadow-sm">
-          <table class="w-full text-left text-xs text-slate-200">
-            <thead class="bg-[#1f242d] text-slate-300 font-semibold text-2xs uppercase tracking-wider border-b border-slate-700">
+        <!-- Tabela Central de Candidatos (Estilo Moderno & Limpo) -->
+        <div class="overflow-x-auto rounded-xl border border-slate-200/90 bg-white shadow-2xs">
+          <table class="w-full text-left text-xs text-slate-700">
+            <thead class="bg-slate-50 text-slate-600 font-semibold text-2xs uppercase tracking-wider border-b border-slate-200">
               <tr>
                 <th class="py-3 px-4">Nome</th>
                 <th class="py-3 px-3 w-32">Tipo</th>
@@ -2247,7 +2247,7 @@
                 <th class="py-3 px-4 w-44 text-right">Ações</th>
               </tr>
             </thead>
-            <tbody id="tabelaCentralCandidatosBody" class="divide-y divide-slate-800 font-normal">
+            <tbody id="tabelaCentralCandidatosBody" class="divide-y divide-slate-100 font-normal">
               <tr>
                 <td colspan="6" class="py-8 text-center text-slate-400">
                   <div class="inline-block animate-spin mr-2">⏳</div> Carregando candidatos cadastrados...
@@ -2257,7 +2257,7 @@
           </table>
         </div>
 
-        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-2xs text-slate-600 flex items-center justify-between">
+        <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-3 text-2xs text-slate-500 flex items-center justify-between">
           <span>💡 <strong>Dica Multi-Concurso:</strong> Candidatos cadastrados aqui ficam disponíveis para todos os seus concursos e lotes. Ao criar um novo lote, você pode adicioná-los com 1 clique.</span>
           <button type="button" onclick="abrirModalNovoCandidatoCentral()" class="text-emerald-700 font-bold hover:underline cursor-pointer">
             + Cadastrar Novo Candidato
@@ -3172,16 +3172,21 @@
   </main>
 
   <!-- Rodapé -->
-  <footer class="bg-[#021812] text-emerald-200/60 text-xs py-5 border-t border-[#043325] text-center mt-auto">
+  <footer class="bg-slate-900 text-slate-400 text-xs py-6 border-t border-slate-800 text-center mt-auto">
     <div class="max-w-7xl mx-auto px-4">
-      <p class="font-medium text-slate-300">TJRS • Tribunal de Justiça do Rio Grande do Sul • Analista judiciário - Área judiciária</p>
-      <p class="text-slate-500 mt-1">Compatível com Google Apps Script e navegadores modernos (Vanilla JS puro)</p>
-      <p class="mt-2"><a href="/politica-de-privacidade.html" class="text-emerald-300 hover:text-emerald-200 underline underline-offset-2 font-medium">Política de Privacidade</a></p>
+      <p class="font-medium text-slate-300">TJRS • Tribunal de Justiça do Estado do Rio Grande do Sul · Analista Judiciário – Área Judiciária</p>
+      <div class="flex flex-wrap items-center justify-center gap-2 text-slate-400 mt-2 text-2xs">
+        <span>Hospedado na Vercel</span>
+        <span aria-hidden="true" class="text-slate-600">·</span>
+        <span>Banco de dados em tempo real no Supabase</span>
+        <span aria-hidden="true" class="text-slate-600">·</span>
+        <a href="/politica-de-privacidade.html" class="text-emerald-400 hover:text-emerald-300 underline underline-offset-2 font-medium">Política de Privacidade</a>
+      </div>
     </div>
   </footer>
 
   <!-- =================================================================== -->
-  <!-- JAVASCRIPT PURO (VANILLA JS): CLIENTE + COMUNICAÇÃO GOOGLE APPS SCRIPT -->
+  <!-- JAVASCRIPT DO CLIENTE: SUPABASE & MOTOR DE SIMULAÇÃO EM TEMPO REAL -->
   <!-- =================================================================== -->
   <script>
     // ===================================================================
@@ -5409,30 +5414,40 @@
       }
     }
 
-    function copiarManifestoAppsscript() {
-      var manifesto = JSON.stringify({
-        "timeZone": "America/Sao_Paulo",
-        "dependencies": {},
-        "exceptionLogging": "STACKDRIVER",
-        "runtimeVersion": "V8",
-        "webapp": {
-          "executeAs": "USER_DEPLOYING",
-          "access": "ANYONE"
-        },
-        "oauthScopes": [
-          "https://www.googleapis.com/auth/userinfo.email"
-        ]
-      }, null, 2);
-
-      if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(manifesto).then(function() {
-          mostrarAlerta('✓ appsscript.json copiado com sucesso! No editor do Apps Script, abra Configurações > Marque "Mostrar arquivo de manifesto" e cole lá.', 'sucesso');
-        }).catch(function() {
-          mostrarAlerta('Não foi possível copiar automaticamente.', 'aviso');
+    function copiarSqlSetup() {
+      fetch('/supabase_setup.sql')
+        .then(function(r) { return r.text(); })
+        .then(function(texto) {
+          navigator.clipboard.writeText(texto).then(function() {
+            var btn = document.getElementById('btnCopiarSqlSetup');
+            if (btn) btn.textContent = '✓ supabase_setup.sql Copiado!';
+            mostrarAlerta('✓ supabase_setup.sql copiado com sucesso! No painel do Supabase, abra o SQL Editor, cole e clique em "Run".', 'sucesso');
+            setTimeout(function() {
+              if (btn) btn.textContent = '📋 Copiar supabase_setup.sql';
+            }, 3000);
+          });
+        })
+        .catch(function() {
+          mostrarAlerta('Copie o conteúdo diretamente do arquivo supabase_setup.sql.', 'aviso');
         });
-      } else {
-        mostrarAlerta('Copie o manifesto diretamente do arquivo appsscript.json.', 'aviso');
+    }
+
+    async function verificarConexaoSupabaseUI() {
+      var btn = document.getElementById('btnVerificarConexao');
+      if (btn) btn.textContent = '⏳ Testando...';
+      try {
+        if (!supabaseClient) throw new Error('Cliente Supabase não inicializado');
+        var res = await supabaseClient.from('concursos').select('id, nome, ativo').limit(1);
+        if (res.error) throw res.error;
+        mostrarAlerta('⚡ Conexão com o Supabase PostgreSQL validada com 100% de sucesso!', 'sucesso');
+        if (btn) btn.textContent = '✓ Conexão OK (200)';
+      } catch(err) {
+        mostrarAlerta('Erro ao conectar ao Supabase: ' + (err.message || err), 'erro');
+        if (btn) btn.textContent = '❌ Falha na Conexão';
       }
+      setTimeout(function() {
+        if (btn) btn.textContent = '⚡ Testar Conexão Supabase';
+      }, 3500);
     }
 
     // APLICA O ESTADO DE BLOQUEIO NO FORMULÁRIO (NOME, CPF E WHATSAPP BLOQUEADOS; COMARCAS LIVRES)
@@ -7424,14 +7439,14 @@
         if (secao) secao.style.display = 'none';
         var btn = document.getElementById('tabBtn' + a.charAt(0).toUpperCase() + a.slice(1));
         if (btn) {
-          btn.className = 'px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all text-emerald-100/90 hover:bg-white/10 hover:text-white';
+          btn.className = 'px-3.5 py-2 rounded-lg font-medium whitespace-nowrap transition-all text-slate-300 hover:text-white hover:bg-slate-800';
         }
       });
 
       // Destaca sutilmente a aba geral como origem
       var btnGeral = document.getElementById('tabBtnGeral');
       if (btnGeral) {
-        btnGeral.className = 'px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all bg-emerald-900 text-white shadow-md font-semibold';
+        btnGeral.className = 'px-3.5 py-2 rounded-lg font-semibold whitespace-nowrap transition-all bg-emerald-600 text-white shadow-xs';
       }
 
       var secaoRanking = document.getElementById('secaoRankingCandidato');
@@ -7881,7 +7896,7 @@
       }
       if (aba === 'gas') {
         if (!verificarSeUsuarioLogadoEhAdmin() || ESTADO.perfilSimulado === 'candidato') {
-          mostrarAlerta('Acesso restrito: a página de Arquivos do Google Apps Script é restrita exclusivamente ao administrador.', 'aviso');
+          mostrarAlerta('Acesso restrito: a página de Infraestrutura e Banco de Dados é restrita exclusivamente ao administrador.', 'aviso');
           trocarAba('formulario');
           return;
         }
@@ -7906,7 +7921,9 @@
         var btn = document.getElementById('tabBtn' + a.charAt(0).toUpperCase() + a.slice(1));
         if (secao) secao.style.display = (a === aba) ? 'block' : 'none';
         if (btn) {
-          btn.className = (a === aba) ? 'px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all bg-amber-400 text-stone-950 shadow-md font-semibold' : 'px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all text-emerald-100/90 hover:bg-white/10 hover:text-white';
+          btn.className = (a === aba)
+            ? 'px-3.5 py-2 rounded-lg font-semibold whitespace-nowrap transition-all bg-emerald-600 text-white shadow-xs'
+            : 'px-3.5 py-2 rounded-lg font-medium whitespace-nowrap transition-all text-slate-300 hover:text-white hover:bg-slate-800';
         }
       });
 
@@ -10491,8 +10508,8 @@
       if (boxLote) boxLote.style.display = 'none';
       if (boxCentral) boxCentral.style.display = 'none';
 
-      var btnInativoClass = 'px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer flex items-center gap-1.5';
-      var btnAtivoClass = 'px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-emerald-800 text-white shadow-xs cursor-pointer flex items-center gap-1.5';
+      var btnInativoClass = 'px-4 py-2 rounded-lg text-xs font-medium transition-all text-slate-600 hover:text-slate-900 cursor-pointer flex items-center gap-1.5';
+      var btnAtivoClass = 'px-4 py-2 rounded-lg text-xs font-semibold transition-all bg-white text-slate-900 shadow-xs cursor-pointer flex items-center gap-1.5';
 
       if (btnCadastros) btnCadastros.className = btnInativoClass;
       if (btnLote) btnLote.className = btnInativoClass;
@@ -10816,29 +10833,29 @@
       for (var i = inicio; i < fim; i++) {
         var c = filtrados[i];
         var tr = document.createElement('tr');
-        tr.className = 'hover:bg-[#202633] transition-colors border-b border-slate-800/80 text-xs';
+        tr.className = 'hover:bg-slate-50/80 transition-colors border-b border-slate-100 text-xs text-slate-700';
 
         var estaNoLote = candsNoLote.hasOwnProperty((c.nome || '').toLowerCase().trim());
-        var cpfFormatado = c.cpf ? formatarCPF(c.cpf) : '<span class="text-slate-500 font-mono">---</span>';
-        var wppFormatado = c.whatsapp ? formatarTelefone(c.whatsapp) : '<span class="text-slate-500">---</span>';
+        var cpfFormatado = c.cpf ? formatarCPF(c.cpf) : '<span class="text-slate-400 font-mono">---</span>';
+        var wppFormatado = c.whatsapp ? formatarTelefone(c.whatsapp) : '<span class="text-slate-400">---</span>';
         var emailHtml = c.email
-          ? '<span class="font-mono text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-800/50">' + c.email + '</span>'
-          : '<button type="button" onclick="vincularEmailCandidatoPrompt(\'' + c.id + '\')" class="text-3xs text-amber-400 hover:text-amber-300 hover:underline cursor-pointer">+ Vincular Google</button>';
+          ? '<span class="font-mono text-slate-700 bg-slate-100 px-2 py-0.5 rounded text-2xs">' + c.email + '</span>'
+          : '<button type="button" onclick="vincularEmailCandidatoPrompt(\'' + c.id + '\')" class="text-2xs text-emerald-700 hover:text-emerald-800 hover:underline cursor-pointer font-medium">+ Vincular Google</button>';
 
         var acoesHtml = '<div class="flex items-center justify-end gap-1.5">' +
           (estaNoLote
-            ? '<span class="text-3xs bg-emerald-950 text-emerald-300 border border-emerald-800/60 px-2 py-1 rounded font-bold">✓ No Lote</span>'
-            : '<button type="button" onclick="abrirModalVincularCandidato(\'' + c.id + '\')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-3xs px-2.5 py-1 rounded cursor-pointer transition-all shadow-2xs">+ No Lote</button>') +
-          '<button type="button" onclick="excluirCandidatoCentral(\'' + c.id + '\')" class="text-red-400 hover:text-red-300 p-1 rounded hover:bg-red-950/40 cursor-pointer" title="Excluir da Central">🗑️</button>' +
+            ? '<span class="text-2xs font-semibold text-emerald-700 px-2 py-0.5">✓ No Lote</span>'
+            : '<button type="button" onclick="abrirModalVincularCandidato(\'' + c.id + '\')" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-medium text-2xs px-2.5 py-1 rounded-md cursor-pointer transition-colors shadow-2xs">+ Lote</button>') +
+          '<button type="button" onclick="excluirCandidatoCentral(\'' + c.id + '\')" class="text-slate-400 hover:text-rose-600 p-1 rounded-md hover:bg-rose-50 cursor-pointer transition-colors" title="Excluir da Central">🗑️</button>' +
           '</div>';
 
-        tr.innerHTML = '<td class="py-3 px-4 font-semibold text-slate-100 flex items-center gap-2">' +
-          '<span>👤</span> <span>' + c.nome + '</span>' +
+        tr.innerHTML = '<td class="py-3 px-4 font-medium text-slate-900 flex items-center gap-2">' +
+          '<span class="text-slate-400">👤</span> <span>' + c.nome + '</span>' +
           '</td>' +
-          '<td class="py-3 px-3 text-slate-300">' + (c.tipo || 'Pessoa Física') + '</td>' +
-          '<td class="py-3 px-3 font-mono text-slate-200">' + cpfFormatado + '</td>' +
+          '<td class="py-3 px-3 text-slate-600">' + (c.tipo || 'Pessoa Física') + '</td>' +
+          '<td class="py-3 px-3 font-mono text-slate-700">' + cpfFormatado + '</td>' +
           '<td class="py-3 px-3">' + emailHtml + '</td>' +
-          '<td class="py-3 px-3 font-mono text-slate-200">' + wppFormatado + '</td>' +
+          '<td class="py-3 px-3 font-mono text-slate-700">' + wppFormatado + '</td>' +
           '<td class="py-3 px-4 text-right">' + acoesHtml + '</td>';
 
         tbody.appendChild(tr);
