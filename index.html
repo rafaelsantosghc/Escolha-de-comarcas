@@ -1558,6 +1558,10 @@
             <span>⚙️</span> Configuração de Lote (Candidatos, Comarcas e Vagas)
             <span id="badgeStatusLoteTopo" class="ml-1 text-3xs font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">Padrão</span>
           </button>
+          <button type="button" id="subAbaBtnCentralCandidatos" onclick="trocarSubAbaAdmin('central_candidatos')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer flex items-center gap-1.5">
+            <span>👥</span> Central Global de Candidatos (Multi-Concurso)
+            <span id="badgeTotalCentralCandidatos" class="ml-1 text-3xs font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">0</span>
+          </button>
         </div>
 
         <!-- Conteúdo da Sub-Aba 1: Cadastros e Respostas -->
@@ -1923,8 +1927,11 @@
           <!-- Barra de Ferramentas de Comarcas -->
           <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div class="flex flex-wrap items-center gap-2">
+              <button type="button" onclick="abrirModalCatalogoComarcasTJRS()" class="bg-amber-400 hover:bg-amber-300 text-stone-950 font-bold px-3.5 py-2 rounded-xl text-xs transition-all shadow-2xs cursor-pointer flex items-center gap-1.5" title="Selecionar da lista oficial com todas as 167 comarcas do TJRS">
+                <span>🏛️</span> Importar da Lista Oficial TJRS (167 comarcas)
+              </button>
               <button type="button" onclick="abrirModalExcelComarcas()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3.5 py-2 rounded-xl text-xs transition-all shadow-2xs cursor-pointer flex items-center gap-1.5">
-                <span>📋</span> Colar do Excel em Massa (Comarcas)
+                <span>📋</span> Colar do Excel em Massa
               </button>
               <button type="button" onclick="toggleFormNovaComarca()" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-semibold px-3 py-2 rounded-xl text-xs transition-all cursor-pointer flex items-center gap-1">
                 <span>➕</span> Adicionar Individual
@@ -2183,6 +2190,80 @@
           </div>
         </div>
       </div> <!-- Fim de conteudoSubAbaLote -->
+
+      <!-- ============================================================== -->
+      <!-- Conteúdo da Sub-Aba 3: Central Global de Candidatos (Multi-Concurso) -->
+      <!-- ============================================================== -->
+      <div id="conteudoSubAbaCentralCandidatos" style="display: none;" class="space-y-4">
+        <!-- Barra de Ações Superior estilo Tabela de Gestão (conforme imagem do usuário) -->
+        <div class="bg-[#1e232a] text-slate-100 rounded-2xl p-4 shadow-md border border-slate-700/60 space-y-3">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="flex items-center gap-3 flex-wrap">
+              <!-- Botão + NOVO estilo sistema de referência -->
+              <button type="button" onclick="abrirModalNovoCandidatoCentral()" class="bg-[#dc2626] hover:bg-[#b91c1c] text-white font-bold px-3.5 py-1.5 rounded-lg text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all cursor-pointer">
+                <span class="text-sm font-black">⊕</span> NOVO
+              </button>
+
+              <!-- Filtro tipo -->
+              <div class="flex items-center gap-1.5 bg-[#2a303c] px-3 py-1.5 rounded-lg border border-slate-600 text-xs text-slate-200">
+                <span>🌪️</span>
+                <select id="filtroTipoCentralCandidatos" onchange="filtrarCandidatosCentral()" class="bg-transparent text-xs font-semibold focus:outline-none cursor-pointer">
+                  <option value="todos" class="bg-[#2a303c] text-white">Todos</option>
+                  <option value="PF" class="bg-[#2a303c] text-white">Pessoa Física</option>
+                  <option value="com_email" class="bg-[#2a303c] text-white">Com E-mail Vinculado</option>
+                  <option value="sem_email" class="bg-[#2a303c] text-white">Sem E-mail Vinculado</option>
+                </select>
+              </div>
+
+              <!-- Campo de busca rápida -->
+              <div class="relative w-full sm:w-72">
+                <input type="text" id="buscaInputCentralCandidatos" oninput="filtrarCandidatosCentral()" placeholder="Buscar por Nome ou CPF..." class="w-full bg-[#2a303c] border border-slate-600 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-400">
+                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
+              </div>
+            </div>
+
+            <!-- Controles de paginação e contagem -->
+            <div class="flex items-center gap-3 text-xs text-slate-300 self-end md:self-auto">
+              <span id="centralCandidatosPaginacaoTexto" class="font-mono text-2xs text-slate-400">1 - 0 de 0</span>
+              <div class="flex items-center gap-1">
+                <button type="button" onclick="mudarPaginaCentralCandidatos(-1)" id="btnPagAntCentral" class="px-2 py-1 bg-[#2a303c] hover:bg-slate-600 rounded text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">‹</button>
+                <button type="button" onclick="mudarPaginaCentralCandidatos(1)" id="btnPagProxCentral" class="px-2 py-1 bg-[#2a303c] hover:bg-slate-600 rounded text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">›</button>
+                <button type="button" onclick="carregarCandidatosCentral(true)" class="px-2 py-1 bg-[#2a303c] hover:bg-slate-600 rounded text-slate-300 cursor-pointer" title="Atualizar lista">🔄</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabela Central de Candidatos -->
+        <div class="overflow-x-auto rounded-2xl border border-slate-700/60 bg-[#161a22] shadow-sm">
+          <table class="w-full text-left text-xs text-slate-200">
+            <thead class="bg-[#1f242d] text-slate-300 font-semibold text-2xs uppercase tracking-wider border-b border-slate-700">
+              <tr>
+                <th class="py-3 px-4">Nome</th>
+                <th class="py-3 px-3 w-32">Tipo</th>
+                <th class="py-3 px-3 w-40">CPF</th>
+                <th class="py-3 px-3">E-mail Google</th>
+                <th class="py-3 px-3 w-36">WhatsApp</th>
+                <th class="py-3 px-4 w-44 text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaCentralCandidatosBody" class="divide-y divide-slate-800 font-normal">
+              <tr>
+                <td colspan="6" class="py-8 text-center text-slate-400">
+                  <div class="inline-block animate-spin mr-2">⏳</div> Carregando candidatos cadastrados...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-2xs text-slate-600 flex items-center justify-between">
+          <span>💡 <strong>Dica Multi-Concurso:</strong> Candidatos cadastrados aqui ficam disponíveis para todos os seus concursos e lotes. Ao criar um novo lote, você pode adicioná-los com 1 clique.</span>
+          <button type="button" onclick="abrirModalNovoCandidatoCentral()" class="text-emerald-700 font-bold hover:underline cursor-pointer">
+            + Cadastrar Novo Candidato
+          </button>
+        </div>
+      </div> <!-- Fim de conteudoSubAbaCentralCandidatos -->
       </div>
     </section>
 
@@ -2663,6 +2744,204 @@
       </div>
     </div>
 
+    <!-- ============================================================== -->
+    <!-- Modal Catálogo de 167 Comarcas Oficiais do TJRS -->
+    <!-- ============================================================== -->
+    <div id="modalCatalogoComarcasTJRS" style="display: none;" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] shadow-2xl border border-slate-300 flex flex-col overflow-hidden">
+        <div class="bg-gradient-to-r from-emerald-950 to-slate-900 text-white p-4 flex items-center justify-between border-b border-emerald-900/50">
+          <div class="flex items-center gap-2.5">
+            <span class="text-xl">🏛️</span>
+            <div>
+              <h3 class="font-bold text-sm sm:text-base font-serif">Catálogo Oficial de Comarcas do TJRS</h3>
+              <p class="text-3xs sm:text-2xs text-emerald-300">167 comarcas oficiais do Tribunal de Justiça do Rio Grande do Sul</p>
+            </div>
+          </div>
+          <button type="button" onclick="fecharModalCatalogoComarcasTJRS()" class="text-white/60 hover:text-white text-lg cursor-pointer">✕</button>
+        </div>
+
+        <div class="p-4 space-y-3 flex-1 overflow-y-auto">
+          <!-- Filtro de busca e botões em massa -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
+            <div class="relative flex-1">
+              <input type="text" id="buscaCatalogoComarcasInput" oninput="filtrarCatalogoComarcasTJRS()" placeholder="Buscar comarca no catálogo oficial..." class="w-full bg-white border border-slate-300 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+              <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="marcarTodasComarcasCatalogo(true)" class="text-3xs bg-white text-emerald-800 border border-emerald-300 hover:bg-emerald-50 px-2 py-1.5 rounded font-bold cursor-pointer">
+                ✓ Todas
+              </button>
+              <button type="button" onclick="marcarTodasComarcasCatalogo(false)" class="text-3xs bg-white text-slate-600 border border-slate-300 hover:bg-slate-100 px-2 py-1.5 rounded font-bold cursor-pointer">
+                ✕ Nenhuma
+              </button>
+            </div>
+          </div>
+
+          <!-- Controle de vagas padrão -->
+          <div class="flex items-center justify-between gap-3 bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-200 text-xs">
+            <span class="text-emerald-950 font-semibold flex items-center gap-1.5">
+              <span>🎯</span> Vagas padrão para cada comarca selecionada:
+            </span>
+            <input type="number" id="vagasPadraoImportacaoCatalogo" min="1" max="100" value="1" class="w-16 bg-white border border-emerald-300 rounded-lg px-2 py-1 text-center font-bold text-xs text-emerald-950">
+          </div>
+
+          <!-- Lista com checkboxes das 167 comarcas -->
+          <div class="border border-slate-200 rounded-xl overflow-hidden">
+            <div class="bg-slate-100 px-3 py-1.5 text-2xs font-bold text-slate-600 flex items-center justify-between border-b border-slate-200">
+              <span id="contadorCatalogoComarcasSelecionadas">0 comarcas selecionadas</span>
+              <span class="text-slate-500">Total: 167 comarcas</span>
+            </div>
+            <div id="listaCatalogoComarcasCheckboxes" class="max-h-72 overflow-y-auto divide-y divide-slate-100 p-1 text-xs">
+              <!-- Preenchido dinamicamente via JS -->
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
+          <span class="text-2xs text-slate-500">Comarcas já existentes no lote serão preservadas e suas vagas somadas/ajustadas.</span>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="fecharModalCatalogoComarcasTJRS()" class="px-3.5 py-1.5 rounded-xl text-xs text-slate-600 hover:bg-slate-200 font-semibold cursor-pointer">Cancelar</button>
+            <button type="button" onclick="confirmarImportacaoCatalogoComarcas()" class="px-4 py-2 rounded-xl text-xs bg-emerald-700 hover:bg-emerald-800 text-white font-bold cursor-pointer shadow-sm flex items-center gap-1.5">
+              <span>✓</span> Importar Selecionadas para o Lote
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- Modal Cadastro de Novo Candidato na Central (Multi-Concurso) -->
+    <!-- ============================================================== -->
+    <div id="modalNovoCandidatoCentral" style="display: none;" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-300 overflow-hidden">
+        <div class="bg-gradient-to-r from-slate-900 to-emerald-950 text-white p-4 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">👤</span>
+            <div>
+              <h3 class="font-bold text-sm sm:text-base font-serif">Cadastrar Candidato (Base Central)</h3>
+              <p class="text-3xs text-emerald-300">Disponível para múltiplos concursos e vinculação por e-mail Google</p>
+            </div>
+          </div>
+          <button type="button" onclick="fecharModalNovoCandidatoCentral()" class="text-white/60 hover:text-white text-lg cursor-pointer">✕</button>
+        </div>
+
+        <div class="p-5 space-y-3.5 text-xs text-slate-700">
+          <div>
+            <label class="block text-2xs font-bold text-slate-800 mb-1">Nome Completo: *</label>
+            <input type="text" id="inputCentralNome" placeholder="Ex: Denis Bairros Silva" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-2xs font-bold text-slate-800 mb-1">CPF (apenas números ou formatado):</label>
+              <input type="text" id="inputCentralCPF" placeholder="000.000.000-00" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+            <div>
+              <label class="block text-2xs font-bold text-slate-800 mb-1">WhatsApp / Telefone:</label>
+              <input type="text" id="inputCentralWhatsApp" placeholder="(51) 99999-9999" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-2xs font-bold text-slate-800 mb-1">E-mail da Conta Google (opcional para vínculo automático):</label>
+            <input type="email" id="inputCentralEmail" placeholder="candidato@gmail.com" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            <span class="text-3xs text-slate-400 mt-0.5 block">Quando o candidato fizer login com o Google, seus dados serão vinculados a este e-mail.</span>
+          </div>
+
+          <!-- Opção de adicionar diretamente ao Lote Atual -->
+          <div class="bg-emerald-50/70 p-3 rounded-xl border border-emerald-200 space-y-2 mt-2">
+            <label class="flex items-center gap-2 cursor-pointer font-bold text-emerald-950 text-2xs">
+              <input type="checkbox" id="checkCentralAdicionarAoLote" onchange="toggleOpcoesLoteNovoCandidato(this.checked)" checked class="rounded text-emerald-600 focus:ring-emerald-500">
+              <span>Incluir também no lote atualmente em edição (<span id="spanNomeLoteCentralModal">Lote Atual</span>)</span>
+            </label>
+
+            <div id="boxOpcoesLoteNovoCandidato" class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-emerald-200">
+              <div>
+                <label class="block text-3xs font-bold text-slate-700 mb-1">Participação:</label>
+                <select id="selectCentralParticipacao" class="w-full bg-white border border-emerald-300 rounded-lg px-2 py-1 text-xs font-semibold">
+                  <option value="titular">Titular</option>
+                  <option value="suplente">Suplente</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-3xs font-bold text-slate-700 mb-1">Cota:</label>
+                <select id="selectCentralCota" class="w-full bg-white border border-emerald-300 rounded-lg px-2 py-1 text-xs font-semibold">
+                  <option value="AC">AC (Ampla)</option>
+                  <option value="CN">CN (Negros)</option>
+                  <option value="PCD">PCD</option>
+                  <option value="CI">CI (Indígena)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-3xs font-bold text-slate-700 mb-1">Classificação / Vaga:</label>
+                <input type="number" id="inputCentralClassificacao" min="1" placeholder="Auto" class="w-full bg-white border border-emerald-300 rounded-lg px-2 py-1 text-xs text-center font-bold">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2">
+          <button type="button" onclick="fecharModalNovoCandidatoCentral()" class="px-3.5 py-1.5 rounded-xl text-xs text-slate-600 hover:bg-slate-200 font-semibold cursor-pointer">Cancelar</button>
+          <button type="button" onclick="confirmarSalvarNovoCandidatoCentral()" class="px-4 py-2 rounded-xl text-xs bg-emerald-700 hover:bg-emerald-800 text-white font-bold cursor-pointer shadow-sm flex items-center gap-1.5">
+            <span>💾</span> Salvar Candidato
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- Modal Vincular Candidato da Central ao Lote Atual -->
+    <!-- ============================================================== -->
+    <div id="modalVincularCandidatoAoLote" style="display: none;" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-300 p-5 space-y-4">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+          <h3 class="font-bold text-slate-900 text-sm sm:text-base font-serif flex items-center gap-2">
+            <span>➕</span> Adicionar Candidato ao Lote
+          </h3>
+          <button type="button" onclick="fecharModalVincularCandidato()" class="text-slate-400 hover:text-slate-700 text-lg cursor-pointer">✕</button>
+        </div>
+
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+          <span class="text-slate-500 block text-2xs">Candidato selecionado:</span>
+          <strong id="vincularNomeCandidatoTexto" class="text-slate-900 text-sm block mt-0.5">-</strong>
+          <span id="vincularCpfCandidatoTexto" class="text-slate-500 font-mono text-2xs mt-0.5 block">-</span>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="block text-2xs font-bold text-slate-700 mb-1">Participação no Lote:</label>
+            <select id="vincularSelectParticipacao" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="titular">Titular (concorre diretamente às vagas)</option>
+              <option value="suplente">Suplente (reserva para chamadas subsequentes)</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-2xs font-bold text-slate-700 mb-1">Cota:</label>
+              <select id="vincularSelectCota" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <option value="AC">AC (Ampla)</option>
+                <option value="CN">CN (Negros)</option>
+                <option value="PCD">PCD</option>
+                <option value="CI">CI (Indígena)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-2xs font-bold text-slate-700 mb-1">Classificação / Vaga:</label>
+              <input type="number" id="vincularInputVaga" min="1" placeholder="Auto" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-center font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+          <button type="button" onclick="fecharModalVincularCandidato()" class="px-3.5 py-1.5 rounded-xl text-xs text-slate-600 hover:bg-slate-100 font-semibold cursor-pointer">Cancelar</button>
+          <button type="button" onclick="confirmarVincularCandidatoAoLote()" class="px-4 py-2 rounded-xl text-xs bg-emerald-700 hover:bg-emerald-800 text-white font-bold cursor-pointer shadow-sm flex items-center gap-1.5">
+            <span>✓</span> Adicionar ao Lote
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal Criar Novo Lote (Requisito 2) -->
     <div id="modalCriarNovoLote" style="display: none;" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
       <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-300 p-6 space-y-4">
@@ -3091,36 +3370,74 @@
               isPrintingEnabled: !!l.is_printing_enabled,
               travado: !!l.travado,
               senha: l.senha || '',
-              temSenha: !!(l.senha && l.senha.trim() !== '')
+              temSenha: !!(l.senha && l.senha.trim() !== ''),
+              comarcas: (l.comarcas && Array.isArray(l.comarcas) && l.comarcas.length > 0) ? l.comarcas : null,
+              candidatos: (l.candidatos && Array.isArray(l.candidatos) && l.candidatos.length > 0) ? l.candidatos : null
             };
           });
 
           LOTE_ESTADO.listaLotes = listaLotesFormatada;
           var loteAtivoDb = listaLotesFormatada.find(function(l) { return l.ativo; }) || listaLotesFormatada[0];
-          
-          if (!ESTADO.loteAtivoId || ESTADO.loteAtivoId === 'lote_1') {
-            ESTADO.loteAtivoId = loteAtivoDb.id;
-            ESTADO.loteSelecionadoId = loteAtivoDb.id;
-            ESTADO.isRankingVisible = loteAtivoDb.isRankingVisible;
-            ESTADO.isPrintingEnabled = loteAtivoDb.isPrintingEnabled;
-            ESTADO.loteTravado = loteAtivoDb.travado;
-            ESTADO.loteTemSenha = loteAtivoDb.temSenha;
-            ESTADO.loteNome = loteAtivoDb.nome;
+          var loteAlvoId = ESTADO.loteSelecionadoId || ESTADO.loteAtivoId || (loteAtivoDb ? loteAtivoDb.id : 'lote_1');
+          var loteCarregar = listaLotesFormatada.find(function(l) { return l.id === loteAlvoId; }) || loteAtivoDb;
+
+          ESTADO.loteAtivoId = loteAtivoDb.id;
+          ESTADO.loteSelecionadoId = loteCarregar.id;
+          LOTE_ESTADO.loteSelecionadoId = loteCarregar.id;
+
+          ESTADO.isRankingVisible = loteCarregar.isRankingVisible;
+          ESTADO.isPrintingEnabled = loteCarregar.isPrintingEnabled;
+          ESTADO.loteTravado = loteCarregar.travado;
+          ESTADO.loteTemSenha = loteCarregar.temSenha;
+          ESTADO.loteSenhaAdmin = loteCarregar.senha;
+          ESTADO.loteNome = loteCarregar.nome;
+
+          LOTE_ESTADO.isRankingVisible = loteCarregar.isRankingVisible;
+          LOTE_ESTADO.isPrintingEnabled = loteCarregar.isPrintingEnabled;
+          LOTE_ESTADO.travado = loteCarregar.travado;
+          LOTE_ESTADO.senha = loteCarregar.senha;
+          LOTE_ESTADO.temSenha = loteCarregar.temSenha;
+
+          // Aplica comarcas do lote se existirem no banco
+          if (loteCarregar.comarcas && loteCarregar.comarcas.length > 0) {
+            ESTADO.comarcas = loteCarregar.comarcas;
+            LOTE_ESTADO.comarcas = JSON.parse(JSON.stringify(loteCarregar.comarcas));
+          } else if (!ESTADO.comarcas || ESTADO.comarcas.length === 0) {
+            ESTADO.comarcas = window.DADOS_COMARCAS_BASE || [];
+            LOTE_ESTADO.comarcas = JSON.parse(JSON.stringify(ESTADO.comarcas));
+          }
+
+          // Aplica candidatos do lote se existirem no banco
+          if (loteCarregar.candidatos && loteCarregar.candidatos.length > 0) {
+            ESTADO.candidatos = loteCarregar.candidatos;
+            LOTE_ESTADO.titulares = [];
+            LOTE_ESTADO.suplentes = [];
+            var totalVagasLote = calcularTotalVagas(ESTADO.comarcas);
+            loteCarregar.candidatos.forEach(function(c, i) {
+              if (c.suplente || ehSuplente(c, i, totalVagasLote)) {
+                LOTE_ESTADO.suplentes.push(Object.assign({}, c, { suplente: true }));
+              } else {
+                LOTE_ESTADO.titulares.push(Object.assign({}, c));
+              }
+            });
+          } else if (!ESTADO.candidatos || ESTADO.candidatos.length === 0) {
+            ESTADO.candidatos = window.DADOS_CANDIDATOS_BASE || [];
           }
 
           atualizarSelectLotesGlobal();
           atualizarSelectLotesAdmin();
           aplicarRegrasVisibilidadeLote();
           aplicarBloqueioSenhaLote();
+          atualizarBadgeLoteSelecionadoStatus();
+          atualizarBadgeLoteGlobalStatus();
         }
 
-        // 2. Carrega todas as respostas do Supabase
-        var resp = await supabaseClient.from('respostas').select('*');
+        // 2. Carrega as respostas do Supabase filtradas estritamente para o lote em foco
+        var loteAtualId = ESTADO.loteSelecionadoId || ESTADO.loteAtivoId || 'lote_1';
+        var resp = await supabaseClient.from('respostas').select('*').eq('lote_id', loteAtualId);
+        
+        var mapaPorLote = {};
         if (resp && resp.data && Array.isArray(resp.data)) {
-          var loteAlvoId = ESTADO.loteSelecionadoId || ESTADO.loteAtivoId || 'lote_1';
-          var mapaGeral = {};
-          var mapaPorLote = {};
-
           resp.data.forEach(function(row) {
             var obj = (row.dados_completos && typeof row.dados_completos === 'object') ? Object.assign({}, row.dados_completos) : {};
             obj.nome = row.nome || obj.nome;
@@ -3129,81 +3446,54 @@
             obj.whatsapp = row.whatsapp || obj.whatsapp || '';
             obj.escolhas = row.escolhas || obj.escolhas || [];
             obj.intencao = row.intencao || obj.intencao || 'assumir';
-            obj.bloqueado = row.bloqueado !== false;
-            obj.loteId = row.lote_id || obj.loteId || 'lote_1';
-            
+            obj.bloqueado = (row.bloqueado !== false);
+            obj.loteId = row.lote_id || loteAtualId;
             if (obj.nome) {
-              mapaGeral[obj.nome] = obj;
-              if (obj.loteId === loteAlvoId) {
-                mapaPorLote[obj.nome] = obj;
-              }
+              mapaPorLote[obj.nome] = obj;
             }
           });
+        }
 
-          // Se o lote específico não tiver registros, usa todas as respostas para visualização geral
-          var mapaFinal = Object.keys(mapaPorLote).length > 0 ? mapaPorLote : mapaGeral;
+        ESTADO.respostas = mapaPorLote;
+        try {
+          localStorage.setItem('tjrs_gas_respostas', JSON.stringify(mapaPorLote));
+        } catch(eStore) {}
 
-          ESTADO.respostas = mapaFinal;
-          // Salva no localStorage para sincronizar com qualquer motor local
-          try {
-            localStorage.setItem('tjrs_gas_respostas', JSON.stringify(mapaFinal));
-          } catch(eStore) {}
+        // Calcula a simulação real
+        if (typeof processarSimulacaoMock === 'function') {
+          ESTADO.simulacao = processarSimulacaoMock(mapaPorLote);
+        }
 
-          // Calcula a simulação real sem usar mock
-          if (typeof processarSimulacaoMock === 'function') {
-            ESTADO.simulacao = processarSimulacaoMock(mapaFinal);
-          }
+        atualizarContadorHeader();
 
-          atualizarContadorHeader();
-
-          // Sincroniza dados com o candidato autenticado no Google se houver
-          if (ESTADO.usuarioLogado && ESTADO.usuarioLogado.email) {
-            var emailLogado = ESTADO.usuarioLogado.email.toLowerCase().trim();
-            for (var candNome in mapaGeral) {
-              var candResp = mapaGeral[candNome];
-              if (candResp && candResp.email && candResp.email.toLowerCase().trim() === emailLogado) {
-                ESTADO.usuarioLogadoNome = candNome;
-                localStorage.setItem('tjrs_candidato_nome', candNome);
-                if (typeof popularSelectCandidatos === 'function' && ESTADO.candidatos) {
-                  popularSelectCandidatos(ESTADO.candidatos);
-                }
-                if (typeof carregarRespostaNoFormulario === 'function') {
-                  carregarRespostaNoFormulario(candResp);
-                }
-                if (typeof aplicarEstadoBloqueioFormulario === 'function') {
-                  aplicarEstadoBloqueioFormulario();
-                }
-                break;
+        // Sincroniza dados com o candidato autenticado no Google se houver
+        if (ESTADO.usuarioLogado && ESTADO.usuarioLogado.email) {
+          var emailLogado = ESTADO.usuarioLogado.email.toLowerCase().trim();
+          for (var candNome in mapaPorLote) {
+            var candResp = mapaPorLote[candNome];
+            if (candResp && candResp.email && candResp.email.toLowerCase().trim() === emailLogado) {
+              ESTADO.usuarioLogadoNome = candNome;
+              localStorage.setItem('tjrs_candidato_nome', candNome);
+              if (typeof popularSelectCandidatos === 'function' && ESTADO.candidatos) {
+                popularSelectCandidatos(ESTADO.candidatos);
               }
+              if (typeof carregarRespostaNoFormulario === 'function') {
+                carregarRespostaNoFormulario(candResp);
+              }
+              if (typeof aplicarEstadoBloqueioFormulario === 'function') {
+                aplicarEstadoBloqueioFormulario();
+              }
+              break;
             }
           }
-
-          // Se o lote ativo tiver candidatos específicos cadastrados nas respostas, assegura que apareçam na lista
-          var nomesNoLote = Object.keys(mapaFinal);
-          if (nomesNoLote.length > 0) {
-            var mapaExistentes = {};
-            (ESTADO.candidatos || []).forEach(function(c) { mapaExistentes[c.nome] = true; });
-            var novosCandidatos = (ESTADO.candidatos || window.DADOS_CANDIDATOS_BASE || []).slice();
-            nomesNoLote.forEach(function(nomeCand) {
-              if (!mapaExistentes[nomeCand]) {
-                novosCandidatos.push({
-                  vaga: novosCandidatos.length + 1,
-                  tipo: 'AC',
-                  nome: nomeCand
-                });
-                mapaExistentes[nomeCand] = true;
-              }
-            });
-            ESTADO.candidatos = novosCandidatos;
-          }
-
-          // Atualiza toda a interface com dados reais
-          if (typeof popularSelectCandidatos === 'function' && ESTADO.candidatos) popularSelectCandidatos(ESTADO.candidatos);
-          if (typeof renderizarTabelaGeral === 'function') renderizarTabelaGeral();
-          if (typeof renderizarPainelComarcas === 'function') renderizarPainelComarcas();
-          if (typeof renderizarTabelaAdmin === 'function') renderizarTabelaAdmin();
-          if (typeof atualizarPreviaInstantanea === 'function') atualizarPreviaInstantanea();
         }
+
+        // Atualiza toda a interface com dados reais
+        if (typeof popularSelectCandidatos === 'function' && ESTADO.candidatos) popularSelectCandidatos(ESTADO.candidatos);
+        if (typeof renderizarTabelaGeral === 'function') renderizarTabelaGeral();
+        if (typeof renderizarPainelComarcas === 'function') renderizarPainelComarcas();
+        if (typeof renderizarTabelaAdmin === 'function') renderizarTabelaAdmin();
+        if (typeof atualizarPreviaInstantanea === 'function') atualizarPreviaInstantanea();
       } catch (eLoad) {
         console.warn('Aviso ao sincronizar respostas do Supabase:', eLoad);
       }
@@ -4216,23 +4506,36 @@
       }
     }
 
-    function verificarAtualizacoesServidorTempoReal() {
+    async function verificarAtualizacoesServidorTempoReal() {
       if (SINCRONIZANDO_ATUALMENTE) return;
       SINCRONIZANDO_ATUALMENTE = true;
 
       try {
-        google.script.run
-          .withSuccessHandler(function(res) {
-            SINCRONIZANDO_ATUALMENTE = false;
-            if (res && res.atualizado) {
-              aplicarDadosAtualizadosEmTempoReal(res);
-            }
-          })
-          .withFailureHandler(function(err) {
-            SINCRONIZANDO_ATUALMENTE = false;
-          })
-          .verificarAtualizacoesTempoReal(ESTADO.ultimoTimestampSincronizacao);
+        if (supabaseClient) {
+          var loteAtualId = ESTADO.loteSelecionadoId || ESTADO.loteAtivoId || 'lote_1';
+          var res = await supabaseClient.from('respostas').select('*').eq('lote_id', loteAtualId);
+          if (res && res.data && Array.isArray(res.data)) {
+            var mapa = {};
+            res.data.forEach(function(row) {
+              var obj = (row.dados_completos && typeof row.dados_completos === 'object') ? Object.assign({}, row.dados_completos) : {};
+              obj.nome = row.nome || obj.nome;
+              obj.cpf = row.cpf || obj.cpf || '';
+              obj.email = row.email || obj.email || '';
+              obj.whatsapp = row.whatsapp || obj.whatsapp || '';
+              obj.escolhas = row.escolhas || obj.escolhas || [];
+              obj.intencao = row.intencao || obj.intencao || 'assumir';
+              obj.bloqueado = (row.bloqueado !== false);
+              obj.loteId = row.lote_id || loteAtualId;
+              if (obj.nome) mapa[obj.nome] = obj;
+            });
+            ESTADO.respostas = mapa;
+            ESTADO.simulacao = processarSimulacaoMock(mapa);
+            atualizarContadorHeader();
+          }
+        }
       } catch (e) {
+        // Silencioso em caso de oscilação momentânea
+      } finally {
         SINCRONIZANDO_ATUALMENTE = false;
       }
     }
@@ -4499,30 +4802,16 @@
       atualizarVisibilidadeBadgeAmbiente();
       inicializarSortableJS();
 
-      var timeoutFallback = setTimeout(function() {
-        console.warn('Aguardando resposta do servidor excedeu o tempo limite, mantendo dados locais.');
-        finalizarInicioApp(ESTADO.candidatos, ESTADO.comarcas, null);
-      }, 3500);
-
-      try {
-        google.script.run
-          .withSuccessHandler(function(resultadoInicial) {
-            clearTimeout(timeoutFallback);
-            var cands = (resultadoInicial && resultadoInicial.candidatos && resultadoInicial.candidatos.length > 0) ? resultadoInicial.candidatos : ESTADO.candidatos;
-            var coms = (resultadoInicial && resultadoInicial.comarcas && resultadoInicial.comarcas.length > 0) ? resultadoInicial.comarcas : ESTADO.comarcas;
-            finalizarInicioApp(cands, coms, resultadoInicial);
-          })
-          .withFailureHandler(function(err) {
-            clearTimeout(timeoutFallback);
-            console.warn('Falha ao conectar com verificarRespostaUsuario, usando modo local:', err);
-            finalizarInicioApp(ESTADO.candidatos, ESTADO.comarcas, null);
-          })
-          .verificarRespostaUsuario(ESTADO.usuarioLogado.email, AMBIENTE_SISTEMA);
-      } catch (eInit) {
-        clearTimeout(timeoutFallback);
-        console.warn('Erro ao chamar verificarRespostaUsuario:', eInit);
-        finalizarInicioApp(ESTADO.candidatos, ESTADO.comarcas, null);
+      if (supabaseClient) {
+        carregarDadosSupabase().then(function() {
+          finalizarInicioApp(ESTADO.candidatos, ESTADO.comarcas, null);
+        }).catch(function() {
+          finalizarInicioApp(ESTADO.candidatos, ESTADO.comarcas, null);
+        });
+        return;
       }
+
+      finalizarInicioApp(ESTADO.candidatos, ESTADO.comarcas, null);
     }
 
     // INICIALIZA ARRASTAR E SOLTAR (SORTABLE JS OTIMIZADO PARA DESKTOP E DISPOSITIVOS MÓVEIS)
@@ -5053,23 +5342,19 @@
         return;
       }
 
-      google.script.run
-        .withSuccessHandler(function(res) {
-          if (res && res.valido) {
-            try { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('tjrs_senha_lote_' + loteId, senhaInformada); } catch(e) {}
-            ESTADO.senhaLoteValida = senhaInformada;
-            mostrarAlerta('✓ Lote desbloqueado com sucesso! Agora você pode registrar ou atualizar suas preferências.', 'sucesso');
-            if (input) input.value = '';
-            aplicarBloqueioSenhaLote();
-          } else {
-            mostrarAlerta('Senha do lote incorreta. Solicite a senha oficial à coordenação/administrador.', 'erro');
-            if (input) { input.focus(); input.select(); }
-          }
-        })
-        .withFailureHandler(function(err) {
-          mostrarAlerta('Erro ao validar senha do lote: ' + (err.message || err), 'erro');
-        })
-        .validarSenhaLote(loteId, senhaInformada);
+      var senhaEsperada = (ESTADO.loteSenhaAdmin || LOTE_ESTADO.senha || '').trim();
+      var ok = (!senhaEsperada || senhaInformada === senhaEsperada);
+
+      if (ok) {
+        try { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('tjrs_senha_lote_' + loteId, senhaInformada); } catch(e) {}
+        ESTADO.senhaLoteValida = senhaInformada;
+        mostrarAlerta('✓ Lote desbloqueado com sucesso! Agora você pode registrar ou atualizar suas preferências.', 'sucesso');
+        if (input) input.value = '';
+        aplicarBloqueioSenhaLote();
+      } else {
+        mostrarAlerta('Senha do lote incorreta. Solicite a senha oficial à coordenação/administrador.', 'erro');
+        if (input) { input.focus(); input.select(); }
+      }
     }
 
     function aoAlternarToggleTravaLote(checked) {
@@ -6711,23 +6996,41 @@
       document.getElementById('modalMensagemJustificativa').value = '';
     }
 
-    function enviarSolicitacaoAlteracaoEmail() {
+    async function enviarSolicitacaoAlteracaoEmail() {
       var nome = ESTADO.usuarioAtivoNome;
       var justificativa = document.getElementById('modalMensagemJustificativa').value;
       var resp = ESTADO.respostas[nome] || {};
 
-      google.script.run.withSuccessHandler(function(res) {
-        fecharModalSolicitarAlteracao();
-        mostrarAlerta('Solicitação enviada com sucesso ao administrador (rafasms0@hotmail.com). Aguarde o desbloqueio.', 'sucesso');
-        if (ESTADO.perfilSimulado === 'admin') {
-          renderizarSolicitacoesAdmin();
-        }
-      }).registrarSolicitacaoAlteracao({
+      var novaSolicitacao = {
         nome: nome,
         cpf: resp.cpf || '',
         whatsapp: resp.whatsapp || '',
-        mensagem: justificativa
-      });
+        mensagem: justificativa,
+        data: new Date().toISOString(),
+        status: 'pendente'
+      };
+
+      if (!ESTADO.adminConfig) ESTADO.adminConfig = {};
+      if (!Array.isArray(ESTADO.adminConfig.solicitacoesAlteracao)) {
+        ESTADO.adminConfig.solicitacoesAlteracao = [];
+      }
+      ESTADO.adminConfig.solicitacoesAlteracao.unshift(novaSolicitacao);
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('configuracoes').upsert({
+            chave: 'admin_config',
+            valor: ESTADO.adminConfig,
+            updated_at: new Date().toISOString()
+          });
+        } catch(e) {}
+      }
+
+      fecharModalSolicitarAlteracao();
+      mostrarAlerta('Solicitação enviada com sucesso ao administrador (rafasms0@hotmail.com). Aguarde o desbloqueio.', 'sucesso');
+      if (ESTADO.perfilSimulado === 'admin') {
+        renderizarSolicitacoesAdmin();
+      }
     }
 
     function enviarSolicitacaoWhatsApp() {
@@ -9372,47 +9675,62 @@
       document.getElementById('adminTotalLiberados').textContent = totalLiberados;
     }
 
-    function desbloquearCandidatoAdmin(nome) {
-      google.script.run.withSuccessHandler(function(res) {
-        if (ESTADO.respostas[nome]) {
-          ESTADO.respostas[nome].bloqueado = false;
+    async function desbloquearCandidatoAdmin(nome) {
+      if (ESTADO.respostas[nome]) {
+        ESTADO.respostas[nome].bloqueado = false;
+        ESTADO.respostas[nome].dadosCadastraisBloqueados = false;
+      }
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('respostas').update({ bloqueado: false, dados_cadastrais_bloqueados: false }).eq('nome', nome);
+        } catch(eSb) {
+          console.warn('Aviso ao desbloquear no Supabase:', eSb);
         }
-        renderizarTabelaAdmin();
-        aplicarEstadoBloqueioFormulario();
-        renderizarSolicitacoesAdmin();
-        notificarAlteracaoTempoReal();
-        mostrarAlerta('Cadastro de ' + nome + ' desbloqueado com sucesso. O candidato já pode editar seus dados.', 'aviso');
-      }).desbloquearCandidato(nome);
+      }
+      renderizarTabelaAdmin();
+      aplicarEstadoBloqueioFormulario();
+      renderizarSolicitacoesAdmin();
+      notificarAlteracaoTempoReal();
+      mostrarAlerta('Cadastro de ' + nome + ' desbloqueado com sucesso. O candidato já pode editar seus dados.', 'aviso');
     }
 
-    function bloquearCandidatoAdmin(nome) {
-      google.script.run.withSuccessHandler(function(res) {
-        if (ESTADO.respostas[nome]) {
-          ESTADO.respostas[nome].bloqueado = true;
+    async function bloquearCandidatoAdmin(nome) {
+      if (ESTADO.respostas[nome]) {
+        ESTADO.respostas[nome].bloqueado = true;
+        ESTADO.respostas[nome].dadosCadastraisBloqueados = true;
+      }
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('respostas').update({ bloqueado: true, dados_cadastrais_bloqueados: true }).eq('nome', nome);
+        } catch(eSb) {
+          console.warn('Aviso ao bloquear no Supabase:', eSb);
         }
-        renderizarTabelaAdmin();
-        aplicarEstadoBloqueioFormulario();
-        notificarAlteracaoTempoReal();
-        mostrarAlerta('Cadastro de ' + nome + ' bloqueado com sucesso.', 'aviso');
-      }).bloquearCandidato(nome);
+      }
+      renderizarTabelaAdmin();
+      aplicarEstadoBloqueioFormulario();
+      notificarAlteracaoTempoReal();
+      mostrarAlerta('Cadastro de ' + nome + ' bloqueado com sucesso.', 'aviso');
     }
 
-    function excluirRespostaAdmin(nome) {
+    async function excluirRespostaAdmin(nome) {
       if (!confirm('Deseja realmente excluir a manifestação do candidato ' + nome + '? Ele poderá preencher um novo cadastro do zero.')) return;
 
-      google.script.run.withSuccessHandler(function(res) {
-        delete ESTADO.respostas[nome];
-        if (res.simulacaoCompleta) {
-          ESTADO.simulacao = res.simulacaoCompleta;
+      delete ESTADO.respostas[nome];
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('respostas').delete().eq('nome', nome);
+        } catch(eSb) {
+          console.warn('Aviso ao excluir no Supabase:', eSb);
         }
-        atualizarContadorHeader();
-        renderizarTabelaAdmin();
-        if (ESTADO.usuarioAtivoNome === nome) {
-          aoMudarCandidato();
-        }
-        notificarAlteracaoTempoReal();
-        mostrarAlerta('Resposta de ' + nome + ' excluída com sucesso.', 'aviso');
-      }).excluirRespostaCandidato(nome);
+      }
+      ESTADO.simulacao = processarSimulacaoMock(ESTADO.respostas);
+      atualizarContadorHeader();
+      renderizarTabelaAdmin();
+      if (ESTADO.usuarioAtivoNome === nome) {
+        aoMudarCandidato();
+      }
+      notificarAlteracaoTempoReal();
+      mostrarAlerta('Resposta de ' + nome + ' excluída com sucesso.', 'aviso');
     }
 
     function editarCandidatoAdmin(nome) {
@@ -9467,7 +9785,7 @@
       });
     }
 
-    function salvarPerfilAdmin() {
+    async function salvarPerfilAdmin() {
       var dados = {
         nome: document.getElementById('adminNomeInput').value,
         email: document.getElementById('adminEmailInput').value,
@@ -9475,14 +9793,21 @@
         cargo: document.getElementById('adminCargoInput').value
       };
 
-      google.script.run.withSuccessHandler(function(res) {
-        if (res.config) ESTADO.adminConfig = res.config;
-        renderizarDadosAdmin();
-        mostrarAlerta('Cadastro do administrador salvo com sucesso.', 'aviso');
-      }).salvarCadastroAdmin(dados);
+      if (!ESTADO.adminConfig) ESTADO.adminConfig = {};
+      ESTADO.adminConfig.adminPrincipal = dados;
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('configuracoes').upsert({ chave: 'admin_config', valor: ESTADO.adminConfig, updated_at: new Date().toISOString() });
+        } catch(eSb) {
+          console.warn('Aviso ao salvar config admin no Supabase:', eSb);
+        }
+      }
+      renderizarDadosAdmin();
+      mostrarAlerta('Cadastro do administrador salvo com sucesso.', 'aviso');
     }
 
-    function cadastrarNovoAdmin() {
+    async function cadastrarNovoAdmin() {
       var nome = document.getElementById('novoAdminNome').value;
       var email = document.getElementById('novoAdminEmail').value;
       var permissao = document.getElementById('novoAdminPermissao').value;
@@ -9494,26 +9819,46 @@
         permissoes: [permissao]
       };
 
-      google.script.run.withSuccessHandler(function(res) {
-        if (res.sucesso) {
-          if (res.config) ESTADO.adminConfig = res.config;
-          document.getElementById('novoAdminNome').value = '';
-          document.getElementById('novoAdminEmail').value = '';
-          renderizarDadosAdmin();
-          mostrarAlerta('Novo administrador adicionado com permissões de ' + novo.cargo + '.', 'aviso');
-        } else {
-          mostrarAlerta(res.mensagem || 'Erro ao adicionar administrador.', 'aviso');
+      if (!ESTADO.adminConfig) ESTADO.adminConfig = {};
+      if (!Array.isArray(ESTADO.adminConfig.administradores)) {
+        ESTADO.adminConfig.administradores = [ESTADO.adminConfig.adminPrincipal || {
+          nome: 'Rafael (administrador)',
+          email: 'rafasms0@hotmail.com',
+          cargo: 'Administrador do site'
+        }];
+      }
+      ESTADO.adminConfig.administradores.push(novo);
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('configuracoes').upsert({ chave: 'admin_config', valor: ESTADO.adminConfig, updated_at: new Date().toISOString() });
+        } catch(eSb) {
+          console.warn('Aviso ao adicionar admin no Supabase:', eSb);
         }
-      }).adicionarNovoAdmin(novo);
+      }
+      document.getElementById('novoAdminNome').value = '';
+      document.getElementById('novoAdminEmail').value = '';
+      renderizarDadosAdmin();
+      mostrarAlerta('Novo administrador adicionado com permissões de ' + novo.cargo + '.', 'aviso');
     }
 
-    function removerAdminAdicional(email) {
+    async function removerAdminAdicional(email) {
       if (!confirm('Deseja revogar as permissões administrativas de ' + email + '?')) return;
 
-      google.script.run.withSuccessHandler(function(res) {
-        if (res.config) ESTADO.adminConfig = res.config;
-        renderizarDadosAdmin();
-      }).removerAdmin(email);
+      if (ESTADO.adminConfig && Array.isArray(ESTADO.adminConfig.administradores)) {
+        ESTADO.adminConfig.administradores = ESTADO.adminConfig.administradores.filter(function(a) {
+          return a.email.toLowerCase() !== email.toLowerCase();
+        });
+      }
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('configuracoes').upsert({ chave: 'admin_config', valor: ESTADO.adminConfig, updated_at: new Date().toISOString() });
+        } catch(eSb) {
+          console.warn('Aviso ao remover admin no Supabase:', eSb);
+        }
+      }
+      renderizarDadosAdmin();
     }
 
     function renderizarSolicitacoesAdmin() {
@@ -9646,7 +9991,7 @@
       }
     }
 
-    function salvarVisibilidadeLoteAtual() {
+    async function salvarVisibilidadeLoteAtual() {
       var id = LOTE_ESTADO.loteSelecionadoId || 'lote_1';
       var rank = !!LOTE_ESTADO.isRankingVisible;
       var imp = !!LOTE_ESTADO.isPrintingEnabled;
@@ -9654,53 +9999,65 @@
       var inpSenha = document.getElementById('inputSenhaLoteConfig');
       var senha = inpSenha ? inpSenha.value.trim() : (LOTE_ESTADO.senha || '').trim();
 
-      google.script.run
-        .withSuccessHandler(function(res) {
-          if (res && res.sucesso) {
-            if (res.listaLotes) LOTE_ESTADO.listaLotes = res.listaLotes;
-            LOTE_ESTADO.senha = res.senha || senha;
-            LOTE_ESTADO.temSenha = res.temSenha;
-            LOTE_ESTADO.travado = res.travado;
-            if (id === (ESTADO.loteSelecionadoId || ESTADO.loteAtivoId || 'lote_1')) {
-              ESTADO.isRankingVisible = rank;
-              ESTADO.isPrintingEnabled = imp;
-              ESTADO.loteTravado = travado;
-              ESTADO.loteTemSenha = !!(senha && senha.trim());
-              ESTADO.loteSenhaAdmin = senha;
-              aplicarRegrasVisibilidadeLote();
-              aplicarBloqueioSenhaLote();
-            }
-            atualizarTogglesVisibilidadeAdmin();
-            mostrarAlerta('✓ Configurações de visibilidade, trava e senha salvas com sucesso no lote!', 'sucesso');
-          } else {
-            mostrarAlerta('Erro ao salvar visibilidade: ' + (res ? res.mensagem : 'Erro desconhecido'), 'erro');
-          }
-        })
-        .withFailureHandler(function(err) {
-          mostrarAlerta('Erro ao salvar no servidor: ' + (err.message || err), 'erro');
-        })
-        .atualizarVisibilidadeLote(id, rank, imp, senha, travado);
+      if (supabaseClient) {
+        try {
+          var updateRes = await supabaseClient.from('lotes').update({
+            is_ranking_visible: rank,
+            is_printing_enabled: imp,
+            travado: travado,
+            senha: senha
+          }).eq('id', id);
+          if (updateRes.error) throw updateRes.error;
+        } catch(errSb) {
+          console.warn('Erro ao salvar visibilidade no Supabase:', errSb);
+          mostrarAlerta('Erro ao salvar no Supabase: ' + (errSb.message || errSb), 'erro');
+          return;
+        }
+      }
+
+      LOTE_ESTADO.senha = senha;
+      LOTE_ESTADO.temSenha = !!(senha && senha.trim());
+      LOTE_ESTADO.travado = travado;
+      (LOTE_ESTADO.listaLotes || []).forEach(function(l) {
+        if (l.id === id) {
+          l.isRankingVisible = rank;
+          l.isPrintingEnabled = imp;
+          l.travado = travado;
+          l.senha = senha;
+          l.temSenha = !!(senha && senha.trim());
+        }
+      });
+
+      if (id === (ESTADO.loteSelecionadoId || ESTADO.loteAtivoId || 'lote_1')) {
+        ESTADO.isRankingVisible = rank;
+        ESTADO.isPrintingEnabled = imp;
+        ESTADO.loteTravado = travado;
+        ESTADO.loteTemSenha = !!(senha && senha.trim());
+        ESTADO.loteSenhaAdmin = senha;
+        aplicarRegrasVisibilidadeLote();
+        aplicarBloqueioSenhaLote();
+      }
+      atualizarTogglesVisibilidadeAdmin();
+      mostrarAlerta('✓ Configurações de visibilidade, trava e senha salvas com sucesso no lote!', 'sucesso');
     }
 
     function inicializarLoteAPartirDoEstado(forcar) {
       if (LOTE_ESTADO.inicializado && !forcar) return;
 
       carregarListaLotesAdmin(function() {
-        var savedLote = null;
-        try {
-          savedLote = JSON.parse(localStorage.getItem('tjrs_gas_lote_config') || 'null');
-        } catch(e) { savedLote = null; }
+        var loteSelId = LOTE_ESTADO.loteSelecionadoId || ESTADO.loteSelecionadoId || ESTADO.loteAtivoId || 'lote_1';
+        var loteAtual = (LOTE_ESTADO.listaLotes || []).find(function(l) { return l.id === loteSelId; }) || (LOTE_ESTADO.listaLotes && LOTE_ESTADO.listaLotes[0]);
 
-        if (savedLote && savedLote.comarcas && savedLote.comarcas.length > 0) {
-          LOTE_ESTADO.comarcas = JSON.parse(JSON.stringify(savedLote.comarcas));
+        if (loteAtual && loteAtual.comarcas && Array.isArray(loteAtual.comarcas) && loteAtual.comarcas.length > 0) {
+          LOTE_ESTADO.comarcas = JSON.parse(JSON.stringify(loteAtual.comarcas));
         } else {
           var coms = (ESTADO.comarcas && ESTADO.comarcas.length > 0) ? ESTADO.comarcas : window.DADOS_COMARCAS_BASE;
           LOTE_ESTADO.comarcas = JSON.parse(JSON.stringify(coms || []));
         }
 
         var todosCandidatos = [];
-        if (savedLote && savedLote.candidatos && savedLote.candidatos.length > 0) {
-          todosCandidatos = JSON.parse(JSON.stringify(savedLote.candidatos));
+        if (loteAtual && loteAtual.candidatos && Array.isArray(loteAtual.candidatos) && loteAtual.candidatos.length > 0) {
+          todosCandidatos = JSON.parse(JSON.stringify(loteAtual.candidatos));
         } else {
           var cands = (ESTADO.candidatos && ESTADO.candidatos.length > 0) ? ESTADO.candidatos : window.DADOS_CANDIDATOS_BASE;
           todosCandidatos = JSON.parse(JSON.stringify(cands || []));
@@ -9712,7 +10069,7 @@
         var totalVagasLote = calcularTotalVagas(LOTE_ESTADO.comarcas);
 
         todosCandidatos.forEach(function(c, i) {
-          if (ehSuplente(c, i, totalVagasLote)) {
+          if (c.suplente || ehSuplente(c, i, totalVagasLote)) {
             LOTE_ESTADO.suplentes.push({
               vaga: null,
               tipo: (c.tipo || 'AC').toUpperCase(),
@@ -9740,11 +10097,35 @@
 
     // --- FUNÇÕES DE GESTÃO DE MÚLTIPLOS LOTES (REQUISITOS 2 E 4) ---
     function carregarListaLotesAdmin(callback) {
-      google.script.run.withSuccessHandler(function(lotes) {
-        LOTE_ESTADO.listaLotes = lotes || [];
+      if (supabaseClient) {
+        supabaseClient.from('lotes').select('*').order('created_at', { ascending: true }).then(function(res) {
+          if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
+            LOTE_ESTADO.listaLotes = res.data.map(function(l) {
+              return {
+                id: l.id,
+                nome: l.nome,
+                ativo: !!l.ativo,
+                isRankingVisible: l.is_ranking_visible !== false,
+                isPrintingEnabled: !!l.is_printing_enabled,
+                travado: !!l.travado,
+                senha: l.senha || '',
+                temSenha: !!(l.senha && l.senha.trim() !== ''),
+                comarcas: (l.comarcas && Array.isArray(l.comarcas)) ? l.comarcas : null,
+                candidatos: (l.candidatos && Array.isArray(l.candidatos)) ? l.candidatos : null
+              };
+            });
+          }
+          atualizarSelectLotesAdmin();
+          if (callback) callback();
+        }).catch(function(err) {
+          console.warn('Aviso ao buscar lotes no Supabase:', err);
+          atualizarSelectLotesAdmin();
+          if (callback) callback();
+        });
+      } else {
         atualizarSelectLotesAdmin();
         if (callback) callback();
-      }).getListaLotes();
+      }
     }
 
     function atualizarSelectLotesAdmin() {
@@ -9867,7 +10248,7 @@
       }
     }
 
-    function aoTrocarLoteGlobal(loteId) {
+    async function aoTrocarLoteGlobal(loteId) {
       if (!loteId) return;
       LOTE_ESTADO.loteSelecionadoId = loteId;
       ESTADO.loteSelecionadoId = loteId;
@@ -9880,87 +10261,17 @@
       atualizarBadgeLoteSelecionadoStatus();
       atualizarBadgeLoteGlobalStatus();
 
-      // Se estiver rodando com Supabase conectado, sincroniza as respostas deste lote
       if (supabaseClient) {
-        carregarDadosSupabase();
+        await carregarDadosSupabase();
       }
-
-      google.script.run
-        .withSuccessHandler(function(dadosLote) {
-          if (!dadosLote) return;
-          LOTE_ESTADO.comarcas = JSON.parse(JSON.stringify(dadosLote.comarcas || []));
-
-          var todosCandidatos = JSON.parse(JSON.stringify(dadosLote.candidatos || []));
-          LOTE_ESTADO.titulares = [];
-          LOTE_ESTADO.suplentes = [];
-
-          var totalVagasLote = calcularTotalVagas(LOTE_ESTADO.comarcas);
-
-          todosCandidatos.forEach(function(c, i) {
-            if (ehSuplente(c, i, totalVagasLote)) {
-              LOTE_ESTADO.suplentes.push({
-                vaga: null,
-                tipo: (c.tipo || 'AC').toUpperCase(),
-                nome: c.nome,
-                suplente: true
-              });
-            } else {
-              var v = Number(c.vaga);
-              LOTE_ESTADO.titulares.push({
-                vaga: isNaN(v) ? (LOTE_ESTADO.titulares.length + 1) : v,
-                tipo: (c.tipo || 'AC').toUpperCase(),
-                nome: c.nome
-              });
-            }
-          });
-
-          LOTE_ESTADO.isRankingVisible = !!dadosLote.isRankingVisible;
-          LOTE_ESTADO.isPrintingEnabled = !!dadosLote.isPrintingEnabled;
-          LOTE_ESTADO.travado = !!dadosLote.travado;
-          LOTE_ESTADO.senha = dadosLote.senha || '';
-          LOTE_ESTADO.temSenha = !!dadosLote.temSenha;
-
-          atualizarTogglesVisibilidadeAdmin();
-
-          // Sincroniza o ESTADO global para que TODOS os painéis reflitam dinamicamente o lote selecionado
-          ESTADO.candidatos = todosCandidatos;
-          ESTADO.comarcas = LOTE_ESTADO.comarcas;
-          if (gasServerTemplateEvaluated) {
-            ESTADO.respostas = dadosLote.respostas || {};
-          }
-          ESTADO.isRankingVisible = LOTE_ESTADO.isRankingVisible;
-          ESTADO.isPrintingEnabled = LOTE_ESTADO.isPrintingEnabled;
-          ESTADO.loteTravado = LOTE_ESTADO.travado;
-          ESTADO.loteTemSenha = LOTE_ESTADO.temSenha;
-          ESTADO.loteSenhaAdmin = LOTE_ESTADO.senha;
-          ESTADO.loteNome = dadosLote.nome || ('Lote ' + loteId);
-          ESTADO.loteEhAtivo = !!dadosLote.ativo;
-
-          ESTADO.simulacao = (gasServerTemplateEvaluated && dadosLote.simulacao) ? dadosLote.simulacao : processarSimulacaoMock(ESTADO.respostas);
-
-          popularSelectCandidatos(ESTADO.candidatos);
-          renderizarListaTodasComarcas();
-          atualizarDatalistComarcas();
-          renderizarTabelaGeral();
-          renderizarPainelComarcas();
-          renderizarTabelaAdmin();
-          atualizarContadorHeader();
-          atualizarLabelsTotalVagas();
-          aplicarRegrasVisibilidadeLote();
-          aplicarBloqueioSenhaLote();
-          atualizarPainelLoteCompleto();
-        })
-        .withFailureHandler(function(err) {
-          mostrarAlerta('Erro ao carregar dados do lote: ' + (err.message || err), 'erro');
-        })
-        .getDadosLote(loteId);
+      atualizarPainelLoteCompleto();
     }
 
     function aoTrocarLoteSelecionadoAdmin(loteId) {
       aoTrocarLoteGlobal(loteId);
     }
 
-    function definirLoteSelecionadoComoAtivo() {
+    async function definirLoteSelecionadoComoAtivo() {
       var id = LOTE_ESTADO.loteSelecionadoId || 'lote_1';
       var item = (LOTE_ESTADO.listaLotes || []).find(function(l) { return l.id === id; });
       var nome = item ? item.nome : id;
@@ -9970,22 +10281,29 @@
         return;
       }
 
-      google.script.run.withSuccessHandler(function(res) {
-        ESTADO.loteAtivoId = id;
-        if (res && res.listaLotes) {
-          LOTE_ESTADO.listaLotes = res.listaLotes;
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('lotes').update({ ativo: false }).neq('id', '___none___');
+          var atRes = await supabaseClient.from('lotes').update({ ativo: true }).eq('id', id);
+          if (atRes.error) throw atRes.error;
+        } catch(eSb) {
+          console.warn('Erro ao definir lote ativo no Supabase:', eSb);
+          mostrarAlerta('Erro ao definir lote ativo no Supabase: ' + eSb.message, 'erro');
+          return;
         }
-        if (LOTE_ESTADO.listaLotes) {
-          LOTE_ESTADO.listaLotes.forEach(function(l) {
-            l.ativo = (l.id === id);
-          });
-        }
-        atualizarSelectLotesAdmin();
-        atualizarSelectLotesGlobal();
-        atualizarBadgeLoteSelecionadoStatus();
-        aoTrocarLoteSelecionadoAdmin(id);
-        mostrarAlerta('✓ ' + (res.mensagem || 'Lote definido como Ativo com sucesso!'), 'sucesso');
-      }).definirLoteAtivo(id);
+      }
+
+      ESTADO.loteAtivoId = id;
+      if (LOTE_ESTADO.listaLotes) {
+        LOTE_ESTADO.listaLotes.forEach(function(l) {
+          l.ativo = (l.id === id);
+        });
+      }
+      atualizarSelectLotesAdmin();
+      atualizarSelectLotesGlobal();
+      atualizarBadgeLoteSelecionadoStatus();
+      mostrarAlerta('✓ Lote "' + nome + '" definido como Ativo com sucesso!', 'sucesso');
+      await aoTrocarLoteGlobal(id);
     }
 
     function abrirModalCriarNovoLote() {
@@ -10005,7 +10323,7 @@
       if (modal) modal.style.display = 'none';
     }
 
-    function confirmarCriacaoNovoLote() {
+    async function confirmarCriacaoNovoLote() {
       var inp = document.getElementById('inputNomeNovoLote');
       var selOrigem = document.getElementById('selectOrigemNovoLote');
       var nome = (inp ? inp.value : '').trim();
@@ -10015,18 +10333,45 @@
       }
 
       var origem = selOrigem ? selOrigem.value : 'atual';
-      var copiarId = (origem === 'atual') ? LOTE_ESTADO.loteSelecionadoId : (origem === 'padrao' ? null : 'em_branco');
+      var novoId = 'lote_' + Date.now();
 
-      google.script.run.withSuccessHandler(function(res) {
-        fecharModalCriarNovoLote();
-        if (res && res.novoId) {
-          LOTE_ESTADO.listaLotes = res.listaLotes || [];
-          LOTE_ESTADO.loteSelecionadoId = res.novoId;
-          atualizarSelectLotesAdmin();
-          aoTrocarLoteSelecionadoAdmin(res.novoId);
-          mostrarAlerta('✓ Novo lote "' + nome + '" criado com sucesso!\n\nAgora você pode alterar suas vagas, candidatos e definir como ativo quando estiver pronto.', 'aviso');
+      var coms = window.DADOS_COMARCAS_BASE || [];
+      var cands = window.DADOS_CANDIDATOS_BASE || [];
+
+      if (origem === 'atual') {
+        coms = JSON.parse(JSON.stringify(LOTE_ESTADO.comarcas || ESTADO.comarcas || []));
+        cands = JSON.parse(JSON.stringify((LOTE_ESTADO.titulares || []).concat(LOTE_ESTADO.suplentes || [])));
+      } else if (origem === 'em_branco') {
+        coms = [];
+        cands = [];
+      }
+
+      if (supabaseClient) {
+        try {
+          var insertRes = await supabaseClient.from('lotes').insert({
+            id: novoId,
+            concurso_id: CONCURSO_ID_PADRAO,
+            nome: nome,
+            ativo: false,
+            is_ranking_visible: false,
+            is_printing_enabled: false,
+            travado: false,
+            senha: '',
+            comarcas: coms,
+            candidatos: cands
+          });
+          if (insertRes.error) throw insertRes.error;
+        } catch(eSb) {
+          console.warn('Erro ao inserir novo lote no Supabase:', eSb);
+          mostrarAlerta('Erro ao criar lote no Supabase: ' + eSb.message, 'erro');
+          return;
         }
-      }).criarNovoLote(nome, copiarId);
+      }
+
+      fecharModalCriarNovoLote();
+      await carregarDadosSupabase();
+      await aoTrocarLoteGlobal(novoId);
+      mostrarAlerta('✓ Novo lote "' + nome + '" criado com sucesso!\n\nAgora você pode alterar suas vagas, candidatos e definir como ativo quando estiver pronto.', 'aviso');
     }
 
     function abrirModalRenomearLote() {
@@ -10036,9 +10381,7 @@
       nomeAtual = nomeAtual.replace(/\s*\[ATIVO\]/gi, '').replace(/\s*\(Histórico\)/gi, '').trim();
 
       var input = document.getElementById('inputNomeRenomearLote');
-      if (input) {
-        input.value = nomeAtual;
-      }
+      if (input) input.value = nomeAtual;
       var modal = document.getElementById('modalRenomearLote');
       if (modal) {
         modal.style.display = 'flex';
@@ -10056,7 +10399,7 @@
       if (modal) modal.style.display = 'none';
     }
 
-    function confirmarRenomearLote() {
+    async function confirmarRenomearLote() {
       var id = LOTE_ESTADO.loteSelecionadoId || ESTADO.loteAtivoId || 'lote_1';
       var input = document.getElementById('inputNomeRenomearLote');
       var novoNome = input ? input.value.trim() : '';
@@ -10069,33 +10412,30 @@
 
       novoNome = novoNome.replace(/\s*\[ATIVO\]/gi, '').replace(/\s*\(Histórico\)/gi, '').trim();
 
-      google.script.run
-        .withSuccessHandler(function(res) {
-          fecharModalRenomearLote();
-          if (res && res.listaLotes) {
-            LOTE_ESTADO.listaLotes = res.listaLotes;
-          } else {
-            (LOTE_ESTADO.listaLotes || []).forEach(function(l) {
-              if (l.id === id) l.nome = novoNome;
-            });
-          }
-          if (id === ESTADO.loteAtivoId) {
-            ESTADO.loteNome = novoNome;
-          }
-          if (id === (ESTADO.loteSelecionadoId || LOTE_ESTADO.loteSelecionadoId)) {
-            ESTADO.loteNome = novoNome;
-          }
-          atualizarSelectLotesAdmin();
-          atualizarSelectLotesGlobal();
-          atualizarBadgeLoteSelecionadoStatus();
-          atualizarBadgeLoteGlobalStatus();
-          atualizarPainelLoteCompleto();
-          mostrarAlerta('✓ ' + (res.mensagem || ('Nome do lote alterado para "' + novoNome + '" com sucesso!')), 'sucesso');
-        })
-        .withFailureHandler(function(err) {
-          mostrarAlerta('Erro ao renomear lote: ' + (err.message || err), 'erro');
-        })
-        .renomearLote(id, novoNome);
+      if (supabaseClient) {
+        try {
+          var renRes = await supabaseClient.from('lotes').update({ nome: novoNome }).eq('id', id);
+          if (renRes.error) throw renRes.error;
+        } catch(eSb) {
+          console.warn('Erro ao renomear lote no Supabase:', eSb);
+          mostrarAlerta('Erro ao renomear lote no Supabase: ' + eSb.message, 'erro');
+          return;
+        }
+      }
+
+      fecharModalRenomearLote();
+      (LOTE_ESTADO.listaLotes || []).forEach(function(l) {
+        if (l.id === id) l.nome = novoNome;
+      });
+      if (id === ESTADO.loteAtivoId) ESTADO.loteNome = novoNome;
+      if (id === (ESTADO.loteSelecionadoId || LOTE_ESTADO.loteSelecionadoId)) ESTADO.loteNome = novoNome;
+
+      atualizarSelectLotesAdmin();
+      atualizarSelectLotesGlobal();
+      atualizarBadgeLoteSelecionadoStatus();
+      atualizarBadgeLoteGlobalStatus();
+      atualizarPainelLoteCompleto();
+      mostrarAlerta('✓ Nome do lote alterado para "' + novoNome + '" com sucesso!', 'sucesso');
     }
 
     function exportarLoteParaPlanilhaAdmin() {
@@ -10103,74 +10443,588 @@
       var item = (LOTE_ESTADO.listaLotes || []).find(function(l) { return l.id === loteId; });
       var nomeLote = item ? item.nome : ('Lote ' + loteId);
 
-      if (!confirm('Deseja exportar a planilha de dados e consolidação do "' + nomeLote + '" em formato CSV / Excel?\n\n' +
-        'O arquivo pode ser aberto diretamente no Excel ou importado no Google Planilhas sem requerer nenhuma autorização confidencial do Google.')) {
-        return;
+      var cands = (LOTE_ESTADO.titulares || []).concat(LOTE_ESTADO.suplentes || []);
+      if (!cands || cands.length === 0) {
+        cands = ESTADO.candidatos || [];
       }
 
-      mostrarToastMobile('Gerando planilha CSV do lote...', false);
+      var cabecalho = 'Ordem;Nome;Cota;Status;Comarca Alocada;Email;Telefone';
+      var linhasCsv = [cabecalho];
 
-      google.script.run
-        .withSuccessHandler(function(res) {
-          if (res && res.sucesso) {
-            mostrarAlerta('✓ ' + res.mensagem, 'sucesso');
-            if (res.csv) {
-              var blob = new Blob([res.csv], { type: 'text/csv;charset=utf-8;' });
-              var url = URL.createObjectURL(blob);
-              var a = document.createElement('a');
-              a.href = url;
-              a.download = res.nomeArquivo || ('TJRS_' + nomeLote.replace(/[^a-zA-Z0-9_-]/g, '_') + '.csv');
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              URL.revokeObjectURL(url);
-            }
-          } else {
-            mostrarAlerta('Erro ao exportar: ' + (res ? res.mensagem : 'Erro desconhecido.'), 'erro');
-          }
-        })
-        .withFailureHandler(function(err) {
-          mostrarAlerta('Erro ao exportar planilha do lote: ' + (err.message || err), 'erro');
-        })
-        .exportarLoteParaPlanilha(loteId);
+      cands.forEach(function(c, i) {
+        var r = (ESTADO.respostas && ESTADO.respostas[c.nome]) || {};
+        var comarcaAlocada = r.comarcaAlocada || (ESTADO.simulacao && ESTADO.simulacao.distribuicao && ESTADO.simulacao.distribuicao[c.nome]) || '-';
+        linhasCsv.push([
+          (c.vaga || (i + 1)),
+          c.nome,
+          (c.tipo || 'AC'),
+          (r.intencao || 'pendente'),
+          comarcaAlocada,
+          (r.email || '-'),
+          (r.whatsapp || '-')
+        ].join(';'));
+      });
+
+      var blob = new Blob(['\uFEFF' + linhasCsv.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'TJRS_' + nomeLote.replace(/[^a-zA-Z0-9_-]/g, '_') + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      mostrarAlerta('✓ Planilha do lote exportada com sucesso em formato CSV!', 'sucesso');
     }
 
     function trocarSubAbaAdmin(subAba) {
       ESTADO.subAbaAdminAtiva = subAba || 'cadastros';
       var btnCadastros = document.getElementById('subAbaBtnCadastros');
       var btnLote = document.getElementById('subAbaBtnLote');
+      var btnCentral = document.getElementById('subAbaBtnCentralCandidatos');
       var boxCadastros = document.getElementById('conteudoSubAbaCadastros');
       var boxLote = document.getElementById('conteudoSubAbaLote');
+      var boxCentral = document.getElementById('conteudoSubAbaCentralCandidatos');
+
+      // Oculta todas as sub-abas
+      if (boxCadastros) boxCadastros.style.display = 'none';
+      if (boxLote) boxLote.style.display = 'none';
+      if (boxCentral) boxCentral.style.display = 'none';
+
+      var btnInativoClass = 'px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer flex items-center gap-1.5';
+      var btnAtivoClass = 'px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-emerald-800 text-white shadow-xs cursor-pointer flex items-center gap-1.5';
+
+      if (btnCadastros) btnCadastros.className = btnInativoClass;
+      if (btnLote) btnLote.className = btnInativoClass;
+      if (btnCentral) btnCentral.className = btnInativoClass;
 
       if (subAba === 'lote') {
-        if (boxCadastros) boxCadastros.style.display = 'none';
         if (boxLote) boxLote.style.display = 'block';
-
-        if (btnCadastros) {
-          btnCadastros.className = 'px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer flex items-center gap-1.5';
-        }
-        if (btnLote) {
-          btnLote.className = 'px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-emerald-800 text-white shadow-xs cursor-pointer flex items-center gap-1.5';
-        }
+        if (btnLote) btnLote.className = btnAtivoClass;
 
         if (!LOTE_ESTADO.inicializado) {
           inicializarLoteAPartirDoEstado(false);
         } else {
           atualizarPainelLoteCompleto();
         }
+      } else if (subAba === 'central_candidatos') {
+        if (boxCentral) boxCentral.style.display = 'block';
+        if (btnCentral) btnCentral.className = btnAtivoClass;
+        carregarCandidatosCentral();
       } else {
         if (boxCadastros) boxCadastros.style.display = 'block';
-        if (boxLote) boxLote.style.display = 'none';
-
-        if (btnCadastros) {
-          btnCadastros.className = 'px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-emerald-800 text-white shadow-xs cursor-pointer flex items-center gap-1.5';
-        }
-        if (btnLote) {
-          btnLote.className = 'px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer flex items-center gap-1.5';
-        }
-
+        if (btnCadastros) btnCadastros.className = btnAtivoClass;
         renderizarTabelaAdmin();
       }
+    }
+
+    // ===================================================================
+    // CATÁLOGO OFICIAL DE 167 COMARCAS DO TJRS (MODAL DE IMPORTAÇÃO)
+    // ===================================================================
+    window.LISTA_OFICIAL_COMARCAS_TJRS = [
+      "Agudo", "Alegrete", "Alvorada", "Antônio Prado", "Arroio do Meio", "Arroio do Tigre", "Arroio Grande",
+      "Arvorezinha", "Augusto Pestana", "Bagé", "Barra do Ribeiro", "Bento Gonçalves", "Bom Jesus", "Butiá",
+      "Caçapava do Sul", "Cacequi", "Cachoeira do Sul", "Cachoeirinha", "Camaquã", "Campina das Missões",
+      "Campo Bom", "Campo Novo", "Candelária", "Canela", "Canguçu", "Canoas", "Capão da Canoa", "Carazinho",
+      "Carlos Barbosa", "Casca", "Catuípe", "Caxias do Sul", "Cerro Largo", "Charqueadas", "Constantina",
+      "Coronel Bicaco", "Crissiumal", "Cruz Alta", "Dois Irmãos", "Dom Pedrito", "Eldorado do Sul", "Encantado",
+      "Encruzilhada do Sul", "Erechim", "Espumoso", "Estância Velha", "Esteio", "Estrela", "Farroupilha",
+      "Faxinal do Soturno", "Feliz", "Flores da Cunha", "Frederico Westphalen", "Garibaldi", "Gaurama",
+      "General Câmara", "Getúlio Vargas", "Giruá", "Gramado", "Gravataí", "Guaíba", "Guaporé", "Guarani das Missões",
+      "Herval", "Horizontina", "Ibirubá", "Igrejinha", "Ijuí", "Iraí", "Itaqui", "Ivoti", "Jaguarão", "Jaguari",
+      "Júlio de Castilhos", "Lagoa Vermelha", "Lajeado", "Lavras do Sul", "Marau", "Marcelino Ramos", "Montenegro",
+      "Mostardas", "Não-Me-Toque", "Nonoai", "Nova Petrópolis", "Nova Prata", "Novo Hamburgo", "Osório",
+      "Palmares do Sul", "Palmeira das Missões", "Panambi", "Parobé", "Passo Fundo", "Pedro Osório", "Pelotas",
+      "Pinheiro Machado", "Piratini", "Planalto", "Portão", "Porto Alegre", "Porto Xavier", "Quaraí",
+      "Restinga Seca", "Rio Grande", "Rio Pardo", "Rodeio Bonito", "Ronda Alta", "Rosário do Sul", "Salto do Jacuí",
+      "Sananduva", "Santa Bárbara do Sul", "Santa Cruz do Sul", "Santa Maria", "Santa Rosa", "Santa Vitória do Palmar",
+      "Santana do Livramento", "Santiago", "Santo Ângelo", "Santo Antônio da Patrulha", "Santo Antônio das Missões",
+      "Santo Augusto", "Santo Cristo", "São Borja", "São Francisco de Assis", "São Francisco de Paula",
+      "São Gabriel", "São Jerônimo", "São José do Norte", "São José do Ouro", "São Leopoldo", "São Lourenço do Sul",
+      "São Luiz Gonzaga", "São Marcos", "São Pedro do Sul", "São Sebastião do Caí", "São Sepé", "São Valentim",
+      "São Vicente do Sul", "Sapiranga", "Sapucaia do Sul", "Sarandi", "Seberi", "Sobradinho", "Soledade",
+      "Tapejara", "Tapera", "Tapes", "Taquara", "Taquari", "Tenente Portela", "Terra de Areia", "Teutônia",
+      "Torres", "Tramandaí", "Três Coroas", "Três de Maio", "Três Passos", "Tribunal de Justiça", "Triunfo",
+      "Tucunduva", "Tupanciretã", "Turmas Recursais", "Uruguaiana", "Vacaria", "Venâncio Aires", "Vera Cruz",
+      "Veranópolis", "Viamão"
+    ];
+
+    function abrirModalCatalogoComarcasTJRS() {
+      var modal = document.getElementById('modalCatalogoComarcasTJRS');
+      if (!modal) return;
+      modal.style.display = 'flex';
+      var busca = document.getElementById('buscaCatalogoComarcasInput');
+      if (busca) busca.value = '';
+      renderizarListaCheckboxesCatalogoComarcas('');
+    }
+
+    function fecharModalCatalogoComarcasTJRS() {
+      var modal = document.getElementById('modalCatalogoComarcasTJRS');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function filtrarCatalogoComarcasTJRS() {
+      var busca = (document.getElementById('buscaCatalogoComarcasInput').value || '').toLowerCase().trim();
+      renderizarListaCheckboxesCatalogoComarcas(busca);
+    }
+
+    function renderizarListaCheckboxesCatalogoComarcas(filtro) {
+      var container = document.getElementById('listaCatalogoComarcasCheckboxes');
+      if (!container) return;
+      container.innerHTML = '';
+
+      var comarcasNoLote = {};
+      (LOTE_ESTADO.comarcas || []).forEach(function(c) {
+        comarcasNoLote[c.nome.toLowerCase()] = c.vagas;
+      });
+
+      var lista = window.LISTA_OFICIAL_COMARCAS_TJRS || [];
+
+      lista.forEach(function(nome) {
+        if (filtro && !nome.toLowerCase().includes(filtro)) return;
+
+        var jaExiste = comarcasNoLote.hasOwnProperty(nome.toLowerCase());
+        var vagasAtuais = jaExiste ? comarcasNoLote[nome.toLowerCase()] : 0;
+
+        var div = document.createElement('label');
+        div.className = 'flex items-center justify-between p-2 hover:bg-emerald-50/50 rounded-lg cursor-pointer transition-colors ' + (jaExiste ? 'bg-emerald-50/30' : '');
+
+        var badgeExiste = jaExiste
+          ? '<span class="text-3xs font-extrabold uppercase px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">No Lote (' + vagasAtuais + ' vagas)</span>'
+          : '<span class="text-3xs text-slate-400">Não adicionada</span>';
+
+        div.innerHTML = '<div class="flex items-center gap-2.5">' +
+          '<input type="checkbox" class="chk-catalogo-comarca rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer" data-nome="' + nome.replace(/"/g, '&quot;') + '" onchange="atualizarContadorCatalogoComarcas()">' +
+          '<span class="font-medium text-slate-800 text-xs">' + nome + '</span>' +
+          '</div>' +
+          '<div>' + badgeExiste + '</div>';
+
+        container.appendChild(div);
+      });
+
+      atualizarContadorCatalogoComarcas();
+    }
+
+    function marcarTodasComarcasCatalogo(marcar) {
+      var checkboxes = document.querySelectorAll('#listaCatalogoComarcasCheckboxes .chk-catalogo-comarca');
+      checkboxes.forEach(function(chk) {
+        chk.checked = !!marcar;
+      });
+      atualizarContadorCatalogoComarcas();
+    }
+
+    function atualizarContadorCatalogoComarcas() {
+      var selecionadas = document.querySelectorAll('#listaCatalogoComarcasCheckboxes .chk-catalogo-comarca:checked').length;
+      var el = document.getElementById('contadorCatalogoComarcasSelecionadas');
+      if (el) el.textContent = selecionadas + ' comarca(s) selecionada(s)';
+    }
+
+    async function confirmarImportacaoCatalogoComarcas() {
+      var checkboxes = document.querySelectorAll('#listaCatalogoComarcasCheckboxes .chk-catalogo-comarca:checked');
+      if (checkboxes.length === 0) {
+        mostrarAlerta('Selecione pelo menos uma comarca para importar para o lote.', 'aviso');
+        return;
+      }
+
+      var inpVagas = document.getElementById('vagasPadraoImportacaoCatalogo');
+      var vagasPadrao = Math.max(1, parseInt(inpVagas ? inpVagas.value : 1, 10) || 1);
+
+      var adicionadas = 0;
+      var mapaComarcas = {};
+      (LOTE_ESTADO.comarcas || []).forEach(function(c) {
+        mapaComarcas[c.nome.toLowerCase()] = c;
+      });
+
+      checkboxes.forEach(function(chk) {
+        var nome = chk.getAttribute('data-nome');
+        if (!nome) return;
+        var k = nome.toLowerCase();
+        if (mapaComarcas[k]) {
+          if (mapaComarcas[k].vagas < vagasPadrao) {
+            mapaComarcas[k].vagas = vagasPadrao;
+          }
+        } else {
+          var nova = { nome: nome, vagas: vagasPadrao };
+          LOTE_ESTADO.comarcas.push(nova);
+          mapaComarcas[k] = nova;
+          adicionadas++;
+        }
+      });
+
+      fecharModalCatalogoComarcasTJRS();
+      renderizarTabelaLoteComarcas();
+      atualizarPainelLoteCompleto();
+      await salvarConfiguracaoLote();
+      mostrarAlerta('✓ ' + checkboxes.length + ' comarca(s) importada(s) para o lote com sucesso! (' + adicionadas + ' novas adicionadas)', 'sucesso');
+    }
+
+    // ===================================================================
+    // CENTRAL GLOBAL DE CANDIDATOS (MULTI-CONCURSO / ESTILO CRM)
+    // ===================================================================
+    var CENTRAL_CANDIDATOS_ESTADO = {
+      lista: [],
+      filtrados: [],
+      paginaAtual: 1,
+      itensPorPagina: 30,
+      filtroTipo: 'todos',
+      termoBusca: '',
+      carregando: false,
+      candidatoSelecionadoParaLote: null
+    };
+
+    async function carregarCandidatosCentral(forcar) {
+      var tbody = document.getElementById('tabelaCentralCandidatosBody');
+      if (tbody && CENTRAL_CANDIDATOS_ESTADO.lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-slate-400"><div class="inline-block animate-spin mr-2">⏳</div> Carregando candidatos cadastrados...</td></tr>';
+      }
+
+      try {
+        var listaCarregada = [];
+
+        if (supabaseClient) {
+          var res = await supabaseClient.from('configuracoes').select('*').eq('chave', 'banco_central_candidatos').single();
+          if (res && res.data && res.data.valor && Array.isArray(res.data.valor)) {
+            listaCarregada = res.data.valor;
+          }
+        }
+
+        if (!listaCarregada || listaCarregada.length === 0) {
+          var base = window.DADOS_CANDIDATOS_BASE || [];
+          listaCarregada = base.map(function(c, idx) {
+            return {
+              id: 'cand_' + (idx + 1),
+              nome: c.nome,
+              cpf: c.cpf || '',
+              email: c.email || '',
+              whatsapp: c.whatsapp || '',
+              tipo: c.tipo || 'AC',
+              vaga: c.vaga || (idx + 1),
+              suplente: !!c.suplente
+            };
+          });
+
+          if (supabaseClient) {
+            try {
+              await supabaseClient.from('configuracoes').upsert({
+                chave: 'banco_central_candidatos',
+                valor: listaCarregada,
+                updated_at: new Date().toISOString()
+              });
+            } catch(eSave) {}
+          }
+        }
+
+        var respostas = ESTADO.respostas || {};
+        listaCarregada.forEach(function(cand) {
+          var r = respostas[cand.nome];
+          if (r) {
+            if (!cand.cpf && r.cpf) cand.cpf = r.cpf;
+            if (!cand.email && r.email) cand.email = r.email;
+            if (!cand.whatsapp && r.whatsapp) cand.whatsapp = r.whatsapp;
+          }
+        });
+
+        CENTRAL_CANDIDATOS_ESTADO.lista = listaCarregada;
+        var badgeTotal = document.getElementById('badgeTotalCentralCandidatos');
+        if (badgeTotal) badgeTotal.textContent = listaCarregada.length;
+
+        filtrarCandidatosCentral();
+      } catch(err) {
+        console.error('Erro ao carregar central de candidatos:', err);
+        if (tbody) {
+          tbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-red-400">Erro ao carregar candidatos: ' + (err.message || err) + '</td></tr>';
+        }
+      }
+    }
+
+    function filtrarCandidatosCentral() {
+      var selTipo = document.getElementById('filtroTipoCentralCandidatos');
+      var inpBusca = document.getElementById('buscaInputCentralCandidatos');
+      var tipo = selTipo ? selTipo.value : 'todos';
+      var termo = (inpBusca ? inpBusca.value : '').toLowerCase().trim();
+
+      CENTRAL_CANDIDATOS_ESTADO.filtroTipo = tipo;
+      CENTRAL_CANDIDATOS_ESTADO.termoBusca = termo;
+
+      var filtrados = (CENTRAL_CANDIDATOS_ESTADO.lista || []).filter(function(c) {
+        if (tipo === 'com_email' && (!c.email || !c.email.trim())) return false;
+        if (tipo === 'sem_email' && (c.email && c.email.trim())) return false;
+
+        if (termo) {
+          var nomeMatch = (c.nome || '').toLowerCase().includes(termo);
+          var cpfLimpo = (c.cpf || '').replace(/\D/g, '');
+          var termoLimpo = termo.replace(/\D/g, '');
+          var cpfMatch = termoLimpo ? cpfLimpo.includes(termoLimpo) : false;
+          var emailMatch = (c.email || '').toLowerCase().includes(termo);
+          if (!nomeMatch && !cpfMatch && !emailMatch) return false;
+        }
+        return true;
+      });
+
+      CENTRAL_CANDIDATOS_ESTADO.filtrados = filtrados;
+      CENTRAL_CANDIDATOS_ESTADO.paginaAtual = 1;
+      renderizarTabelaCentralCandidatos();
+    }
+
+    function mudarPaginaCentralCandidatos(delta) {
+      var total = CENTRAL_CANDIDATOS_ESTADO.filtrados.length;
+      var porPag = CENTRAL_CANDIDATOS_ESTADO.itensPorPagina;
+      var maxPag = Math.max(1, Math.ceil(total / porPag));
+
+      var novaPag = CENTRAL_CANDIDATOS_ESTADO.paginaAtual + delta;
+      if (novaPag >= 1 && novaPag <= maxPag) {
+        CENTRAL_CANDIDATOS_ESTADO.paginaAtual = novaPag;
+        renderizarTabelaCentralCandidatos();
+      }
+    }
+
+    function renderizarTabelaCentralCandidatos() {
+      var tbody = document.getElementById('tabelaCentralCandidatosBody');
+      var pagTexto = document.getElementById('centralCandidatosPaginacaoTexto');
+      var btnAnt = document.getElementById('btnPagAntCentral');
+      var btnProx = document.getElementById('btnPagProxCentral');
+
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      var filtrados = CENTRAL_CANDIDATOS_ESTADO.filtrados || [];
+      var total = filtrados.length;
+      var porPag = CENTRAL_CANDIDATOS_ESTADO.itensPorPagina;
+      var pag = CENTRAL_CANDIDATOS_ESTADO.paginaAtual;
+      var maxPag = Math.max(1, Math.ceil(total / porPag));
+
+      var inicio = (pag - 1) * porPag;
+      var fim = Math.min(inicio + porPag, total);
+
+      if (pagTexto) {
+        pagTexto.textContent = total > 0 ? ((inicio + 1) + ' - ' + fim + ' de ' + total) : '0 - 0 de 0';
+      }
+
+      if (btnAnt) btnAnt.disabled = (pag <= 1);
+      if (btnProx) btnProx.disabled = (pag >= maxPag || total === 0);
+
+      if (total === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="py-10 text-center text-slate-400 text-xs">Nenhum candidato encontrado com os filtros aplicados.</td></tr>';
+        return;
+      }
+
+      var candsNoLote = {};
+      ((LOTE_ESTADO.titulares || []).concat(LOTE_ESTADO.suplentes || [])).forEach(function(c) {
+        candsNoLote[(c.nome || '').toLowerCase().trim()] = true;
+      });
+
+      for (var i = inicio; i < fim; i++) {
+        var c = filtrados[i];
+        var tr = document.createElement('tr');
+        tr.className = 'hover:bg-[#202633] transition-colors border-b border-slate-800/80 text-xs';
+
+        var estaNoLote = candsNoLote.hasOwnProperty((c.nome || '').toLowerCase().trim());
+        var cpfFormatado = c.cpf ? formatarCPF(c.cpf) : '<span class="text-slate-500 font-mono">---</span>';
+        var wppFormatado = c.whatsapp ? formatarTelefone(c.whatsapp) : '<span class="text-slate-500">---</span>';
+        var emailHtml = c.email
+          ? '<span class="font-mono text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-800/50">' + c.email + '</span>'
+          : '<button type="button" onclick="vincularEmailCandidatoPrompt(\'' + c.id + '\')" class="text-3xs text-amber-400 hover:text-amber-300 hover:underline cursor-pointer">+ Vincular Google</button>';
+
+        var acoesHtml = '<div class="flex items-center justify-end gap-1.5">' +
+          (estaNoLote
+            ? '<span class="text-3xs bg-emerald-950 text-emerald-300 border border-emerald-800/60 px-2 py-1 rounded font-bold">✓ No Lote</span>'
+            : '<button type="button" onclick="abrirModalVincularCandidato(\'' + c.id + '\')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-3xs px-2.5 py-1 rounded cursor-pointer transition-all shadow-2xs">+ No Lote</button>') +
+          '<button type="button" onclick="excluirCandidatoCentral(\'' + c.id + '\')" class="text-red-400 hover:text-red-300 p-1 rounded hover:bg-red-950/40 cursor-pointer" title="Excluir da Central">🗑️</button>' +
+          '</div>';
+
+        tr.innerHTML = '<td class="py-3 px-4 font-semibold text-slate-100 flex items-center gap-2">' +
+          '<span>👤</span> <span>' + c.nome + '</span>' +
+          '</td>' +
+          '<td class="py-3 px-3 text-slate-300">' + (c.tipo || 'Pessoa Física') + '</td>' +
+          '<td class="py-3 px-3 font-mono text-slate-200">' + cpfFormatado + '</td>' +
+          '<td class="py-3 px-3">' + emailHtml + '</td>' +
+          '<td class="py-3 px-3 font-mono text-slate-200">' + wppFormatado + '</td>' +
+          '<td class="py-3 px-4 text-right">' + acoesHtml + '</td>';
+
+        tbody.appendChild(tr);
+      }
+    }
+
+    function abrirModalNovoCandidatoCentral() {
+      var modal = document.getElementById('modalNovoCandidatoCentral');
+      if (!modal) return;
+      modal.style.display = 'flex';
+
+      var itemLote = (LOTE_ESTADO.listaLotes || []).find(function(l) { return l.id === LOTE_ESTADO.loteSelecionadoId; });
+      var spanLote = document.getElementById('spanNomeLoteCentralModal');
+      if (spanLote) spanLote.textContent = itemLote ? itemLote.nome : 'Lote Atual';
+
+      document.getElementById('inputCentralNome').value = '';
+      document.getElementById('inputCentralCPF').value = '';
+      document.getElementById('inputCentralWhatsApp').value = '';
+      document.getElementById('inputCentralEmail').value = '';
+      document.getElementById('checkCentralAdicionarAoLote').checked = true;
+      toggleOpcoesLoteNovoCandidato(true);
+    }
+
+    function fecharModalNovoCandidatoCentral() {
+      var modal = document.getElementById('modalNovoCandidatoCentral');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function toggleOpcoesLoteNovoCandidato(checked) {
+      var box = document.getElementById('boxOpcoesLoteNovoCandidato');
+      if (box) box.style.display = checked ? 'grid' : 'none';
+    }
+
+    async function confirmarSalvarNovoCandidatoCentral() {
+      var nome = (document.getElementById('inputCentralNome').value || '').trim();
+      var cpf = (document.getElementById('inputCentralCPF').value || '').replace(/\D/g, '');
+      var wpp = (document.getElementById('inputCentralWhatsApp').value || '').replace(/\D/g, '');
+      var email = (document.getElementById('inputCentralEmail').value || '').toLowerCase().trim();
+
+      if (!nome) {
+        mostrarAlerta('Informe o nome completo do candidato.', 'erro');
+        return;
+      }
+
+      var novoId = 'cand_' + Date.now();
+      var novoCand = {
+        id: novoId,
+        nome: nome,
+        cpf: cpf,
+        email: email,
+        whatsapp: wpp,
+        tipo: 'AC',
+        created_at: new Date().toISOString()
+      };
+
+      CENTRAL_CANDIDATOS_ESTADO.lista.unshift(novoCand);
+
+      var chkLote = document.getElementById('checkCentralAdicionarAoLote');
+      if (chkLote && chkLote.checked) {
+        var part = document.getElementById('selectCentralParticipacao').value;
+        var cota = document.getElementById('selectCentralCota').value;
+        var vagaInp = document.getElementById('inputCentralClassificacao').value;
+        var vagaNum = parseInt(vagaInp, 10);
+
+        novoCand.tipo = cota || 'AC';
+
+        if (part === 'suplente') {
+          novoCand.suplente = true;
+          LOTE_ESTADO.suplentes.push(Object.assign({}, novoCand));
+        } else {
+          novoCand.vaga = isNaN(vagaNum) ? (LOTE_ESTADO.titulares.length + 1) : vagaNum;
+          LOTE_ESTADO.titulares.push(Object.assign({}, novoCand));
+        }
+        atualizarPainelLoteCompleto();
+        await salvarConfiguracaoLote();
+      }
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('configuracoes').upsert({
+            chave: 'banco_central_candidatos',
+            valor: CENTRAL_CANDIDATOS_ESTADO.lista,
+            updated_at: new Date().toISOString()
+          });
+        } catch(eSb) {
+          console.warn('Aviso ao persistir central no Supabase:', eSb);
+        }
+      }
+
+      fecharModalNovoCandidatoCentral();
+      filtrarCandidatosCentral();
+      mostrarAlerta('✓ Candidato ' + nome + ' cadastrado com sucesso!', 'sucesso');
+    }
+
+    function abrirModalVincularCandidato(candId) {
+      var cand = (CENTRAL_CANDIDATOS_ESTADO.lista || []).find(function(c) { return c.id === candId; });
+      if (!cand) return;
+
+      CENTRAL_CANDIDATOS_ESTADO.candidatoSelecionadoParaLote = cand;
+      document.getElementById('vincularNomeCandidatoTexto').textContent = cand.nome;
+      document.getElementById('vincularCpfCandidatoTexto').textContent = cand.cpf ? ('CPF: ' + formatarCPF(cand.cpf)) : 'Sem CPF cadastrado';
+      document.getElementById('modalVincularCandidatoAoLote').style.display = 'flex';
+    }
+
+    function fecharModalVincularCandidato() {
+      var modal = document.getElementById('modalVincularCandidatoAoLote');
+      if (modal) modal.style.display = 'none';
+      CENTRAL_CANDIDATOS_ESTADO.candidatoSelecionadoParaLote = null;
+    }
+
+    async function confirmarVincularCandidatoAoLote() {
+      var cand = CENTRAL_CANDIDATOS_ESTADO.candidatoSelecionadoParaLote;
+      if (!cand) return;
+
+      var part = document.getElementById('vincularSelectParticipacao').value;
+      var cota = document.getElementById('vincularSelectCota').value;
+      var vagaInp = document.getElementById('vincularInputVaga').value;
+      var vagaNum = parseInt(vagaInp, 10);
+
+      var candLote = {
+        nome: cand.nome,
+        tipo: cota || 'AC',
+        cpf: cand.cpf || '',
+        email: cand.email || '',
+        whatsapp: cand.whatsapp || ''
+      };
+
+      if (part === 'suplente') {
+        candLote.suplente = true;
+        candLote.vaga = null;
+        LOTE_ESTADO.suplentes.push(candLote);
+      } else {
+        candLote.vaga = isNaN(vagaNum) ? (LOTE_ESTADO.titulares.length + 1) : vagaNum;
+        LOTE_ESTADO.titulares.push(candLote);
+      }
+
+      fecharModalVincularCandidato();
+      atualizarPainelLoteCompleto();
+      renderizarTabelaCentralCandidatos();
+      await salvarConfiguracaoLote();
+      mostrarAlerta('✓ Candidato ' + cand.nome + ' adicionado ao lote com sucesso!', 'sucesso');
+    }
+
+    async function vincularEmailCandidatoPrompt(candId) {
+      var cand = (CENTRAL_CANDIDATOS_ESTADO.lista || []).find(function(c) { return c.id === candId; });
+      if (!cand) return;
+
+      var email = prompt('Informe o e-mail da Conta Google a vincular para ' + cand.nome + ':', cand.email || '');
+      if (email === null) return;
+      email = (email || '').toLowerCase().trim();
+
+      cand.email = email;
+      renderizarTabelaCentralCandidatos();
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('configuracoes').upsert({
+            chave: 'banco_central_candidatos',
+            valor: CENTRAL_CANDIDATOS_ESTADO.lista,
+            updated_at: new Date().toISOString()
+          });
+        } catch(e) {}
+      }
+      mostrarAlerta('✓ E-mail Google vinculado com sucesso ao candidato ' + cand.nome + '!', 'sucesso');
+    }
+
+    async function excluirCandidatoCentral(candId) {
+      var cand = (CENTRAL_CANDIDATOS_ESTADO.lista || []).find(function(c) { return c.id === candId; });
+      if (!cand) return;
+
+      if (!confirm('Deseja excluir ' + cand.nome + ' da Base Central de Candidatos?')) return;
+
+      CENTRAL_CANDIDATOS_ESTADO.lista = CENTRAL_CANDIDATOS_ESTADO.lista.filter(function(c) { return c.id !== candId; });
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('configuracoes').upsert({
+            chave: 'banco_central_candidatos',
+            valor: CENTRAL_CANDIDATOS_ESTADO.lista,
+            updated_at: new Date().toISOString()
+          });
+        } catch(e) {}
+      }
+
+      filtrarCandidatosCentral();
+      mostrarAlerta('Candidato removido da base central.', 'aviso');
     }
 
     function trocarCategoriaLote(categoria) {
@@ -11024,28 +11878,113 @@
     }
 
     // --- SALVAMENTO, RESTAURAÇÃO E EXPORTAÇÃO DO LOTE ---
-    async function salvarLoteConfiguracao() {
-      try {
-        // Exemplo de salvamento direto no Supabase para o lote ativo
-        const loteId = ESTADO.loteAtivoId || 'lote_1';
-        
-        // 1. Salvar dados do lote / comarcas
-        const { error: errComarcas } = await supabaseClient
-          .from('comarcas')
-          .upsert(ESTADO.comarcas);
+    async function salvarLoteConfiguracao(semConfirmacao) {
+      if (!LOTE_ESTADO.comarcas || LOTE_ESTADO.comarcas.length === 0) {
+        mostrarAlerta('O lote deve possuir pelo menos uma comarca cadastrada.', 'aviso');
+        return;
+      }
+      if (!LOTE_ESTADO.titulares || LOTE_ESTADO.titulares.length === 0) {
+        mostrarAlerta('O lote deve possuir pelo menos um candidato titular cadastrado.', 'aviso');
+        return;
+      }
 
-        if (errComarcas) {
-          console.error("Erro ao salvar comarcas no Supabase:", errComarcas);
-          alert("Erro ao salvar comarcas no Supabase. Verifique o console.");
+      var id = LOTE_ESTADO.loteSelecionadoId || 'lote_1';
+      var item = (LOTE_ESTADO.listaLotes || []).find(function(l) { return l.id === id; });
+      var nomeLote = item ? item.nome : ('Lote ' + id);
+      nomeLote = String(nomeLote).replace(/\s*\[ATIVO\]/gi, '').replace(/\s*\(Histórico\)/gi, '').trim();
+
+      if (!semConfirmacao) {
+        if (!confirm('Deseja salvar as alterações no "' + nomeLote + '"?\n\n' +
+          '• ' + LOTE_ESTADO.comarcas.length + ' comarcas\n' +
+          '• ' + LOTE_ESTADO.titulares.length + ' titulares\n' +
+          '• ' + LOTE_ESTADO.suplentes.length + ' suplentes\n\n' +
+          'Caso alguma comarca tenha sido removida, o sistema ajustará as escolhas salvas dos candidatos automaticamente em cascata (subindo as opções seguintes sem criar lacunas na ordem de preferência).')) {
           return;
         }
-
-        alert("Alterações salvas com sucesso no Supabase!");
-        location.reload();
-      } catch (err) {
-        console.error("Erro inesperado ao salvar:", err);
       }
+
+      var todosCandidatosNovos = LOTE_ESTADO.titulares.concat(LOTE_ESTADO.suplentes);
+
+      // =============================================================
+      // REQUISITO 3: AJUSTE AUTOMÁTICO DE ESCOLHAS EM CASCATA
+      // =============================================================
+      var setComarcas = {};
+      LOTE_ESTADO.comarcas.forEach(function(c) {
+        setComarcas[c.nome] = true;
+        setComarcas[c.nome.replace(/\*/g, '').trim()] = true;
+      });
+
+      var totalAjustados = 0;
+      var respostasAtuais = ESTADO.respostas || {};
+      for (var candNome in respostasAtuais) {
+        var r = respostasAtuais[candNome];
+        if (r && r.escolhas && Array.isArray(r.escolhas)) {
+          var antesQtd = r.escolhas.length;
+          var novasEscolhas = r.escolhas.filter(function(op) {
+            var opLimpo = op.replace(/\*/g, '').trim();
+            return setComarcas[op] || setComarcas[opLimpo];
+          });
+          if (novasEscolhas.length !== antesQtd) {
+            r.escolhas = novasEscolhas;
+            r.dataUltimoAjusteCascata = new Date().toISOString();
+            totalAjustados++;
+          }
+        }
+      }
+
+      var payload = {
+        id: id,
+        concurso_id: CONCURSO_ID_PADRAO,
+        nome: nomeLote,
+        candidatos: todosCandidatosNovos,
+        comarcas: LOTE_ESTADO.comarcas,
+        is_ranking_visible: !!LOTE_ESTADO.isRankingVisible,
+        is_printing_enabled: !!LOTE_ESTADO.isPrintingEnabled,
+        travado: !!LOTE_ESTADO.travado,
+        senha: LOTE_ESTADO.senha || ''
+      };
+
+      if (supabaseClient) {
+        try {
+          var resSave = await supabaseClient.from('lotes').upsert(payload, { onConflict: 'id,concurso_id' });
+          if (resSave.error) {
+            // Tenta sem onConflict caso PK seja apenas id
+            var resAlt = await supabaseClient.from('lotes').upsert(payload);
+            if (resAlt.error) throw resAlt.error;
+          }
+        } catch(eSb) {
+          console.warn('Erro ao salvar lote no Supabase:', eSb);
+          mostrarAlerta('Erro ao salvar lote no Supabase: ' + (eSb.message || eSb), 'erro');
+          return;
+        }
+      }
+
+      // Se este lote for o ativo, sincroniza no estado
+      if (id === (ESTADO.loteAtivoId || 'lote_1')) {
+        ESTADO.candidatos = todosCandidatosNovos;
+        ESTADO.comarcas = LOTE_ESTADO.comarcas;
+        ESTADO.isRankingVisible = !!LOTE_ESTADO.isRankingVisible;
+        ESTADO.isPrintingEnabled = !!LOTE_ESTADO.isPrintingEnabled;
+        ESTADO.simulacao = processarSimulacaoMock(ESTADO.respostas);
+
+        popularSelectCandidatos(ESTADO.candidatos);
+        renderizarListaTodasComarcas();
+        renderizarTabelaGeral();
+        renderizarPainelComarcas();
+        renderizarTabelaAdmin();
+        atualizarContadorHeader();
+        aplicarRegrasVisibilidadeLote();
+      }
+
+      atualizarPainelLoteCompleto();
+
+      var msg = '✓ Configurações do "' + nomeLote + '" salvas com sucesso!';
+      if (totalAjustados > 0) {
+        msg += '\n\n' + totalAjustados + ' candidato(s) tiveram suas escolhas ajustadas e elevadas em cascata automaticamente.';
+      }
+      mostrarAlerta(msg, 'sucesso');
     }
+    window.salvarConfiguracaoLote = salvarLoteConfiguracao;
 
     function restaurarLotePadraoEdital() {
       if (!confirm('Deseja restaurar a lista PADRÃO do Edital original?\n\n' +
@@ -11155,18 +12094,22 @@
     }
 
     // AÇÕES DE GESTÃO DO BANCO DE DADOS
-    function zerarBancoDeDados() {
-      if (confirm('Zerar todas as respostas do sistema?')) {
-        google.script.run.withSuccessHandler(function() {
-          ESTADO.respostas = {};
-          ESTADO.simulacao = processarSimulacaoMock({});
-          atualizarContadorHeader();
-          renderizarMinhasEscolhas();
-          renderizarListaTodasComarcas();
-          notificarAlteracaoTempoReal();
-          mostrarAlerta('Banco de dados zerado com sucesso.', 'aviso');
-          trocarAba('formulario');
-        }).limparBancoDeDados();
+    async function zerarBancoDeDados() {
+      if (confirm('Zerar todas as respostas do lote atual no Supabase?')) {
+        var loteId = ESTADO.loteSelecionadoId || ESTADO.loteAtivoId || 'lote_1';
+        if (supabaseClient) {
+          try {
+            await supabaseClient.from('respostas').delete().eq('lote_id', loteId);
+          } catch(e) {}
+        }
+        ESTADO.respostas = {};
+        ESTADO.simulacao = processarSimulacaoMock({});
+        atualizarContadorHeader();
+        renderizarMinhasEscolhas();
+        renderizarListaTodasComarcas();
+        notificarAlteracaoTempoReal();
+        mostrarAlerta('Banco de dados zerado com sucesso.', 'aviso');
+        trocarAba('formulario');
       }
     }
 
