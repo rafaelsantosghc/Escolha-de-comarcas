@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TJRS - Escolha de Comarcas</title>
-  <meta name="description" content="Sistema interativo de escolha de comarcas e simulação de lotação dos concursos do TJRS.">
-  <meta property="og:title" content="TJRS - Escolha de Comarcas">
-  <meta property="og:description" content="Sistema interativo de escolha de comarcas e simulação de lotação dos concursos do TJRS.">
+  <title>CERTAM | Portal de Concurseiros</title>
+  <meta name="description" content="CERTAM | Portal de Concurseiros - Nunca é apenas uma prova. Sistema interativo de escolha de comarcas e simulação de lotação.">
+  <meta property="og:title" content="CERTAM | Portal de Concurseiros">
+  <meta property="og:description" content="CERTAM | Portal de Concurseiros - Nunca é apenas uma prova.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Crect width='100' height='100' rx='22' fill='%230B132B'/%3E%3Cdefs%3E%3ClinearGradient id='cg' x1='0%25' y1='100%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' stop-color='%230E4A5B'/%3E%3Cstop offset='50%25' stop-color='%230E7490'/%3E%3Cstop offset='100%25' stop-color='%232DD4BF'/%3E%3C/linearGradient%3E%3ClinearGradient id='cc' x1='20%25' y1='80%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' stop-color='%230891B2'/%3E%3Cstop offset='100%25' stop-color='%2334D399'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M 68 18 C 38 10 12 30 12 56 C 12 80 34 94 58 92 C 76 90 90 76 90 58' stroke='url(%23cg)' stroke-width='11' stroke-linecap='round' fill='none'/%3E%3Cpath d='M 32 53 L 48 69 L 88 23' stroke='url(%23cc)' stroke-width='11' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-4EEN0NG52E"></script>
@@ -631,31 +632,46 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased overflow-x-hidden w-full max-w-full">
 
-  <!-- Header TJRS - Padrão Moderno & Limpo -->
-  <header class="bg-slate-900 text-white shadow-xs border-b border-slate-800 overflow-hidden max-w-full">
+  <!-- Header CERTAM - Portal de Concurseiros -->
+  <header class="bg-[#0B132B] text-white shadow-xs border-b border-[#1C2D4A] overflow-hidden max-w-full">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div class="flex items-center space-x-3.5">
-          <div class="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-lg shadow-2xs font-serif shrink-0">
-            ⚖️
+          <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0F1E3D] to-[#0A1128] border border-teal-500/30 flex items-center justify-center p-2 shadow-sm shrink-0">
+            <svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
+              <defs>
+                <linearGradient id="certamHeaderGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#0E4A5B" />
+                  <stop offset="50%" stop-color="#0E7490" />
+                  <stop offset="100%" stop-color="#2DD4BF" />
+                </linearGradient>
+                <linearGradient id="certamHeaderCheck" x1="20%" y1="80%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#0891B2" />
+                  <stop offset="100%" stop-color="#34D399" />
+                </linearGradient>
+              </defs>
+              <path d="M 68 18 C 38 10 12 30 12 56 C 12 80 34 94 58 92 C 76 90 90 76 90 58" stroke="url(#certamHeaderGrad)" stroke-width="11" stroke-linecap="round" fill="none"/>
+              <path d="M 32 53 L 48 69 L 88 23" stroke="url(#certamHeaderCheck)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
           </div>
           <div>
-            <div class="flex items-center gap-2 text-xs font-semibold text-emerald-400 tracking-wider">
-              <span>TJRS • PODER JUDICIÁRIO</span>
+            <div class="flex items-center gap-2">
+              <h1 class="text-xl sm:text-2xl font-bold tracking-wider text-white font-serif uppercase">
+                CERTAM
+              </h1>
+              <span class="text-xs sm:text-sm font-semibold text-teal-300">Portal de Concurseiros</span>
               <span id="headerSubtituloVagas" style="display: none;"></span>
             </div>
-            <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white font-serif">
-              TJRS - Escolha de Comarcas
-            </h1>
-            <p class="text-xs text-slate-400">
-              Simulação e Lotação em Tempo Real
-            </p>
+            <div class="flex items-center gap-2 mt-0.5">
+              <span class="px-2 py-0.5 rounded-md bg-[#0E4A5B]/50 border border-teal-500/30 text-teal-200 text-2xs font-semibold font-mono tracking-wider">TJRS • Escolha de Comarcas</span>
+              <span class="text-2xs text-slate-400 hidden sm:inline">Simulação e Lotação em Tempo Real</span>
+            </div>
           </div>
         </div>
 
         <div class="flex flex-wrap items-center gap-2.5 sm:gap-3 text-xs">
           <!-- Metadados em formato limpo (Sem pills pesadas) -->
-          <div class="hidden xl:flex items-center gap-2 text-xs text-slate-400 font-medium border-r border-slate-800 pr-3">
+          <div class="hidden xl:flex items-center gap-2 text-xs text-slate-400 font-medium border-r border-[#1C2D4A] pr-3">
             <span><strong id="headerTotalVagasBadge" class="text-slate-200">166</strong> vagas</span>
             <span aria-hidden="true" class="text-slate-600">·</span>
             <span><strong id="headerTotalComarcasBadge" class="text-slate-200">98</strong> comarcas</span>
@@ -664,12 +680,12 @@
           </div>
 
           <!-- Seletor de Lote Global Clean -->
-          <div class="flex items-center gap-1.5 bg-slate-800 border border-slate-700/80 px-2.5 py-1 rounded-lg">
+          <div class="flex items-center gap-1.5 bg-[#0F1E3D] border border-teal-500/30 px-2.5 py-1 rounded-lg">
             <span class="text-xs font-medium text-slate-300">Lote:</span>
-            <select id="selectLoteGlobal" onchange="aoTrocarLoteGlobal(this.value)" class="bg-slate-800 text-white font-semibold text-xs focus:outline-none cursor-pointer">
+            <select id="selectLoteGlobal" onchange="aoTrocarLoteGlobal(this.value)" class="bg-[#0F1E3D] text-white font-semibold text-xs focus:outline-none cursor-pointer">
               <option value="lote_1" class="bg-slate-800 text-white" style="background-color: #1e293b; color: #ffffff;">Lote 1 (1º Chamamento)</option>
             </select>
-            <span id="badgeLoteGlobalStatus" class="text-3xs font-semibold uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">ATIVO</span>
+            <span id="badgeLoteGlobalStatus" class="text-3xs font-semibold uppercase px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-300 border border-teal-500/30 font-mono">ATIVO</span>
             <button id="btnRenomearLoteHeader" type="button" onclick="abrirModalRenomearLote()" style="display: none;" class="text-2xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-2 py-0.5 rounded font-medium transition-colors cursor-pointer flex items-center gap-1" title="Renomear lote selecionado">
               ✏️
             </button>
@@ -681,8 +697,8 @@
           </div>
 
           <!-- Indicador de Sincronização em Tempo Real (Supabase) -->
-          <div id="badgeTempoReal" class="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg text-2xs font-medium shrink-0" title="Sincronização em tempo real ativa com o Supabase">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <div id="badgeTempoReal" class="flex items-center gap-1.5 bg-teal-500/10 text-teal-300 border border-teal-500/20 px-2.5 py-1 rounded-lg text-2xs font-medium shrink-0" title="Sincronização em tempo real ativa com o Supabase">
+            <span class="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></span>
             <span id="textoTempoReal">Tempo Real</span>
           </div>
 
@@ -700,17 +716,17 @@
             </button>
 
             <!-- Botão de Acesso Direto para Teste/Preview Sem Login -->
-            <button id="btnModoTesteRapido" type="button" onclick="ativarModoTestePreview(true)" class="flex items-center gap-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-semibold px-2.5 py-1.5 rounded-lg text-xs border border-emerald-500/40 transition-colors cursor-pointer" title="Testar todas as funcionalidades do preview sem precisar autenticar">
+            <button id="btnModoTesteRapido" type="button" onclick="ativarModoTestePreview(true)" class="flex items-center gap-1.5 bg-teal-500/20 hover:bg-teal-500/30 text-teal-200 font-semibold px-2.5 py-1.5 rounded-lg text-xs border border-teal-500/40 transition-colors cursor-pointer" title="Testar todas as funcionalidades do preview sem precisar autenticar">
               <span>🧪 Modo Teste</span>
             </button>
 
             <!-- Bloco do Usuário Logado -->
-            <div id="blocoUsuarioLogado" style="display: none;" class="flex items-center gap-2 bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700 text-xs">
+            <div id="blocoUsuarioLogado" style="display: none;" class="flex items-center gap-2 bg-[#0F1E3D] px-2.5 py-1 rounded-lg border border-teal-500/30 text-xs">
               <div class="flex items-center gap-1.5">
                 <img id="imgAvatarUsuario" src="" alt="Avatar" style="display: none;" class="w-4 h-4 rounded-full border border-slate-600 object-cover" />
                 <span id="iconeTipoUsuario">👤</span>
                 <span id="badgeEmailUsuario" class="font-mono text-2xs font-medium text-slate-200 max-w-[130px] sm:max-w-[180px] truncate" title="E-mail autenticado"></span>
-                <span id="badgeTipoUsuario" class="text-3xs font-semibold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">Candidato</span>
+                <span id="badgeTipoUsuario" class="text-3xs font-semibold px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-300">Candidato</span>
               </div>
 
               <!-- Seletor de visão admin -->
@@ -734,8 +750,8 @@
       </div>
 
       <!-- Navegação por abas - Estilo Segmentado Clean -->
-      <nav class="flex overflow-x-auto gap-1 mt-4 pt-3 border-t border-slate-800 text-xs sm:text-sm no-scrollbar">
-        <button id="tabBtnFormulario" onclick="trocarAba('formulario')" class="px-3.5 py-2 rounded-lg font-semibold whitespace-nowrap transition-all bg-emerald-600 text-white shadow-xs">
+      <nav class="flex overflow-x-auto gap-1 mt-4 pt-3 border-t border-[#1C2D4A] text-xs sm:text-sm no-scrollbar">
+        <button id="tabBtnFormulario" onclick="trocarAba('formulario')" class="px-3.5 py-2 rounded-lg font-semibold whitespace-nowrap transition-all bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-xs">
           📝 Formulário de escolha
         </button>
         <button id="tabBtnDashboard" onclick="trocarAba('dashboard')" class="px-3.5 py-2 rounded-lg font-medium whitespace-nowrap transition-all text-slate-300 hover:text-white hover:bg-slate-800">
@@ -771,16 +787,35 @@
     <!-- ========================================== -->
     <section id="secaoFormulario" style="display: none;" class="space-y-6">
       <!-- Card de Bloqueio por Falta de Autenticação com Google -->
-      <div id="cardLoginObrigatorioGoogle" style="display: none;" class="p-8 rounded-2xl border-2 border-amber-300 bg-amber-50/95 text-stone-900 shadow-md text-center max-w-2xl mx-auto my-6">
-        <div class="w-16 h-16 bg-white rounded-full shadow-sm mx-auto flex items-center justify-center text-3xl mb-4 border border-amber-200">
-          🔐
+      <div id="cardLoginObrigatorioGoogle" style="display: none;" class="p-8 rounded-2xl border border-teal-500/30 bg-gradient-to-b from-[#0B132B] to-[#0A1128] text-white shadow-xl text-center max-w-2xl mx-auto my-6 relative overflow-hidden">
+        <div class="w-16 h-16 bg-gradient-to-br from-[#0F1E3D] to-[#0A1128] rounded-2xl shadow-inner mx-auto flex items-center justify-center p-3 mb-4 border border-teal-500/30">
+          <svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
+            <defs>
+              <linearGradient id="certamLoginGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#0E4A5B" />
+                <stop offset="50%" stop-color="#0E7490" />
+                <stop offset="100%" stop-color="#2DD4BF" />
+              </linearGradient>
+              <linearGradient id="certamLoginCheck" x1="20%" y1="80%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#0891B2" />
+                <stop offset="100%" stop-color="#34D399" />
+              </linearGradient>
+            </defs>
+            <path d="M 68 18 C 38 10 12 30 12 56 C 12 80 34 94 58 92 C 76 90 90 76 90 58" stroke="url(#certamLoginGrad)" stroke-width="11" stroke-linecap="round" fill="none"/>
+            <path d="M 32 53 L 48 69 L 88 23" stroke="url(#certamLoginCheck)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
-        <h3 class="text-xl font-bold font-serif text-stone-900">Autenticação Obrigatória</h3>
-        <p class="text-sm text-stone-700 mt-2 leading-relaxed">
-          Para garantir a integridade da sua manifestação e proteger seus dados pessoais com segurança no Supabase, você deve <strong>fazer login com sua conta Google</strong> antes de preencher ou alterar as comarcas escolhidas.
+        <div class="inline-flex items-center gap-2 mb-1">
+          <span class="font-serif font-bold text-white tracking-wider uppercase text-lg">CERTAM</span>
+          <span class="text-teal-300 font-semibold text-xs">Portal de Concurseiros</span>
+        </div>
+        <p class="text-teal-200/80 italic text-xs mb-3">"Nunca é apenas uma prova."</p>
+        <h3 class="text-xl font-bold font-serif text-white">Autenticação Obrigatória</h3>
+        <p class="text-sm text-slate-300 mt-2 leading-relaxed">
+          Para garantir a integridade da sua manifestação no módulo do TJRS e proteger seus dados com segurança, você deve <strong>fazer login com sua conta Google</strong> antes de preencher ou alterar as comarcas escolhidas.
         </p>
         <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <button type="button" onclick="fazerLoginGoogle()" class="flex items-center justify-center gap-3 bg-white hover:bg-stone-50 text-stone-800 font-bold px-6 py-3 rounded-xl shadow-md border border-stone-200 text-sm transition-all transform hover:scale-[1.02] cursor-pointer">
+          <button type="button" onclick="fazerLoginGoogle()" class="flex items-center justify-center gap-3 bg-white hover:bg-slate-100 text-slate-900 font-bold px-6 py-3 rounded-xl shadow-md border border-slate-200 text-sm transition-all transform hover:scale-[1.02] cursor-pointer">
             <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -789,12 +824,12 @@
             </svg>
             <span>Entrar com Google</span>
           </button>
-          <button type="button" onclick="ativarModoTestePreview(true)" class="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl shadow-md text-sm transition-all transform hover:scale-[1.02] cursor-pointer">
+          <button type="button" onclick="ativarModoTestePreview(true)" class="flex items-center justify-center gap-2 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-white font-bold px-6 py-3 rounded-xl shadow-md text-sm transition-all transform hover:scale-[1.02] cursor-pointer">
             <span>🧪</span>
             <span>Liberar Modo de Teste (Sem Login)</span>
           </button>
         </div>
-        <p class="text-2xs text-stone-500 mt-4">
+        <p class="text-2xs text-slate-400 mt-4">
           Autenticação criptografada via Supabase Auth. Suas escolhas são protegidas por Row Level Security (RLS) no PostgreSQL.
         </p>
       </div>
@@ -802,10 +837,13 @@
       <!-- Container do Formulário (exibido quando autenticado ou em modo de teste) -->
       <div id="containerFormularioAutenticado" class="space-y-6">
       <!-- Banner de orientações -->
-      <div class="bg-gradient-to-r from-[#022119] via-[#043b2b] to-[#07543d] rounded-2xl p-6 text-white shadow-sm border border-[#064834]">
-        <span class="text-xs font-bold text-amber-300 tracking-wider">Formulário oficial de manifestação</span>
+      <div class="bg-gradient-to-r from-[#0A1128] via-[#0C243B] to-[#0E3D4F] rounded-2xl p-6 text-white shadow-sm border border-[#1C2D4A]">
+        <div class="flex items-center justify-between gap-2 flex-wrap mb-1">
+          <span class="text-xs font-bold text-teal-300 tracking-wider">CERTAM • Módulo TJRS</span>
+          <span class="text-2xs text-teal-200/70 italic">"Nunca é apenas uma prova."</span>
+        </div>
         <h2 class="text-xl sm:text-2xl font-bold font-serif mt-1">Preenchimento de preferências de lotação</h2>
-        <p class="text-xs sm:text-sm text-emerald-100/95 mt-2 leading-relaxed">
+        <p class="text-xs sm:text-sm text-slate-200 mt-2 leading-relaxed">
           Selecione seu nome da lista oficial de candidatos do edital, informe seus dados e ordene as comarcas na coluna da direita conforme seu interesse. O sistema aplica estritamente a ordem de colocação e as regras de cotas <span class="whitespace-nowrap font-semibold text-white">(AC, CN, PCD e CI)</span>.
         </p>
       </div>
@@ -3216,16 +3254,38 @@
 
   </main>
 
-  <!-- Rodapé -->
-<footer class="bg-slate-900 text-slate-400 border-t border-slate-800 mt-12 py-8 px-4 sm:px-6 lg:px-8 text-xs leading-relaxed">
+  <!-- Rodapé CERTAM - Portal de Concurseiros -->
+<footer class="bg-[#0B132B] text-slate-400 border-t border-[#1C2D4A] mt-12 py-8 px-4 sm:px-6 lg:px-8 text-xs leading-relaxed">
   <div class="max-w-7xl mx-auto space-y-4">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-800 pb-4">
-      <div class="flex items-center gap-2 text-slate-200 font-bold font-serif text-sm">
-        <span>⚖️</span>
-        <span>TJRS - Escolha de Comarcas</span>
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[#1C2D4A] pb-4">
+      <div class="flex items-center gap-3">
+        <svg class="w-6 h-6 shrink-0" viewBox="0 0 100 100" fill="none">
+          <defs>
+            <linearGradient id="certamFtrGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#0E4A5B" />
+              <stop offset="50%" stop-color="#0E7490" />
+              <stop offset="100%" stop-color="#2DD4BF" />
+            </linearGradient>
+            <linearGradient id="certamFtrCheck" x1="20%" y1="80%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#0891B2" />
+              <stop offset="100%" stop-color="#34D399" />
+            </linearGradient>
+          </defs>
+          <path d="M 68 18 C 38 10 12 30 12 56 C 12 80 34 94 58 92 C 76 90 90 76 90 58" stroke="url(#certamFtrGrad)" stroke-width="11" stroke-linecap="round" fill="none"/>
+          <path d="M 32 53 L 48 69 L 88 23" stroke="url(#certamFtrCheck)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-serif font-bold text-white tracking-wider uppercase text-sm">CERTAM</span>
+            <span class="text-teal-300 text-xs font-semibold">Portal de Concurseiros</span>
+          </div>
+          <p class="text-teal-200/70 italic text-2xs">"Nunca é apenas uma prova."</p>
+        </div>
       </div>
       <div class="flex flex-wrap items-center gap-4 text-xs">
-        <a href="https://escolha-de-comarcas.vercel.app/politica-de-privacidade.html" class="text-emerald-400 hover:text-emerald-300 underline underline-offset-2 transition-colors">
+        <span class="text-slate-300 font-medium">TJRS • Escolha de Comarcas</span>
+        <span class="text-slate-600">·</span>
+        <a href="https://escolha-de-comarcas.vercel.app/politica-de-privacidade.html" class="text-teal-400 hover:text-teal-300 underline underline-offset-2 transition-colors">
           Política de Privacidade
         </a>
         <span class="text-slate-600">·</span>
@@ -3236,13 +3296,13 @@
     <!-- Finalidade da Aplicação e Declaração de Conformidade Google APIs -->
     <div class="space-y-2 text-slate-400 text-2xs sm:text-xs">
       <p>
-        <strong class="text-slate-300">Finalidade do Aplicativo:</strong> Esta é uma ferramenta independente desenvolvida exclusivamente para fins organizacionais e informativos, com o objetivo de auxiliar candidatos convocados nos concursos públicos do Tribunal de Justiça do Estado do Rio Grande do Sul (TJRS) na simulação, organização e ordenação de suas preferências de lotação entre as comarcas disponíveis.
+        <strong class="text-slate-300">Finalidade do Aplicativo:</strong> Esta é uma ferramenta independente da <strong>CERTAM – Portal de Concurseiros</strong> desenvolvida exclusivamente para fins organizacionais e informativos, com o objetivo de auxiliar candidatos convocados nos concursos públicos do Tribunal de Justiça do Estado do Rio Grande do Sul (TJRS) na simulação, organização e ordenação de suas preferências de lotação entre as comarcas disponíveis.
       </p>
       <p>
         <strong class="text-slate-300">Uso da Autenticação Google e Conformidade com APIs:</strong> O login via Conta Google (Google Identity Platform) é utilizado unicamente para autenticação segura e identificação unívoca do candidato, prevenindo votos duplicados ou acessos não autorizados. A aplicação não armazena, comercializa nem compartilha dados pessoais confidenciais com terceiros e opera em estrita conformidade com os <em>Google API Services User Data Policy</em>. O sistema não utiliza serviços nem APIs do Google para geração ou manipulação de mídia sintética (incluindo IA generativa de imagens íntimas não consensuais - AI NCII), processamento de imagens ou quaisquer atividades restritas.
       </p>
       <p class="text-slate-500 pt-1">
-        © 2026 TJRS - Escolha de Comarcas. Todos os direitos reservados. Aplicação comunitária sem vínculo oficial de representação direta com o Poder Judiciário do Estado do Rio Grande do Sul.
+        © 2026 CERTAM - Portal de Concurseiros. Todos os direitos reservados. Aplicação comunitária sem vínculo oficial de representação direta com o Poder Judiciário do Estado do Rio Grande do Sul.
       </p>
     </div>
   </div>
@@ -7607,7 +7667,7 @@
       // Destaca sutilmente a aba geral como origem
       var btnGeral = document.getElementById('tabBtnGeral');
       if (btnGeral) {
-        btnGeral.className = 'px-3.5 py-2 rounded-lg font-semibold whitespace-nowrap transition-all bg-emerald-600 text-white shadow-xs';
+        btnGeral.className = 'px-3.5 py-2 rounded-lg font-semibold whitespace-nowrap transition-all bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-xs';
       }
 
       var secaoRanking = document.getElementById('secaoRankingCandidato');
@@ -8083,7 +8143,7 @@
         if (secao) secao.style.display = (a === aba) ? 'block' : 'none';
         if (btn) {
           btn.className = (a === aba)
-            ? 'px-3.5 py-2 rounded-lg font-semibold whitespace-nowrap transition-all bg-emerald-600 text-white shadow-xs'
+            ? 'px-3.5 py-2 rounded-lg font-semibold whitespace-nowrap transition-all bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-xs'
             : 'px-3.5 py-2 rounded-lg font-medium whitespace-nowrap transition-all text-slate-300 hover:text-white hover:bg-slate-800';
         }
       });
@@ -9092,7 +9152,7 @@
         htmlPaginas += '</div>' +
           '<!-- Rodapé da folha -->' +
           '<div class="rodape-folha mt-auto pt-1 border-t border-slate-200 flex flex-wrap items-center justify-between gap-1 text-2xs text-slate-400 font-mono">' +
-            '<span>TJRS • Sistema de Escolha de Comarcas</span>' +
+            '<span>CERTAM • Módulo TJRS Escolha de Comarcas</span>' +
             '<span>Candidato: ' + cand.nome + ' • Folha ' + numeroPagina + ' de ' + totalPaginas + '</span>' +
           '</div>' +
         '</div>';
@@ -9572,7 +9632,7 @@
         html += '</div>' +
           '<!-- Rodapé da folha -->' +
           '<div class="rodape-folha mt-auto pt-1 border-t border-slate-200 flex flex-wrap items-center justify-between gap-1 text-2xs text-slate-400 font-mono">' +
-            '<span>TJRS • Analista Judiciário - Área Judiciária • Lote de ' + totalVagasAta + ' Vagas</span>' +
+            '<span>CERTAM • TJRS Analista Judiciário - Área Judiciária • Lote de ' + totalVagasAta + ' Vagas</span>' +
             '<span>Folha ' + numPag + ' de ' + totalPaginasAta + '</span>' +
           '</div>' +
         '</div>';
