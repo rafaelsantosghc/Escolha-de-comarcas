@@ -716,7 +716,7 @@
             </button>
 
             <!-- Botão de Acesso Direto para Teste/Preview Sem Login -->
-            <button id="btnModoTesteRapido" type="button" onclick="ativarModoTestePreview(true)" class="flex items-center gap-1.5 bg-teal-500/20 hover:bg-teal-500/30 text-teal-200 font-semibold px-2.5 py-1.5 rounded-lg text-xs border border-teal-500/40 transition-colors cursor-pointer" title="Testar todas as funcionalidades do preview sem precisar autenticar">
+            <button id="btnModoTesteRapido" type="button" onclick="ativarModoTestePreview(true)" style="display: none;" class="flex items-center gap-1.5 bg-teal-500/20 hover:bg-teal-500/30 text-teal-200 font-semibold px-2.5 py-1.5 rounded-lg text-xs border border-teal-500/40 transition-colors cursor-pointer" title="Testar todas as funcionalidades do preview sem precisar autenticar">
               <span>🧪 Modo Teste</span>
             </button>
 
@@ -824,7 +824,7 @@
             </svg>
             <span>Entrar com Google</span>
           </button>
-          <button type="button" onclick="ativarModoTestePreview(true)" class="flex items-center justify-center gap-2 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-white font-bold px-6 py-3 rounded-xl shadow-md text-sm transition-all transform hover:scale-[1.02] cursor-pointer">
+          <button id="btnModoTesteCard" type="button" onclick="ativarModoTestePreview(true)" style="display: none;" class="flex items-center justify-center gap-2 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-white font-bold px-6 py-3 rounded-xl shadow-md text-sm transition-all transform hover:scale-[1.02] cursor-pointer">
             <span>🧪</span>
             <span>Liberar Modo de Teste (Sem Login)</span>
           </button>
@@ -3394,16 +3394,28 @@
           await supabaseClient.auth.signOut();
         } catch(e) {}
       }
-      localStorage.setItem('tjrs_preview_modo_teste', 'desativado');
+      try {
+        localStorage.removeItem('tjrs_preview_modo_teste');
+      } catch(e) {}
       ESTADO.usuarioLogado = { email: '', isAdmin: false, user: null };
+      ESTADO.perfilSimulado = 'candidato';
       atualizarInterfaceAutenticacao(null);
       window.location.reload();
     }
     window.fazerLogout = fazerLogout;
 
     function atualizarInterfaceAutenticacao(session) {
+      var isAmbienteAIStudio = (
+        window.location.hostname.includes('run.app') ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.search.includes('preview=true') ||
+        window.location.search.includes('teste=true')
+      );
+
       var btnLoginHeader = document.getElementById('btnGoogleAuthHeader');
       var btnModoTeste = document.getElementById('btnModoTesteRapido');
+      var btnModoTesteCard = document.getElementById('btnModoTesteCard');
       var blocoUsuario = document.getElementById('blocoUsuarioLogado');
       var badgeEmail = document.getElementById('badgeEmailUsuario');
       var badgeTipo = document.getElementById('badgeTipoUsuario');
@@ -3416,25 +3428,30 @@
       if (session && session.user) {
         var user = session.user;
         var email = (user.email || '').toLowerCase().trim();
-        var ehAdmin = (email === 'rafasms0@hotmail.com' || !!session.isMockPreview);
+        var ehAdmin = (email === 'rafasms0@hotmail.com' || (!!session.isMockPreview && isAmbienteAIStudio));
         ESTADO.usuarioLogado = { email: email, isAdmin: ehAdmin, user: user, isMockPreview: !!session.isMockPreview };
+
+        if (!ehAdmin) {
+          ESTADO.perfilSimulado = 'candidato';
+        }
 
         if (btnLoginHeader) btnLoginHeader.style.display = 'none';
         if (btnModoTeste) btnModoTeste.style.display = 'none';
+        if (btnModoTesteCard) btnModoTesteCard.style.display = 'none';
         if (blocoUsuario) blocoUsuario.style.display = 'flex';
         if (badgeEmail) {
           badgeEmail.textContent = email;
           badgeEmail.title = (session.isMockPreview ? 'Modo de Teste (Preview): ' : 'Autenticado com Google: ') + email;
         }
         if (badgeTipo) {
-          if (session.isMockPreview) {
+          if (session.isMockPreview && isAmbienteAIStudio) {
             badgeTipo.textContent = 'Preview (Admin)';
-            badgeTipo.className = 'text-3xs font-black uppercase px-2 py-0.5 rounded-full bg-emerald-400 text-stone-950 font-mono shadow-xs';
+            badgeTipo.className = 'text-3xs font-black uppercase px-2 py-0.5 rounded-full bg-teal-400 text-stone-950 font-mono shadow-xs';
           } else {
             badgeTipo.textContent = ehAdmin ? 'Admin' : 'Candidato';
             badgeTipo.className = ehAdmin
               ? 'text-2xs font-black px-2 py-0.5 rounded-full bg-amber-300 text-stone-950 font-mono shadow-xs'
-              : 'text-2xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-950';
+              : 'text-2xs font-bold px-2 py-0.5 rounded-full bg-teal-100 text-teal-950';
           }
         }
 
@@ -3450,41 +3467,47 @@
           }
         }
 
-        // Formulário liberado
+        // Formulário liberado para usuário logado
         if (cardGate) cardGate.style.display = 'none';
         if (containerForm) containerForm.style.display = 'block';
 
-        // Visão de administrador
+        // Visão e painel de administrador (apenas para rafasms0@hotmail.com)
         if (ehAdmin) {
           if (containerAdmin) containerAdmin.style.display = 'inline-flex';
           if (tabBtnAdmin) tabBtnAdmin.style.display = 'inline-block';
+        } else {
+          if (containerAdmin) containerAdmin.style.display = 'none';
+          if (tabBtnAdmin) tabBtnAdmin.style.display = 'none';
         }
       } else {
         ESTADO.usuarioLogado = { email: '', isAdmin: false, user: null };
+        ESTADO.perfilSimulado = 'candidato';
         if (btnLoginHeader) btnLoginHeader.style.display = 'inline-flex';
-        if (btnModoTeste) btnModoTeste.style.display = 'inline-flex';
+        // Botão de teste exibido EXCLUSIVAMENTE no ambiente de preview do AI Studio (run.app/localhost)
+        if (btnModoTeste) btnModoTeste.style.display = isAmbienteAIStudio ? 'inline-flex' : 'none';
+        if (btnModoTesteCard) btnModoTesteCard.style.display = isAmbienteAIStudio ? 'inline-flex' : 'none';
         if (blocoUsuario) blocoUsuario.style.display = 'none';
         if (containerAdmin) containerAdmin.style.display = 'none';
         if (tabBtnAdmin) tabBtnAdmin.style.display = 'none';
 
-        // Formulário bloqueado
+        // Formulário bloqueado até autenticar com Google
         if (cardGate) cardGate.style.display = 'block';
         if (containerForm) containerForm.style.display = 'none';
       }
     }
 
     async function inicializarSupabaseAuth() {
-      var isAmbientePreview = (
+      var isAmbienteAIStudio = (
         window.location.hostname.includes('run.app') ||
         window.location.hostname === 'localhost' ||
         window.location.hostname === '127.0.0.1' ||
         window.location.search.includes('preview=true') ||
-        window.location.search.includes('teste=true') ||
-        localStorage.getItem('tjrs_preview_modo_teste') !== 'desativado'
+        window.location.search.includes('teste=true')
       );
+      var modoTesteExplicitamenteAtivo = (localStorage.getItem('tjrs_preview_modo_teste') === 'true');
 
       if (!supabaseClient) {
-        if (isAmbientePreview) {
+        if (isAmbienteAIStudio || modoTesteExplicitamenteAtivo) {
           var mockSession = {
             user: {
               id: 'preview-tester',
@@ -3511,16 +3534,21 @@
           } catch(eClean) {}
         }
 
-        // Se não houver sessão do Google mas estiver no ambiente preview do AI Studio, libera o modo de teste automaticamente
-        if ((!session || !session.user) && isAmbientePreview) {
-          session = {
-            user: {
-              id: 'preview-tester',
-              email: 'rafasms0@hotmail.com',
-              user_metadata: { name: 'Administrador (Preview)' }
-            },
-            isMockPreview: true
-          };
+        // Se não houver sessão do Google:
+        // Apenas usa sessão de preview se estiver no ambiente de testes do AI Studio ou com modo teste explicitamente ativado
+        if ((!session || !session.user)) {
+          if (isAmbienteAIStudio || modoTesteExplicitamenteAtivo) {
+            session = {
+              user: {
+                id: 'preview-tester',
+                email: 'rafasms0@hotmail.com',
+                user_metadata: { name: 'Administrador (Preview)' }
+              },
+              isMockPreview: true
+            };
+          } else {
+            session = null;
+          }
         }
 
         atualizarInterfaceAutenticacao(session);
@@ -3528,7 +3556,7 @@
         supabaseClient.auth.onAuthStateChange(function(evt, newSession) {
           if (newSession && newSession.user) {
             atualizarInterfaceAutenticacao(newSession);
-          } else if (isAmbientePreview && localStorage.getItem('tjrs_preview_modo_teste') !== 'desativado') {
+          } else if ((isAmbienteAIStudio || modoTesteExplicitamenteAtivo) && localStorage.getItem('tjrs_preview_modo_teste') !== 'desativado') {
             var mockSession = {
               user: {
                 id: 'preview-tester',
@@ -3553,19 +3581,14 @@
         });
 
         // Sincroniza dados com o Supabase
-        carregarDadosSupabase();
-      } catch (err) {
-        console.warn('Erro ao verificar sessão Supabase:', err);
-        if (isAmbientePreview) {
-          var fallbackMockSession = {
-            user: {
-              id: 'preview-tester',
-              email: 'rafasms0@hotmail.com',
-              user_metadata: { name: 'Administrador (Preview)' }
-            },
+        await carregarDadosSupabase();
+      } catch (errAuth) {
+        console.warn('Erro ao verificar sessão Supabase:', errAuth);
+        if (isAmbienteAIStudio || modoTesteExplicitamenteAtivo) {
+          atualizarInterfaceAutenticacao({
+            user: { id: 'preview-tester', email: 'rafasms0@hotmail.com', user_metadata: { name: 'Administrador (Preview)' } },
             isMockPreview: true
-          };
-          atualizarInterfaceAutenticacao(fallbackMockSession);
+          });
         } else {
           atualizarInterfaceAutenticacao(null);
         }
@@ -3790,8 +3813,9 @@
       simulacao: null,
       usuarioAtivoNome: '',
       usuarioLogado: {
-        email: !gasServerTemplateEvaluated ? 'rafasms0@hotmail.com' : '',
-        isAdmin: !gasServerTemplateEvaluated
+        email: '',
+        isAdmin: false,
+        user: null
       },
       escolhasSelecionadas: [],
       intencaoAtual: 'assumir',
@@ -3801,7 +3825,7 @@
       comarcasSelecionadasLote: [],
       modoCompactoMobile: false,
       abaAtiva: 'formulario',
-      perfilSimulado: !gasServerTemplateEvaluated ? 'admin' : 'candidato',
+      perfilSimulado: 'candidato',
       ultimoTimestampSincronizacao: '0',
       candidatoRankingAtual: '',
       loteAtivoId: 'lote_1',
@@ -4226,10 +4250,18 @@
                 localStorage.setItem('tjrs_gas_respostas', JSON.stringify(bd));
               }
 
+              var isAmbienteAIStudio = (
+                window.location.hostname.includes('run.app') ||
+                window.location.hostname === 'localhost' ||
+                window.location.hostname === '127.0.0.1' ||
+                window.location.search.includes('preview=true') ||
+                window.location.search.includes('teste=true') ||
+                localStorage.getItem('tjrs_preview_modo_teste') === 'true'
+              );
               var emailAtivo = (typeof emailInformado === 'string' && emailInformado.trim() !== '')
                 ? emailInformado.trim()
-                : ((ESTADO.usuarioLogado && typeof ESTADO.usuarioLogado.email === 'string' && ESTADO.usuarioLogado.email.trim() !== '') ? ESTADO.usuarioLogado.email.trim() : (localStorage.getItem('tjrs_usuario_email') || 'rafasms0@hotmail.com'));
-              emailAtivo = String(emailAtivo || 'rafasms0@hotmail.com').toLowerCase().trim();
+                : ((ESTADO.usuarioLogado && typeof ESTADO.usuarioLogado.email === 'string' && ESTADO.usuarioLogado.email.trim() !== '') ? ESTADO.usuarioLogado.email.trim() : (localStorage.getItem('tjrs_usuario_email') || (isAmbienteAIStudio ? 'rafasms0@hotmail.com' : '')));
+              emailAtivo = String(emailAtivo || '').toLowerCase().trim();
               var ehAdmin = (emailAtivo === 'rafasms0@hotmail.com');
 
               var candidatoEncontrado = null;
@@ -4880,6 +4912,8 @@
         ESTADO.perfilSimulado = 'admin';
         var selModoPre = document.getElementById('selectModoVisaoAdmin');
         if (selModoPre) selModoPre.value = 'admin';
+      } else {
+        ESTADO.perfilSimulado = 'candidato';
       }
 
       aplicarPermissoesUsuario();
