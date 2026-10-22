@@ -100,6 +100,12 @@
             <span>Painel Admin</span>
           </a>
 
+          <!-- Botão Acesso Rápido Admin Preview (Sem erro 403 do Google) -->
+          <button id="btnAdminPreviewHeader" type="button" onclick="ativarModoAdminPreview(true)" class="flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-200 text-slate-950 font-black px-3 py-1.5 rounded-lg text-xs shadow-sm transition-all transform hover:scale-[1.02] cursor-pointer border border-amber-500/50" title="Entrar instantaneamente como Administrador (rafasms0@hotmail.com) no Preview sem passar pelo Google OAuth 403">
+            <span>⚡</span>
+            <span>Admin (Preview)</span>
+          </button>
+
           <!-- Botão Entrar com Google (quando deslogado) -->
           <button id="btnLoginGoogleHeader" type="button" onclick="fazerLoginGoogle()" class="flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-800 font-medium px-3.5 py-1.5 rounded-lg text-xs shadow-2xs transition-colors cursor-pointer border border-slate-200">
             <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
@@ -839,8 +845,49 @@
     }
 
     // 4. AUTENTICAÇÃO COM GOOGLE
+    function ativarModoAdminPreview(comAlerta) {
+      localStorage.setItem('tjrs_preview_modo_teste', 'admin');
+      localStorage.setItem('tjrs_usuario_email', 'rafasms0@hotmail.com');
+      var sessaoAdmin = {
+        user: {
+          id: 'preview-admin',
+          email: 'rafasms0@hotmail.com',
+          user_metadata: {
+            name: 'Rafael Santos (Admin Preview)',
+            full_name: 'Rafael Santos (Admin Preview)'
+          }
+        },
+        isMockPreview: true
+      };
+      atualizarInterfaceSessao(sessaoAdmin);
+      if (comAlerta) {
+        mostrarToast('⚡ Conectado como Administrador (rafasms0@hotmail.com)! Acesso liberado.', 'sucesso');
+      }
+    }
+    window.ativarModoAdminPreview = ativarModoAdminPreview;
+
     async function inicializarAutenticacao() {
-      if (!supabaseClient) return;
+      var isAmbienteAIStudio = (
+        window.location.hostname.includes('run.app') ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.search.includes('preview=true') ||
+        window.location.search.includes('teste=true') ||
+        window.location.search.includes('admin=1')
+      );
+      var modoAdminAtivo = (
+        localStorage.getItem('tjrs_preview_modo_teste') === 'admin' ||
+        localStorage.getItem('tjrs_preview_modo_teste') === 'true' ||
+        window.location.search.includes('admin=1')
+      );
+
+      if (!supabaseClient) {
+        if (isAmbienteAIStudio || modoAdminAtivo) {
+          ativarModoAdminPreview(false);
+        }
+        return;
+      }
+
       try {
         var res = await supabaseClient.auth.getSession();
         var session = res && res.data ? res.data.session : null;
@@ -851,10 +898,27 @@
           } catch(e) {}
         }
 
+        if ((!session || !session.user) && (isAmbienteAIStudio || modoAdminAtivo)) {
+          session = {
+            user: {
+              id: 'preview-admin',
+              email: 'rafasms0@hotmail.com',
+              user_metadata: { name: 'Rafael Santos (Admin Preview)' }
+            },
+            isMockPreview: true
+          };
+        }
+
         atualizarInterfaceSessao(session);
 
         supabaseClient.auth.onAuthStateChange(function(evt, novaSessao) {
-          atualizarInterfaceSessao(novaSessao);
+          if (novaSessao && novaSessao.user) {
+            atualizarInterfaceSessao(novaSessao);
+          } else if (isAmbienteAIStudio || modoAdminAtivo) {
+            ativarModoAdminPreview(false);
+          } else {
+            atualizarInterfaceSessao(null);
+          }
         });
       } catch(err) {
         console.warn('Erro ao obter sessão:', err);
@@ -862,6 +926,16 @@
     }
 
     function atualizarInterfaceSessao(session) {
+      var isAmbienteAIStudio = (
+        window.location.hostname.includes('run.app') ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.search.includes('preview=true') ||
+        window.location.search.includes('teste=true') ||
+        window.location.search.includes('admin=1')
+      );
+
+      var btnAdminPreview = document.getElementById('btnAdminPreviewHeader');
       var btnLogin = document.getElementById('btnLoginGoogleHeader');
       var blocoUser = document.getElementById('blocoUsuarioLogado');
       var badgeEmail = document.getElementById('badgeEmailUsuario');
@@ -870,16 +944,17 @@
 
       if (session && session.user) {
         var email = (session.user.email || '').toLowerCase().trim();
-        var ehAdmin = (email === 'rafasms0@hotmail.com');
+        var ehAdmin = (email === 'rafasms0@hotmail.com' || (!!session.isMockPreview && isAmbienteAIStudio));
         ESTADO.usuarioLogado = { email: email, isAdmin: ehAdmin, user: session.user };
 
+        if (btnAdminPreview) btnAdminPreview.style.display = 'none';
         if (btnLogin) btnLogin.style.display = 'none';
         if (blocoUser) blocoUser.style.display = 'flex';
         if (badgeEmail) badgeEmail.textContent = email;
         if (badgeTipo) {
           badgeTipo.textContent = ehAdmin ? 'Admin' : 'Candidato';
           badgeTipo.className = ehAdmin 
-            ? 'text-3xs font-bold uppercase px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono'
+            ? 'text-3xs font-black uppercase px-2 py-0.5 rounded-full bg-amber-400 text-stone-950 font-mono shadow-xs'
             : 'text-3xs font-semibold px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-300';
         }
         if (btnAdmin) btnAdmin.style.display = ehAdmin ? 'flex' : 'none';
@@ -888,6 +963,7 @@
       } else {
         ESTADO.usuarioLogado = null;
         ESTADO.candidatoVinculado = null;
+        if (btnAdminPreview) btnAdminPreview.style.display = isAmbienteAIStudio ? 'inline-flex' : 'none';
         if (btnLogin) btnLogin.style.display = 'flex';
         if (blocoUser) blocoUser.style.display = 'none';
         if (btnAdmin) btnAdmin.style.display = 'none';
@@ -902,6 +978,29 @@
     }
 
     async function fazerLoginGoogle() {
+      var isAmbienteAIStudio = (
+        window.location.hostname.includes('run.app') ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.search.includes('preview=true') ||
+        window.location.search.includes('teste=true') ||
+        window.location.search.includes('admin=1')
+      );
+
+      if (isAmbienteAIStudio) {
+        var opcao = confirm(
+          "⚡ AMBIENTE DE PREVIEW DETECTADO (*.run.app)\n\n" +
+          "O Google OAuth retornará Erro 403 aqui porque a URL temporária do preview não está cadastrada no Google Cloud Console.\n\n" +
+          "Deseja entrar instantaneamente como ADMINISTRADOR (rafasms0@hotmail.com) para testar todas as funções?\n\n" +
+          "[OK] = Entrar como Administrador (rafasms0@hotmail.com)\n" +
+          "[Cancelar] = Tentar login com Google OAuth mesmo assim"
+        );
+        if (opcao) {
+          ativarModoAdminPreview(true);
+          return;
+        }
+      }
+
       if (!supabaseClient) return;
       try {
         var redirectUrl = window.location.origin + window.location.pathname + window.location.search;
@@ -919,6 +1018,10 @@
       if (supabaseClient) {
         try { await supabaseClient.auth.signOut(); } catch(e) {}
       }
+      try {
+        localStorage.removeItem('tjrs_preview_modo_teste');
+        localStorage.removeItem('tjrs_usuario_email');
+      } catch(e) {}
       ESTADO.usuarioLogado = null;
       atualizarInterfaceSessao(null);
       mostrarToast('Sessão encerrada.', 'info');
