@@ -3646,6 +3646,11 @@
         if (ehAdmin) {
           if (containerAdmin) containerAdmin.style.display = 'inline-flex';
           if (tabBtnAdmin) tabBtnAdmin.style.display = 'inline-block';
+          if (URL_PARAMS_LOTE.get('admin') === '1' || URL_PARAMS_LOTE.get('aba') === 'admin') {
+            setTimeout(function() {
+              trocarAba('admin');
+            }, 60);
+          }
         } else {
           if (containerAdmin) containerAdmin.style.display = 'none';
           if (tabBtnAdmin) tabBtnAdmin.style.display = 'none';
@@ -3664,6 +3669,12 @@
         // Formulário bloqueado até autenticar com Google
         if (cardGate) cardGate.style.display = 'block';
         if (containerForm) containerForm.style.display = 'none';
+
+        if (URL_PARAMS_LOTE.get('admin') === '1' || URL_PARAMS_LOTE.get('aba') === 'admin') {
+          setTimeout(function() {
+            mostrarToastMobile('Conecte-se com sua conta Google de administrador para acessar o Painel Admin.', false);
+          }, 500);
+        }
       }
     }
 
@@ -3751,8 +3762,15 @@
           }
         });
 
-        // Sincroniza dados com o Supabase
-        await carregarDadosSupabase();
+        // Sincroniza dados com o Supabase com timeout de proteção para nunca travar
+        try {
+          await Promise.race([
+            carregarDadosSupabase(),
+            new Promise(function(resolve) { setTimeout(resolve, 2500); })
+          ]);
+        } catch(eRace) {
+          console.warn('Aviso ao sincronizar dados do Supabase:', eRace);
+        }
       } catch (errAuth) {
         console.warn('Erro ao verificar sessão Supabase:', errAuth);
         if (isAmbienteAIStudio || modoTesteExplicitamenteAtivo) {
@@ -5056,14 +5074,44 @@
     }
 
     // INICIALIZAÇÃO AO CARREGAR A PÁGINA
-    window.addEventListener('DOMContentLoaded', async function() {
+    function iniciarSistemaCompleto() {
+      // 1. Inicia aplicação e remove tela de loading geral imediatamente
       try {
-        await inicializarSupabaseAuth();
-      } catch(eAuth) {
-        console.warn('Aviso ao inicializar Supabase Auth:', eAuth);
+        iniciarAplicacao();
+      } catch(eApp) {
+        console.error('Erro em iniciarAplicacao:', eApp);
+        var lErr = document.getElementById('loadingGeral');
+        if (lErr) lErr.style.display = 'none';
+        var fErr = document.getElementById('secaoFormulario');
+        if (fErr) fErr.style.display = 'block';
       }
-      iniciarAplicacao();
-    });
+
+      // 2. Inicializa autenticação em paralelo
+      inicializarSupabaseAuth().catch(function(eAuth) {
+        console.warn('Aviso ao inicializar Supabase Auth:', eAuth);
+      });
+
+      // 3. Trava de segurança anti-loading infinito
+      setTimeout(function() {
+        var elLoading = document.getElementById('loadingGeral');
+        if (elLoading && elLoading.style.display !== 'none') {
+          elLoading.style.display = 'none';
+          var elForm = document.getElementById('secaoFormulario');
+          var elAdmin = document.getElementById('secaoAdmin');
+          if (ESTADO.abaAtiva === 'admin' && elAdmin) {
+            elAdmin.style.display = 'block';
+          } else if (elForm && (!elAdmin || elAdmin.style.display !== 'block')) {
+            elForm.style.display = 'block';
+          }
+        }
+      }, 600);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', iniciarSistemaCompleto);
+    } else {
+      iniciarSistemaCompleto();
+    }
 
     function iniciarAplicacao() {
       // Determina o e-mail ativo com base no Google Apps Script ou no Supabase Auth
@@ -5222,7 +5270,13 @@
       var elLoadingPre = document.getElementById('loadingGeral');
       var elFormPre = document.getElementById('secaoFormulario');
       if (elLoadingPre) elLoadingPre.style.display = 'none';
-      if (elFormPre) elFormPre.style.display = 'block';
+
+      var querAdmin = (URL_PARAMS_LOTE.get('admin') === '1' || URL_PARAMS_LOTE.get('aba') === 'admin');
+      if (querAdmin && (ehAdmin || ESTADO.usuarioLogado.isAdmin)) {
+        trocarAba('admin');
+      } else if (elFormPre) {
+        elFormPre.style.display = 'block';
+      }
 
       if (!ESTADO.candidatos || ESTADO.candidatos.length === 0) {
         ESTADO.candidatos = window.DADOS_CANDIDATOS_BASE || [];
@@ -8412,6 +8466,9 @@
 
       var secaoRanking = document.getElementById('secaoRankingCandidato');
       if (secaoRanking) secaoRanking.style.display = 'none';
+
+      var elLoadingAba = document.getElementById('loadingGeral');
+      if (elLoadingAba) elLoadingAba.style.display = 'none';
 
       ESTADO.abaAtiva = aba;
       var abas = ['formulario', 'dashboard', 'geral', 'comarcas', 'admin', 'gas'];
