@@ -296,7 +296,8 @@
             <select id="filtroClassifIntencao" onchange="filtrarClassificacaoGeral()" class="w-full py-2 px-3 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
               <option value="todas">Intenção: Todas</option>
               <option value="Sim">Assume (Sim)</option>
-              <option value="Não">Não Assume (Não)</option>
+              <option value="final_fila">Fim de Fila</option>
+              <option value="Não">Desiste (Não)</option>
               <option value="Indefinido">Não Informou</option>
             </select>
           </div>
@@ -750,6 +751,7 @@
           </h4>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700">
             <div><strong>Status:</strong> <span id="modalStatusTexto">-</span></div>
+            <div><strong>Intenção Declarada:</strong> <span id="modalIntencaoTexto" class="font-semibold text-slate-900">-</span></div>
             <div><strong>Lote de Chamada:</strong> <span id="modalLoteChamadaTexto">-</span></div>
             <div><strong>Lotação Assumida:</strong> <span id="modalLotacaoAssumidaTexto">-</span></div>
             <div><strong>Data de Nomeação:</strong> <span id="modalDataNomeacaoTexto">-</span></div>
@@ -1117,6 +1119,45 @@
       }
     }
 
+    function normalizarValorIntencao(val) {
+      if (!val) return '';
+      var v = String(val).toLowerCase().trim();
+      if (v === 'sim' || v === 'assumir' || v === 'interesse' || v.includes('pretende assumir') || v === 'titular') return 'assumir';
+      if (v === 'não' || v === 'nao' || v === 'desistir' || v === 'desiste' || v.includes('desist') || v.includes('renún') || v.includes('renun')) return 'desistir';
+      if (v.includes('fim') || v.includes('final') || v.includes('fila') || v.includes('lista')) return 'final_fila';
+      return '';
+    }
+
+    function determinarIntencaoCandidato(c, resp) {
+      resp = resp || {};
+
+      // 1. Resposta direta do candidato em pesquisa/lote ativo
+      var intResp = normalizarValorIntencao(resp.intencao);
+      if (intResp) return intResp;
+
+      // 2. Intenção explícita gravada no registro do candidato
+      var intCand = normalizarValorIntencao(c.intencao);
+      if (intCand) return intCand;
+
+      // 3. Status oficial registrado na planilha/concurso
+      var st = (resp.status_nomeacao || c.status_nomeacao || '').toLowerCase();
+      if (st.includes('final de lista') || st.includes('fim de fila') || st.includes('final de fila')) {
+        return 'final_fila';
+      }
+      if (st.includes('desist') || st.includes('renún') || st.includes('renun')) {
+        return 'desistir';
+      }
+      if (st.includes('convocado titular') || st.includes('nomeado') || st.includes('posse') || st.includes('exercício')) {
+        return 'assumir';
+      }
+      if (st.includes('suplente') && (c.lotacao_assumida || resp.lotacao_assumida)) {
+        return 'assumir';
+      }
+
+      // 4. Candidatos com status 'Aguardando' ou sem manifestação
+      return 'indefinido';
+    }
+
     async function carregarClassificacaoGeral() {
       var tbody = document.getElementById('tabelaClassificacaoBody');
 
@@ -1175,6 +1216,8 @@
               .eq('concurso_id', ESTADO.concursoId);
             if (resResp.data && Array.isArray(resResp.data)) {
               resResp.data.forEach(function(r) {
+                // Não permite que registros genéricos em massa sobrescrevam intenções individuais
+                if (r.id && r.id.indexOf('-geral-') !== -1) return;
                 if (r.id) mapaRespostas[r.id] = r;
                 if (r.cpf) mapaRespostas[r.cpf.replace(/\D/g, '')] = r;
                 if (r.email) mapaRespostas[r.email.trim().toLowerCase()] = r;
@@ -1230,7 +1273,7 @@
             lotacao_assumida: resp.lotacao_assumida || c.lotacao_assumida || null,
             data_nomeacao: resp.data_nomeacao || c.data_nomeacao || null,
             data_convocacao: c.data_convocacao || null,
-            intencao: resp.intencao || c.intencao || (c.status_nomeacao === 'Convocado Titular' ? 'assumir' : 'indefinido'),
+            intencao: determinarIntencaoCandidato(c, resp),
             escolhas: escolhasResp,
             comarca_preferencia: primComarca,
             ja_e_servidor: resp.possui_fg_cc === 'Sim' || c.ja_e_servidor === true,
@@ -1318,7 +1361,8 @@
           data_convocacao: obj.data_convocacao,
           status_nomeacao: obj.status_nomeacao || 'Aguardando',
           lotacao_assumida: obj.lotacao_assumida,
-          data_nomeacao: obj.data_nomeacao
+          data_nomeacao: obj.data_nomeacao,
+          intencao: obj.intencao || ''
         });
       }
       return resultado;
@@ -1340,7 +1384,7 @@
       var desistencias = lista.filter(function(c) {
         var st = (c.status_nomeacao || '').toLowerCase();
         var intencao = (c.intencao || '').toLowerCase();
-        return st.includes('desistência') || st.includes('fim de fila') || intencao === 'desistir' || intencao === 'final_fila';
+        return st.includes('desist') || st.includes('renún') || st.includes('renun') || st.includes('fim de fila') || st.includes('final de lista') || intencao === 'desistir' || intencao === 'final_fila' || intencao === 'fim_fila';
       }).length;
 
       document.getElementById('statTotalAprovados').textContent = total.toLocaleString('pt-BR');
@@ -1381,9 +1425,10 @@
 
         // Intenção
         if (intencao !== 'todas') {
-          var cInt = (c.intencao || '').toLowerCase();
+          var cInt = (c.intencao || 'indefinido').toLowerCase();
           if (intencao === 'Sim' && cInt !== 'sim' && cInt !== 'assumir') return false;
-          if (intencao === 'Não' && cInt !== 'não' && cInt !== 'desistir' && cInt !== 'final_fila') return false;
+          if (intencao === 'Não' && cInt !== 'não' && cInt !== 'nao' && cInt !== 'desistir' && cInt !== 'desiste') return false;
+          if (intencao === 'final_fila' && cInt !== 'final_fila' && cInt !== 'fim_fila') return false;
           if (intencao === 'Indefinido' && cInt !== '' && cInt !== 'indefinido') return false;
         }
 
@@ -1491,13 +1536,13 @@
         var notaFinal = (typeof c.nota_final === 'number') ? c.nota_final.toFixed(2) : (c.nota_final || '-');
 
         // Intenção
-        var intRaw = (c.intencao || '').toLowerCase();
-        var badgeIntencao = '<span class="px-2 py-0.5 rounded text-3xs font-semibold bg-slate-100 text-slate-600">Não informou</span>';
+        var intRaw = (c.intencao || 'indefinido').toLowerCase();
+        var badgeIntencao = '<span class="px-2 py-0.5 rounded text-3xs font-semibold bg-slate-100 text-slate-500">Não informou</span>';
         if (intRaw === 'sim' || intRaw === 'assumir') {
           badgeIntencao = '<span class="px-2 py-0.5 rounded text-3xs font-bold bg-emerald-100 text-emerald-800">Assume (Sim)</span>';
-        } else if (intRaw === 'não' || intRaw === 'desistir') {
+        } else if (intRaw === 'não' || intRaw === 'nao' || intRaw === 'desistir' || intRaw === 'desiste') {
           badgeIntencao = '<span class="px-2 py-0.5 rounded text-3xs font-bold bg-rose-100 text-rose-800">Desiste</span>';
-        } else if (intRaw === 'final_fila') {
+        } else if (intRaw === 'final_fila' || intRaw === 'fim_fila') {
           badgeIntencao = '<span class="px-2 py-0.5 rounded text-3xs font-bold bg-amber-100 text-amber-800">Fim de Fila</span>';
         }
 
@@ -1511,6 +1556,10 @@
         var badgeStatus = '<span class="px-2 py-0.5 rounded text-2xs font-medium bg-slate-100 text-slate-700 font-mono">' + escapeHtml(status) + '</span>';
         if (status.includes('Convocado') || status.includes('Nomeado') || status.includes('Exercício') || status.includes('Posse')) {
           badgeStatus = '<span class="px-2 py-0.5 rounded text-2xs font-bold bg-teal-100 text-teal-900 font-mono">● ' + escapeHtml(status) + '</span>';
+        } else if (status.includes('Final de lista') || status.includes('Fim de fila')) {
+          badgeStatus = '<span class="px-2 py-0.5 rounded text-2xs font-bold bg-amber-100 text-amber-900 font-mono">● ' + escapeHtml(status) + '</span>';
+        } else if (status.includes('Desist') || status.includes('Renún')) {
+          badgeStatus = '<span class="px-2 py-0.5 rounded text-2xs font-bold bg-rose-100 text-rose-900 font-mono">● ' + escapeHtml(status) + '</span>';
         }
 
         html += `
@@ -1604,6 +1653,18 @@
 
       // Histórico
       document.getElementById('modalStatusTexto').textContent = cand.status_nomeacao || 'Aguardando';
+
+      var intRawModal = (cand.intencao || 'indefinido').toLowerCase();
+      var textoIntencaoModal = 'Não informou';
+      if (intRawModal === 'sim' || intRawModal === 'assumir') {
+        textoIntencaoModal = 'Pretende assumir a vaga (Sim)';
+      } else if (intRawModal === 'não' || intRawModal === 'nao' || intRawModal === 'desistir' || intRawModal === 'desiste') {
+        textoIntencaoModal = 'Desiste da vaga / Renúncia';
+      } else if (intRawModal === 'final_fila' || intRawModal === 'fim_fila') {
+        textoIntencaoModal = 'Fim de fila (Final de lista)';
+      }
+      var elModalInt = document.getElementById('modalIntencaoTexto');
+      if (elModalInt) elModalInt.textContent = textoIntencaoModal;
       document.getElementById('modalLoteChamadaTexto').textContent = cand.lote_chamada || 'Aguardando lote';
       document.getElementById('modalLotacaoAssumidaTexto').textContent = cand.lotacao_assumida || 'Não alocado';
       document.getElementById('modalDataNomeacaoTexto').textContent = cand.data_nomeacao || 'Não nomeado';
