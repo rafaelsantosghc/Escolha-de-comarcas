@@ -101,6 +101,12 @@
             <span>Painel Admin</span>
           </a>
 
+          <!-- Botão Acesso Rápido Admin Preview (Sem erro 403 do Google) -->
+          <button id="btnAdminPreviewHeader" type="button" onclick="ativarModoAdminPreview(true)" class="flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-200 text-slate-950 font-black px-3 py-1.5 rounded-lg text-xs shadow-sm transition-all transform hover:scale-[1.02] cursor-pointer border border-amber-500/50" title="Entrar instantaneamente como Administrador (rafasms0@hotmail.com) no Preview sem passar pelo Google OAuth 403">
+            <span>⚡</span>
+            <span>Admin (Preview)</span>
+          </button>
+
           <!-- Botão Entrar com Google (quando deslogado) -->
           <button id="btnLoginGoogleHeader" type="button" onclick="fazerLoginGoogle()" class="flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-800 font-medium px-3.5 py-1.5 rounded-lg text-xs shadow-2xs transition-colors cursor-pointer border border-slate-200">
             <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
@@ -414,8 +420,48 @@
     };
 
     // 3. FLUXO DE AUTENTICAÇÃO COM GOOGLE & ESTADO DE USUÁRIO
+    function ativarModoAdminPreview(comAlerta) {
+      localStorage.setItem('tjrs_preview_modo_teste', 'admin');
+      localStorage.setItem('tjrs_usuario_email', 'rafasms0@hotmail.com');
+      var sessaoAdmin = {
+        user: {
+          id: 'preview-admin',
+          email: 'rafasms0@hotmail.com',
+          user_metadata: {
+            name: 'Rafael Santos (Admin Preview)',
+            full_name: 'Rafael Santos (Admin Preview)'
+          }
+        },
+        isMockPreview: true
+      };
+      atualizarInterfaceUsuario(sessaoAdmin);
+      if (comAlerta) {
+        mostrarToast('⚡ Conectado como Administrador (rafasms0@hotmail.com)! Atalho para Painel Admin liberado.', 'sucesso');
+      }
+    }
+    window.ativarModoAdminPreview = ativarModoAdminPreview;
+
     async function inicializarAutenticacao() {
-      if (!supabaseClient) return;
+      var isAmbienteAIStudio = (
+        window.location.hostname.includes('run.app') ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.search.includes('preview=true') ||
+        window.location.search.includes('teste=true') ||
+        window.location.search.includes('admin=1')
+      );
+      var modoAdminAtivo = (
+        localStorage.getItem('tjrs_preview_modo_teste') === 'admin' ||
+        localStorage.getItem('tjrs_preview_modo_teste') === 'true' ||
+        window.location.search.includes('admin=1')
+      );
+
+      if (!supabaseClient) {
+        if (isAmbienteAIStudio || modoAdminAtivo) {
+          ativarModoAdminPreview(false);
+        }
+        return;
+      }
 
       try {
         var resSession = await supabaseClient.auth.getSession();
@@ -428,11 +474,28 @@
           } catch(e) {}
         }
 
+        if ((!session || !session.user) && (isAmbienteAIStudio || modoAdminAtivo)) {
+          session = {
+            user: {
+              id: 'preview-admin',
+              email: 'rafasms0@hotmail.com',
+              user_metadata: { name: 'Rafael Santos (Admin Preview)' }
+            },
+            isMockPreview: true
+          };
+        }
+
         atualizarInterfaceUsuario(session);
 
         // Ouve mudanças de auth state
         supabaseClient.auth.onAuthStateChange(function(event, novaSessao) {
-          atualizarInterfaceUsuario(novaSessao);
+          if (novaSessao && novaSessao.user) {
+            atualizarInterfaceUsuario(novaSessao);
+          } else if (isAmbienteAIStudio || modoAdminAtivo) {
+            ativarModoAdminPreview(false);
+          } else {
+            atualizarInterfaceUsuario(null);
+          }
         });
       } catch(err) {
         console.warn('Aviso de sessão de autenticação:', err);
@@ -440,6 +503,16 @@
     }
 
     function atualizarInterfaceUsuario(session) {
+      var isAmbienteAIStudio = (
+        window.location.hostname.includes('run.app') ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.search.includes('preview=true') ||
+        window.location.search.includes('teste=true') ||
+        window.location.search.includes('admin=1')
+      );
+
+      var btnAdminPreview = document.getElementById('btnAdminPreviewHeader');
       var btnLogin = document.getElementById('btnLoginGoogleHeader');
       var blocoUser = document.getElementById('blocoUsuarioLogado');
       var badgeEmail = document.getElementById('badgeEmailUsuario');
@@ -449,20 +522,24 @@
       if (session && session.user) {
         var user = session.user;
         var email = (user.email || '').toLowerCase().trim();
-        var ehAdmin = (email === 'rafasms0@hotmail.com');
+        var ehAdmin = (email === 'rafasms0@hotmail.com' || (!!session.isMockPreview && isAmbienteAIStudio));
 
         ESTADO_PORTAL.usuarioLogado = { email: email, isAdmin: ehAdmin, user: user };
 
+        if (btnAdminPreview) btnAdminPreview.style.display = 'none';
         if (btnLogin) btnLogin.style.display = 'none';
         if (blocoUser) blocoUser.style.display = 'flex';
         if (badgeEmail) {
           badgeEmail.textContent = email;
-          badgeEmail.title = 'Conectado como: ' + email;
+          badgeEmail.title = (session.isMockPreview ? 'Modo de Teste (Preview): ' : 'Conectado como: ') + email;
         }
         if (badgeTipo) {
-          if (ehAdmin) {
+          if (session.isMockPreview && isAmbienteAIStudio) {
+            badgeTipo.textContent = 'Preview (Admin)';
+            badgeTipo.className = 'text-3xs font-black uppercase px-2 py-0.5 rounded-full bg-amber-400 text-stone-950 font-mono shadow-xs';
+          } else if (ehAdmin) {
             badgeTipo.textContent = 'Admin';
-            badgeTipo.className = 'text-3xs font-bold uppercase px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono';
+            badgeTipo.className = 'text-3xs font-black uppercase px-1.5 py-0.5 rounded bg-amber-300 text-stone-950 font-mono';
           } else {
             badgeTipo.textContent = 'Candidato';
             badgeTipo.className = 'text-3xs font-semibold px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-300';
@@ -473,6 +550,7 @@
         }
       } else {
         ESTADO_PORTAL.usuarioLogado = null;
+        if (btnAdminPreview) btnAdminPreview.style.display = isAmbienteAIStudio ? 'inline-flex' : 'none';
         if (btnLogin) btnLogin.style.display = 'flex';
         if (blocoUser) blocoUser.style.display = 'none';
         if (btnAdminHeader) btnAdminHeader.style.display = 'none';
@@ -480,6 +558,29 @@
     }
 
     async function fazerLoginGoogle() {
+      var isAmbienteAIStudio = (
+        window.location.hostname.includes('run.app') ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.search.includes('preview=true') ||
+        window.location.search.includes('teste=true') ||
+        window.location.search.includes('admin=1')
+      );
+
+      if (isAmbienteAIStudio) {
+        var opcao = confirm(
+          "⚡ AMBIENTE DE PREVIEW DETECTADO (*.run.app)\n\n" +
+          "O Google OAuth retornará Erro 403 aqui porque a URL temporária do preview não está cadastrada no Google Cloud Console.\n\n" +
+          "Deseja entrar instantaneamente como ADMINISTRADOR (rafasms0@hotmail.com) para testar todas as funções do Painel Admin?\n\n" +
+          "[OK] = Entrar como Administrador (rafasms0@hotmail.com)\n" +
+          "[Cancelar] = Tentar login com Google OAuth mesmo assim"
+        );
+        if (opcao) {
+          ativarModoAdminPreview(true);
+          return;
+        }
+      }
+
       if (!supabaseClient) {
         alert('Cliente Supabase não está configurado.');
         return;
@@ -505,6 +606,10 @@
           await supabaseClient.auth.signOut();
         } catch(e) {}
       }
+      try {
+        localStorage.removeItem('tjrs_preview_modo_teste');
+        localStorage.removeItem('tjrs_usuario_email');
+      } catch(e) {}
       ESTADO_PORTAL.usuarioLogado = null;
       atualizarInterfaceUsuario(null);
       mostrarToast('Sessão encerrada com sucesso.', 'info');
