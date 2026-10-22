@@ -11416,6 +11416,7 @@
           var colNotaComum = -1, colNotaConst = -1, colNotaAdm = -1, colNotaCivil = -1, colNotaPenal = -1, colNotaEspec = -1;
           var colCpf = -1, colEmail = -1, colWhats = -1, colNasc = -1;
           var colLoteCham = -1, colDataConv = -1, colStatus = -1, colLotacao = -1, colDataNom = -1;
+          var colIntencao = -1;
 
           headerRow.forEach(function(h, idx) {
             var ht = normTxtImportador(h);
@@ -11467,6 +11468,8 @@
               colLotacao = idx;
             } else if (colDataNom === -1 && (ht === 'data_nomeacao' || (ht.includes('data') && ht.includes('nom')))) {
               colDataNom = idx;
+            } else if (colIntencao === -1 && (ht === 'intencao' || ht === 'intencao_assumir' || ht.includes('intenc') || ht.includes('manifest') || ht.includes('interesse') || ht.includes('opcao') || ht.includes('opção'))) {
+              colIntencao = idx;
             } else if (colCpf === -1 && ht.includes('cpf')) {
               colCpf = idx;
             } else if (colEmail === -1 && (ht.includes('email') || ht.includes('mail'))) {
@@ -11514,6 +11517,28 @@
             var candLoteCham = (colLoteCham !== -1 && r[colLoteCham]) ? String(r[colLoteCham]).trim() : null;
             var candDataConv = (colDataConv !== -1 && r[colDataConv]) ? formatarDataImportador(r[colDataConv]) : null;
             var candDataNom = (colDataNom !== -1 && r[colDataNom]) ? formatarDataImportador(r[colDataNom]) : null;
+            var rawIntencao = (colIntencao !== -1 && r[colIntencao]) ? String(r[colIntencao]).trim() : '';
+
+            // Normaliza a intenção sem forçar "assumir"
+            var candIntencao = 'indefinido';
+            var intNorm = (rawIntencao || '').toLowerCase().trim();
+            var stNorm = (candStatus || '').toLowerCase().trim();
+
+            if (intNorm === 'sim' || intNorm === 'assumir' || intNorm === 'interesse' || intNorm.includes('pretende assumir') || intNorm === 'titular') {
+              candIntencao = 'assumir';
+            } else if (intNorm === 'não' || intNorm === 'nao' || intNorm === 'desistir' || intNorm === 'desiste' || intNorm.includes('desist') || intNorm.includes('renún') || intNorm.includes('renun')) {
+              candIntencao = 'desistir';
+            } else if (intNorm.includes('fim') || intNorm.includes('final') || intNorm.includes('fila') || intNorm.includes('lista')) {
+              candIntencao = 'final_fila';
+            } else if (stNorm.includes('final de lista') || stNorm.includes('fim de fila')) {
+              candIntencao = 'final_fila';
+            } else if (stNorm.includes('desist') || stNorm.includes('renún') || stNorm.includes('renun')) {
+              candIntencao = 'desistir';
+            } else if (stNorm.includes('convocado titular') || stNorm.includes('nomeado') || stNorm.includes('posse') || stNorm.includes('exercício')) {
+              candIntencao = 'assumir';
+            } else if (stNorm.includes('suplente') && candLotacao) {
+              candIntencao = 'assumir';
+            }
 
             var cand = {
               id: candId,
@@ -11544,7 +11569,7 @@
               data_convocacao: candDataConv,
               lotacao_assumida: candLotacao,
               data_nomeacao: candDataNom,
-              intencao: candStatus.includes('Convocado') ? 'assumir' : 'assumir',
+              intencao: candIntencao,
               escolhas: candLotacao ? [candLotacao] : []
             };
 
@@ -11785,42 +11810,45 @@
           data_nomeacao: cand.data_nomeacao || null
         });
 
-        respostasRows.push({
-          id: concursoId + '-geral-' + cand.classificacao_ampla,
-          concurso_id: concursoId,
-          lote_id: 'geral',
-          ambiente: 'prod',
-          nome: cand.nome,
-          cpf: cand.cpf || '',
-          email: cand.email || '',
-          whatsapp: cand.whatsapp || '',
-          intencao: cand.intencao || 'assumir',
-          escolhas: cand.escolhas || [],
-          bloqueado: true,
-          dados_cadastrais_bloqueados: true,
-          dados_completos: {
-            classificacao_ampla: cand.classificacao_ampla,
-            classificacao_cota: cand.classificacao_cota,
-            cota: cand.cota,
-            nota_final: cand.nota_final,
-            ordem_nomeacao: cand.ordem_nomeacao,
-            vaga_chamada: cand.vaga_chamada,
-            status_nomeacao: cand.status_nomeacao || 'Aguardando',
-            lote_chamada: cand.lote_chamada,
-            lotacao_assumida: cand.lotacao_assumida,
-            data_nomeacao: cand.data_nomeacao,
-            nota_port: cand.nota_port,
-            nota_leg: cand.nota_leg,
-            nota_info: cand.nota_info,
-            nota_comum: cand.nota_comum,
-            nota_const: cand.nota_const,
-            nota_adm: cand.nota_adm,
-            nota_civil: cand.nota_civil,
-            nota_penal: cand.nota_penal,
-            nota_espec: cand.nota_espec,
-            inscricao: cand.inscricao
-          }
-        });
+        // Só sincroniza em respostas se o candidato possuir manifestação ou escolhas concretas
+        if ((cand.intencao && cand.intencao !== 'indefinido') || (cand.escolhas && cand.escolhas.length > 0)) {
+          respostasRows.push({
+            id: concursoId + '-geral-' + cand.classificacao_ampla,
+            concurso_id: concursoId,
+            lote_id: 'geral',
+            ambiente: 'prod',
+            nome: cand.nome,
+            cpf: cand.cpf || '',
+            email: cand.email || '',
+            whatsapp: cand.whatsapp || '',
+            intencao: cand.intencao || 'indefinido',
+            escolhas: cand.escolhas || [],
+            bloqueado: true,
+            dados_cadastrais_bloqueados: true,
+            dados_completos: {
+              classificacao_ampla: cand.classificacao_ampla,
+              classificacao_cota: cand.classificacao_cota,
+              cota: cand.cota,
+              nota_final: cand.nota_final,
+              ordem_nomeacao: cand.ordem_nomeacao,
+              vaga_chamada: cand.vaga_chamada,
+              status_nomeacao: cand.status_nomeacao || 'Aguardando',
+              lote_chamada: cand.lote_chamada,
+              lotacao_assumida: cand.lotacao_assumida,
+              data_nomeacao: cand.data_nomeacao,
+              nota_port: cand.nota_port,
+              nota_leg: cand.nota_leg,
+              nota_info: cand.nota_info,
+              nota_comum: cand.nota_comum,
+              nota_const: cand.nota_const,
+              nota_adm: cand.nota_adm,
+              nota_civil: cand.nota_civil,
+              nota_penal: cand.nota_penal,
+              nota_espec: cand.nota_espec,
+              inscricao: cand.inscricao
+            }
+          });
+        }
       });
 
       var totalLotes = Math.ceil(total / TAMANHO_LOTE);
@@ -11839,8 +11867,10 @@
           var res1 = await supabaseClient.from('candidatos_base').upsert(chunkCandidatos, { onConflict: 'id' });
           if (res1.error) throw res1.error;
 
-          var res2 = await supabaseClient.from('respostas').upsert(chunkRespostas, { onConflict: 'id' });
-          if (res2.error) throw res2.error;
+          if (chunkRespostas.length > 0) {
+            var res2 = await supabaseClient.from('respostas').upsert(chunkRespostas, { onConflict: 'id' });
+            if (res2.error) throw res2.error;
+          }
 
           processados = end;
           var pct = Math.round((processados / total) * 100);
