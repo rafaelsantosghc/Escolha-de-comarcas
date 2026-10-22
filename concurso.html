@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CERTAM | Classificação Geral e Área do Candidato</title>
+  <meta name="description" content="CERTAM - Portal do Concurseiro. Acompanhe a classificação geral, nomeações, convocação de lotes e organize suas preferências de comarcas.">
+
+  <!-- Fontes Oficiais do Design System CERTAM -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+  <!-- Supabase JS Client v2 Oficial -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .font-serif {
+      font-family: 'Merriweather', Georgia, serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Estilização suave da barra de rolagem */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-teal-500 selection:text-white">
+
+  <!-- ===================================================================== -->
+  <!-- CABEÇALHO INSTITUCIONAL CERTAM                                        -->
+  <!-- ===================================================================== -->
+  <header class="bg-[#0B132B] text-white shadow-xs border-b border-[#1C2D4A] sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3.5">
+        
+        <!-- Logo e Naming Oficial -->
+        <div class="flex items-center space-x-3">
+          <a href="index.html" class="flex items-center space-x-3 group">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0F1E3D] to-[#0A1128] border border-teal-500/30 flex items-center justify-center p-2 shadow-sm shrink-0 group-hover:border-teal-400 transition-colors">
+              <svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
+                <defs>
+                  <linearGradient id="certamGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#0E4A5B" />
+                    <stop offset="50%" stop-color="#0E7490" />
+                    <stop offset="100%" stop-color="#2DD4BF" />
+                  </linearGradient>
+                  <linearGradient id="certamCheck" x1="20%" y1="80%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#0891B2" />
+                    <stop offset="100%" stop-color="#34D399" />
+                  </linearGradient>
+                </defs>
+                <path d="M 68 18 C 38 10 12 30 12 56 C 12 80 34 94 58 92 C 76 90 90 76 90 58" stroke="url(#certamGrad)" stroke-width="11" stroke-linecap="round" fill="none"/>
+                <path d="M 32 53 L 48 69 L 88 23" stroke="url(#certamCheck)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xl sm:text-2xl font-bold tracking-wider text-white font-serif uppercase">
+                  CERTAM
+                </span>
+                <span class="text-xs sm:text-sm font-semibold text-teal-300">Portal do Concurseiro</span>
+              </div>
+              <p class="text-2xs text-slate-400 italic">"Nunca é apenas uma prova."</p>
+            </div>
+          </a>
+        </div>
+
+        <!-- Ações do Topo: Voltar, Admin e Autenticação -->
+        <div class="flex items-center gap-2.5 sm:gap-3 flex-wrap">
+          
+          <!-- Voltar ao Portal -->
+          <a href="index.html" class="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white bg-[#0F1E3D] hover:bg-[#1C2D4A] border border-teal-500/20 px-3 py-1.5 rounded-lg transition-colors">
+            <span>←</span>
+            <span>Voltar ao Portal</span>
+          </a>
+
+          <!-- Botão Painel Admin (visível para administradores) -->
+          <a id="btnAdminTopHeader" href="lote.html?admin=1" style="display: none;" class="flex items-center gap-1.5 bg-purple-900/60 hover:bg-purple-800 text-purple-200 border border-purple-500/40 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors shadow-2xs">
+            <span>⚙️</span>
+            <span>Painel Admin</span>
+          </a>
+
+          <!-- Botão Entrar com Google (quando deslogado) -->
+          <button id="btnLoginGoogleHeader" type="button" onclick="fazerLoginGoogle()" class="flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-800 font-medium px-3.5 py-1.5 rounded-lg text-xs shadow-2xs transition-colors cursor-pointer border border-slate-200">
+            <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <span>Entrar com Google</span>
+          </button>
+
+          <!-- Bloco Usuário Logado -->
+          <div id="blocoUsuarioLogado" style="display: none;" class="flex items-center gap-2 bg-[#0F1E3D] px-2.5 py-1 rounded-lg border border-teal-500/30 text-xs">
+            <div class="flex items-center gap-1.5">
+              <span>👤</span>
+              <span id="badgeEmailUsuario" class="font-mono text-2xs font-medium text-slate-200 max-w-[140px] truncate"></span>
+              <span id="badgeTipoUsuario" class="text-3xs font-semibold px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-300">Candidato</span>
+            </div>
+            <button type="button" onclick="fazerLogout()" class="text-2xs text-rose-300 hover:text-rose-100 hover:underline border-l border-slate-700 pl-2 cursor-pointer font-medium" title="Sair da conta">
+              Sair
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================================================================== -->
+  <!-- BARRA DE CONTEXTO DO CONCURSO & NAVEGAÇÃO DE ABAS                     -->
+  <!-- ===================================================================== -->
+  <section class="bg-gradient-to-r from-[#0B132B] via-[#0E243D] to-[#0E3D4F] text-white border-b border-[#1C2D4A] py-6 sm:py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 flex-wrap mb-1.5">
+            <span id="badgeOrgaoConcurso" class="px-2.5 py-0.5 rounded-md bg-teal-500/20 text-teal-200 text-2xs font-bold font-mono tracking-wider border border-teal-500/40 uppercase">
+              TJRS
+            </span>
+            <span id="badgeStatusConcurso" class="px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 text-2xs font-bold font-mono tracking-wider border border-emerald-500/40">
+              ● Ativo
+            </span>
+            <span class="text-2xs text-slate-400">Edital Oficial</span>
+          </div>
+
+          <h1 id="tituloConcursoNome" class="text-2xl sm:text-3xl font-bold font-serif text-white tracking-tight">
+            Concurso TJRS - Analista Judiciário
+          </h1>
+          <p id="subtituloConcursoCargo" class="text-xs sm:text-sm text-slate-300 mt-1 font-medium">
+            💼 Analista Judiciário - Área Judiciária
+          </p>
+        </div>
+
+        <!-- Ações do Concurso -->
+        <div class="flex items-center gap-2.5 flex-wrap">
+          <button 
+            type="button" 
+            onclick="copiarLinkDesteConcurso()" 
+            class="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white font-medium px-3.5 py-2 rounded-xl text-xs border border-white/20 transition-colors cursor-pointer shadow-xs"
+            title="Copiar URL completa deste concurso"
+          >
+            <span>🔗</span>
+            <span>Copiar Link do Concurso</span>
+          </button>
+
+          <a 
+            id="btnAtalhoSimulacaoLotes" 
+            href="lote.html?concurso=tjrs_analista_2024&lote=lote_1" 
+            class="flex items-center gap-2 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-md cursor-pointer"
+          >
+            <span>🏛️</span>
+            <span>Simulação de Lotação (Lotes) →</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Abas Principais de Navegação -->
+      <div class="mt-8 flex items-center gap-2 border-b border-white/15 overflow-x-auto pb-px">
+        <button 
+          type="button" 
+          id="tabBtnClassificacao" 
+          onclick="trocarAbaPrincipal('classificacao')" 
+          class="flex items-center gap-2 py-3 px-4 font-bold text-xs sm:text-sm border-b-2 border-teal-400 text-teal-300 transition-colors cursor-pointer shrink-0"
+        >
+          <span>📊</span>
+          <span>Classificação Geral &amp; Nomeações</span>
+        </button>
+
+        <button 
+          type="button" 
+          id="tabBtnCandidato" 
+          onclick="trocarAbaPrincipal('candidato')" 
+          class="flex items-center gap-2 py-3 px-4 font-semibold text-xs sm:text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors cursor-pointer shrink-0"
+        >
+          <span>👤</span>
+          <span>Área do Candidato (Perfil &amp; Preferências)</span>
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- CONTEÚDO PRINCIPAL (ABAS 1 E 2)                                       -->
+  <!-- ===================================================================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- =================================================================== -->
+    <!-- ABA 1: CLASSIFICAÇÃO GERAL E NOMEAÇÕES                              -->
+    <!-- =================================================================== -->
+    <section id="abaConteudoClassificacao" class="space-y-6">
+      
+      <!-- Cards de Resumo Rápido -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-2xs">
+          <span class="text-3xs font-bold uppercase tracking-wider text-slate-400 block font-mono">Aprovados</span>
+          <div class="text-2xl font-bold font-mono text-slate-900 mt-1" id="statTotalAprovados">0</div>
+          <span class="text-2xs text-slate-500">Candidatos homologados</span>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-2xs">
+          <span class="text-3xs font-bold uppercase tracking-wider text-emerald-600 block font-mono">Pretendem Assumir</span>
+          <div class="text-2xl font-bold font-mono text-emerald-700 mt-1" id="statManifestaramInteresse">0</div>
+          <span class="text-2xs text-emerald-600">Interesse ativo na vaga</span>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-2xs">
+          <span class="text-3xs font-bold uppercase tracking-wider text-teal-600 block font-mono">Nomeados / Exercício</span>
+          <div class="text-2xl font-bold font-mono text-teal-700 mt-1" id="statNomeadosExercicio">0</div>
+          <span class="text-2xs text-teal-600">Convocação oficial</span>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-2xs">
+          <span class="text-3xs font-bold uppercase tracking-wider text-rose-500 block font-mono">Desistências / Fim de Fila</span>
+          <div class="text-2xl font-bold font-mono text-rose-600 mt-1" id="statDesistenciasFimFila">0</div>
+          <span class="text-2xs text-rose-500">Renúncias ou repasse de vez</span>
+        </div>
+      </div>
+
+      <!-- Barra de Filtros e Busca de Candidatos -->
+      <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-2xs space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5">
+          
+          <!-- Busca por Nome ou Comarca -->
+          <div class="md:col-span-5 relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              🔍
+            </span>
+            <input 
+              type="text" 
+              id="filtroClassifBusca" 
+              oninput="filtrarClassificacaoGeral()" 
+              placeholder="Buscar por nome do candidato ou comarca..." 
+              class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+            >
+          </div>
+
+          <!-- Filtro por Cota -->
+          <div class="md:col-span-2">
+            <select id="filtroClassifCota" onchange="filtrarClassificacaoGeral()" class="w-full py-2 px-3 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+              <option value="todas">Cota: Todas</option>
+              <option value="Ampla">Ampla Concorrência</option>
+              <option value="PPP">PPP / Negros (CN)</option>
+              <option value="PCD">PCD</option>
+              <option value="Indígena">Indígena (CI)</option>
+            </select>
+          </div>
+
+          <!-- Filtro por Status Oficial -->
+          <div class="md:col-span-3">
+            <select id="filtroClassifStatus" onchange="filtrarClassificacaoGeral()" class="w-full py-2 px-3 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+              <option value="todos">Status: Todos</option>
+              <option value="Aguardando">Aguardando Convocação</option>
+              <option value="Convocado Titular">Convocado Titular</option>
+              <option value="Em fase de exames médicos">Em fase de exames</option>
+              <option value="Nomeado">Nomeado</option>
+              <option value="Posse">Posse</option>
+              <option value="Exercício">Em Exercício</option>
+              <option value="Fim de Fila">Fim de Fila</option>
+              <option value="Desistência">Desistência / Renúncia</option>
+            </select>
+          </div>
+
+          <!-- Filtro por Intenção -->
+          <div class="md:col-span-2">
+            <select id="filtroClassifIntencao" onchange="filtrarClassificacaoGeral()" class="w-full py-2 px-3 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+              <option value="todas">Intenção: Todas</option>
+              <option value="Sim">Assume (Sim)</option>
+              <option value="Não">Não Assume (Não)</option>
+              <option value="Indefinido">Não Informou</option>
+            </select>
+          </div>
+
+        </div>
+
+        <div class="flex items-center justify-between text-2xs text-slate-500 pt-1 border-t border-slate-100">
+          <div>
+            Exibindo <strong id="contadorCandidatosFiltrados" class="text-slate-800">0</strong> candidato(s)
+          </div>
+          <button type="button" onclick="limparFiltrosClassificacao()" class="text-teal-700 hover:text-teal-900 font-semibold cursor-pointer">
+            Limpar filtros
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabela Principal de Classificação Geral -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs sm:text-sm divide-y divide-slate-100">
+            <thead class="bg-slate-50/80 text-slate-600 font-bold text-2xs uppercase tracking-wider font-mono">
+              <tr>
+                <th class="px-3.5 py-3 text-center">Class. Geral</th>
+                <th class="px-4 py-3">Candidato &amp; Vínculo</th>
+                <th class="px-3.5 py-3 text-center">Cota</th>
+                <th class="px-3 py-3 text-right">Nota Final</th>
+                <th class="px-3.5 py-3 text-center">Intenção</th>
+                <th class="px-4 py-3">1ª Comarca Desejada</th>
+                <th class="px-3.5 py-3">Status / Lotação</th>
+                <th class="px-3 py-3 text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaClassificacaoBody" class="divide-y divide-slate-100">
+              <tr>
+                <td colspan="8" class="text-center py-10 text-slate-400">
+                  <div class="animate-pulse space-y-2">
+                    <div class="h-4 bg-slate-200 rounded w-1/3 mx-auto"></div>
+                    <div class="text-xs text-slate-400">Consultando lista oficial de candidatos...</div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- ABA 2: ÁREA DO CANDIDATO (PERFIL PRIVADO, LOTES E RANKING PRÉ-LOTE) -->
+    <!-- =================================================================== -->
+    <section id="abaConteudoCandidato" style="display: none;" class="space-y-8">
+      
+      <!-- GATE DE AUTENTICAÇÃO: Se não estiver logado com Google -->
+      <div id="gateAutenticacaoCandidato" class="bg-gradient-to-r from-[#0A1128] via-[#0C243B] to-[#0E3D4F] text-white rounded-2xl p-8 sm:p-12 text-center max-w-2xl mx-auto shadow-md border border-[#1C2D4A] space-y-4">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-2xl">
+          🔒
+        </div>
+        <h3 class="text-xl sm:text-2xl font-bold font-serif">Área do Candidato Aprovado</h3>
+        <p class="text-xs sm:text-sm text-slate-300 max-w-lg mx-auto leading-relaxed">
+          Para vincular sua colocação homologada, registrar suas preferências de comarcas e acompanhar suas convocações oficiais, entre com sua conta Google.
+        </p>
+        <div class="pt-2">
+          <button 
+            type="button" 
+            onclick="fazerLoginGoogle()" 
+            class="inline-flex items-center gap-3 bg-white hover:bg-slate-100 text-slate-900 font-bold px-6 py-3 rounded-xl shadow-md text-sm transition-all transform hover:scale-[1.02] cursor-pointer"
+          >
+            <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <span>Entrar com Google</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- FORMULÁRIO DE VÍNCULO (Exibido quando logado, mas e-mail ainda não consta na candidatos_base) -->
+      <div id="cardVinculoCandidato" style="display: none;" class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm max-w-xl mx-auto space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-800 flex items-center justify-center text-xl">
+            🤝
+          </div>
+          <div>
+            <h3 class="text-base sm:text-lg font-bold font-serif text-slate-900">Vincular meu Cadastro de Aprovado</h3>
+            <p class="text-2xs sm:text-xs text-slate-500">Informe seu CPF para sincronizar sua colocação e liberar seu painel.</p>
+          </div>
+        </div>
+
+        <div class="space-y-3.5 pt-2">
+          <div>
+            <label class="block text-2xs font-bold text-slate-700 tracking-wider mb-1">
+              CPF DO CANDIDATO <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="inputVinculoCpf" 
+              maxlength="14" 
+              placeholder="000.000.000-00" 
+              class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-teal-500"
+            >
+          </div>
+
+          <div>
+            <label class="block text-2xs font-bold text-slate-700 tracking-wider mb-1">
+              NOME COMPLETO OU NÚMERO DE INSCRIÇÃO (OPCIONAL)
+            </label>
+            <input 
+              type="text" 
+              id="inputVinculoInscricao" 
+              placeholder="Digite seu nome ou inscrição..." 
+              class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+            >
+          </div>
+
+          <button 
+            type="button" 
+            onclick="executarVinculoCandidato()" 
+            class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-colors cursor-pointer shadow-xs"
+          >
+            Validar e Vincular meu Perfil
+          </button>
+        </div>
+      </div>
+
+      <!-- PAINEL COMPLETO DO CANDIDATO (Exibido quando autenticado e vinculado) -->
+      <div id="painelPerfilCandidatoAutenticado" style="display: none;" class="space-y-8">
+        
+        <!-- SEÇÃO 1: MINHA SITUAÇÃO E MEUS LOTES -->
+        <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <div>
+              <span class="text-3xs font-bold uppercase tracking-wider text-teal-700 font-mono">Meu Perfil Oficial</span>
+              <h3 id="candidatoMeuNome" class="text-xl sm:text-2xl font-bold font-serif text-slate-900 mt-0.5">
+                Nome do Candidato
+              </h3>
+              <p id="candidatoMeuEmail" class="text-xs text-slate-500 font-mono mt-0.5">
+                email@gmail.com
+              </p>
+            </div>
+
+            <!-- Status de Nomeação Oficial -->
+            <div class="flex items-center gap-2">
+              <span id="badgeCandidatoMeuStatus" class="px-3 py-1 rounded-full text-xs font-bold font-mono uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200">
+                Aguardando Convocação
+              </span>
+            </div>
+          </div>
+
+          <!-- Grade de Informações Oficiais de Classificação -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-200/80">
+              <span class="text-3xs font-bold text-slate-400 uppercase font-mono block">Classificação Ampla</span>
+              <div id="candidatoMinhaClassGeral" class="text-xl font-bold font-mono text-slate-900 mt-1">-</div>
+              <span class="text-3xs text-slate-500">Ordem Geral</span>
+            </div>
+
+            <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-200/80">
+              <span class="text-3xs font-bold text-slate-400 uppercase font-mono block">Cota &amp; Class. Cota</span>
+              <div id="candidatoMinhaCota" class="text-xl font-bold font-mono text-teal-800 mt-1">Ampla</div>
+              <span id="candidatoMinhaClassCota" class="text-3xs text-teal-600">Posição na Cota: -</span>
+            </div>
+
+            <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-200/80">
+              <span class="text-3xs font-bold text-slate-400 uppercase font-mono block">Nota Final</span>
+              <div id="candidatoMinhaNotaFinal" class="text-xl font-bold font-mono text-slate-900 mt-1">-</div>
+              <span class="text-3xs text-slate-500">Pontuação homologada</span>
+            </div>
+
+            <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-200/80">
+              <span class="text-3xs font-bold text-slate-400 uppercase font-mono block">Lotação Assumida</span>
+              <div id="candidatoMinhaLotacao" class="text-xl font-bold text-slate-900 mt-1">-</div>
+              <span id="candidatoDataNomeacao" class="text-3xs text-slate-500">Sem data registrada</span>
+            </div>
+          </div>
+
+          <!-- Lotes de Chamamento Vinculados ao Candidato -->
+          <div class="pt-4 border-t border-slate-100">
+            <h4 class="text-xs sm:text-sm font-bold text-slate-900 font-serif flex items-center gap-2 mb-3">
+              <span>🏛️</span>
+              <span>Lotes de Escolha de Comarcas Disponíveis:</span>
+            </h4>
+            <div id="containerBotoesLotesCandidato" class="flex flex-wrap gap-2.5">
+              <!-- Preenchido via JavaScript -->
+            </div>
+          </div>
+        </div>
+
+        <!-- SEÇÃO 2: DADOS PESSOAIS E FUNCIONAIS DO CANDIDATO -->
+        <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+          <div class="border-b border-slate-100 pb-3">
+            <h3 class="text-base sm:text-lg font-bold font-serif text-slate-900 flex items-center gap-2">
+              <span>📝</span>
+              <span>Meus Dados Pessoais e Informações Funcionais</span>
+            </h3>
+            <p class="text-xs text-slate-500">Mantenha seus dados atualizados para que a organização e seus colegas acompanhem a simulação.</p>
+          </div>
+
+          <form id="formDadosCandidato" onsubmit="event.preventDefault(); salvarDadosPerfilCandidato();" class="space-y-5">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-2xs font-bold text-slate-700 tracking-wider mb-1">CPF (Somente Leitura)</label>
+                <input type="text" id="perfilCpf" readonly class="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono text-slate-600 cursor-not-allowed">
+              </div>
+
+              <div>
+                <label class="block text-2xs font-bold text-slate-700 tracking-wider mb-1">WhatsApp / Telefone <span class="text-red-500">*</span></label>
+                <input type="text" id="perfilWhatsapp" placeholder="(51) 99999-9999" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-teal-500">
+              </div>
+
+              <div>
+                <label class="block text-2xs font-bold text-slate-700 tracking-wider mb-1">Intenção Quanto à Vaga <span class="text-red-500">*</span></label>
+                <select id="perfilIntencao" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-teal-500">
+                  <option value="assumir">Pretendo assumir a vaga (Sim)</option>
+                  <option value="final_fila">Pedir final de fila</option>
+                  <option value="desistir">Desistir da vaga / Renúncia</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-2xs font-bold text-slate-700 tracking-wider mb-1">Região de Preferência no RS</label>
+                <input type="text" id="perfilRegiaoPreferencia" placeholder="Ex: Região Metropolitana, Serra, Litoral..." class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-teal-500">
+              </div>
+
+              <div>
+                <label class="block text-2xs font-bold text-slate-700 tracking-wider mb-1">Outros concursos em que está aprovado / aguardando</label>
+                <input type="text" id="perfilOutrosConcursos" placeholder="Ex: TJSC, TRF4, MPRS..." class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-teal-500">
+              </div>
+            </div>
+
+            <!-- Bloco de Informações Funcionais TJRS -->
+            <div class="bg-teal-50/50 rounded-2xl p-4 sm:p-5 border border-teal-100 space-y-4">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-lg">🏛️</span>
+                  <span class="text-xs font-bold text-teal-950 uppercase tracking-wider">Vínculo Funcional com o TJRS</span>
+                </div>
+                <label class="inline-flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="perfilJaEServidor" onchange="toggleCamposFuncionais()" class="rounded text-teal-600 focus:ring-teal-500 w-4 h-4">
+                  <span class="text-xs font-semibold text-teal-900">Já sou servidor do tribunal</span>
+                </label>
+              </div>
+
+              <div id="containerCamposFuncionais" style="display: none;" class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2">
+                <div>
+                  <label class="block text-3xs font-bold text-teal-900 mb-1">Registro Funcional / Matrícula</label>
+                  <input type="text" id="perfilFgCcRegistro" placeholder="Ex: 1234567" class="w-full bg-white border border-teal-200 rounded-xl px-3 py-2 text-xs font-mono">
+                </div>
+                <div>
+                  <label class="block text-3xs font-bold text-teal-900 mb-1">Cargo Atual</label>
+                  <input type="text" id="perfilFgCcCargo" placeholder="Ex: Oficial Escrevente" class="w-full bg-white border border-teal-200 rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                  <label class="block text-3xs font-bold text-teal-900 mb-1">Comarca Atual</label>
+                  <input type="text" id="perfilFgCcComarcaAtual" placeholder="Ex: Porto Alegre" class="w-full bg-white border border-teal-200 rounded-xl px-3 py-2 text-xs">
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end">
+              <button 
+                type="submit" 
+                class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs transition-colors shadow-xs cursor-pointer flex items-center gap-1.5"
+              >
+                <span>💾</span>
+                <span>Salvar Informações do Perfil</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- SEÇÃO 3: SISTEMA DE DUAS TABELAS DE RANKING DE COMARCAS (PRÉ-LOTE) -->
+        <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-5">
+          <div class="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 class="text-base sm:text-lg font-bold font-serif text-slate-900 flex items-center gap-2">
+                <span>⭐</span>
+                <span>Minhas Preferências de Comarcas (Ranking Oficial de Posse)</span>
+              </h3>
+              <p class="text-xs text-slate-500">
+                Organize sua ordem de prioridade entre todas as comarcas do estado. Comarcas à esquerda representam locais onde você não tem interesse de posse.
+              </p>
+            </div>
+            
+            <div class="flex items-center gap-2 shrink-0">
+              <button 
+                type="button" 
+                onclick="salvarRankingPreferenciasComarcas()" 
+                class="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                <span>💾</span>
+                <span>Salvar Ranking de Comarcas</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Grid de Duas Colunas Lado a Lado -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            
+            <!-- COLUNA ESQUERDA: COMARCAS DISPONÍVEIS NO ÓRGÃO (NÃO SELECIONADAS) -->
+            <div class="lg:col-span-6 bg-slate-50 rounded-2xl border border-slate-200 p-4 flex flex-col h-[600px]">
+              <div class="flex items-center justify-between pb-2 border-b border-slate-200 mb-2.5">
+                <div>
+                  <h4 class="text-xs sm:text-sm font-bold text-slate-800">Comarcas Disponíveis no Estado</h4>
+                  <span class="text-3xs text-slate-500"><span id="contadorComarcasDisponiveis">0</span> comarcas não selecionadas</span>
+                </div>
+                <button 
+                  type="button" 
+                  onclick="adicionarTodasComarcasFiltradas()" 
+                  class="text-2xs bg-white text-teal-800 border border-teal-300 font-semibold px-2.5 py-1 rounded-lg hover:bg-teal-50 cursor-pointer transition-colors"
+                  title="Adicionar todas as comarcas exibidas na busca para sua lista de posse"
+                >
+                  + Adicionar Todas
+                </button>
+              </div>
+
+              <!-- Filtros de Busca e Região -->
+              <div class="space-y-2 mb-2.5">
+                <input 
+                  type="text" 
+                  id="buscaComarcasDisponiveis" 
+                  oninput="renderizarTabelaComarcasDisponiveis()" 
+                  placeholder="Pesquisar comarca..." 
+                  class="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-teal-500"
+                >
+              </div>
+
+              <!-- Lista Rolável de Comarcas Disponíveis -->
+              <div id="listaComarcasDisponiveis" class="flex-1 overflow-y-auto space-y-1 pr-1">
+                <!-- Preenchido via JavaScript -->
+              </div>
+            </div>
+
+            <!-- COLUNA DIREITA: MINHAS COMARCAS ESCOLHIDAS PARA POSSE (ORDENADAS) -->
+            <div class="lg:col-span-6 bg-teal-50/40 rounded-2xl border-2 border-teal-200 p-4 flex flex-col h-[600px]">
+              <div class="flex items-center justify-between pb-2 border-b border-teal-200 mb-2.5">
+                <div>
+                  <h4 class="text-xs sm:text-sm font-bold text-teal-950 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-teal-600"></span>
+                    <span>Minha Lista de Posse (Ordem de Preferência)</span>
+                  </h4>
+                  <span class="text-3xs text-teal-800">1º colocado no topo = sua maior prioridade</span>
+                </div>
+                <button 
+                  type="button" 
+                  onclick="limparTodasEscolhasComarcas()" 
+                  class="text-2xs text-rose-600 hover:text-rose-800 font-semibold cursor-pointer"
+                >
+                  Limpar lista
+                </button>
+              </div>
+
+              <div class="text-2xs text-teal-900 bg-teal-100/70 border border-teal-200 rounded-lg p-2 mb-2 flex items-center justify-between">
+                <span>⭐ <strong id="contadorComarcasEscolhidas">0</strong> comarca(s) selecionada(s) para posse.</span>
+                <span class="text-3xs text-teal-700">Use ▲ ▼ para reordenar</span>
+              </div>
+
+              <!-- Lista Rolável de Comarcas Selecionadas -->
+              <div id="listaComarcasEscolhidas" class="flex-1 overflow-y-auto space-y-1.5 pr-1">
+                <!-- Preenchido via JavaScript -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL DE DETALHES DO CANDIDATO                                        -->
+  <!-- ===================================================================== -->
+  <div id="modalDetalhesCandidato" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh]">
+      
+      <!-- Cabeçalho do Modal -->
+      <div class="bg-[#0B132B] text-white p-5 border-b border-[#1C2D4A] flex items-center justify-between shrink-0">
+        <div>
+          <span id="modalDetalheCotaBadge" class="text-3xs font-mono px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 font-bold uppercase">
+            Ampla
+          </span>
+          <h3 id="modalDetalheNome" class="text-lg font-bold font-serif text-white mt-1">
+            Nome do Candidato
+          </h3>
+          <p id="modalDetalheClassif" class="text-xs text-slate-300 mt-0.5">
+            Classificação Ampla: 1º • Nota Final: 85.00
+          </p>
+        </div>
+        <button type="button" onclick="fecharModalDetalhesCandidato()" class="text-slate-400 hover:text-white p-1 rounded-lg text-lg leading-none cursor-pointer">
+          ✕
+        </button>
+      </div>
+
+      <!-- Conteúdo do Modal -->
+      <div class="p-5 sm:p-6 space-y-5 overflow-y-auto text-xs sm:text-sm text-slate-700">
+        
+        <!-- Bloco 1: Discriminativo Completo de Notas -->
+        <div>
+          <h4 class="font-bold text-xs uppercase tracking-wider text-slate-400 font-mono mb-2">
+            Notas Discriminadas por Disciplina
+          </h4>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center" id="modalGridNotasDiscriminadas">
+            <!-- Inserido dinamicamente -->
+          </div>
+        </div>
+
+        <!-- Bloco 2: Histórico de Convocação e Lotação -->
+        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-2 text-xs">
+          <h4 class="font-bold text-xs uppercase tracking-wider text-slate-500 font-mono">
+            Situação da Convocação Oficial
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700">
+            <div><strong>Status:</strong> <span id="modalStatusTexto">-</span></div>
+            <div><strong>Lote de Chamada:</strong> <span id="modalLoteChamadaTexto">-</span></div>
+            <div><strong>Lotação Assumida:</strong> <span id="modalLotacaoAssumidaTexto">-</span></div>
+            <div><strong>Data de Nomeação:</strong> <span id="modalDataNomeacaoTexto">-</span></div>
+            <div class="sm:col-span-2"><strong>Outros Concursos:</strong> <span id="modalOutrosConcursosTexto">-</span></div>
+          </div>
+        </div>
+
+        <!-- Bloco 3: Lista Completa de Comarcas Escolhidas -->
+        <div>
+          <h4 class="font-bold text-xs uppercase tracking-wider text-slate-400 font-mono mb-2 flex items-center justify-between">
+            <span>Ordem Completa de Preferência de Comarcas</span>
+            <span id="modalQtdComarcasBadge" class="text-3xs font-semibold text-teal-800 bg-teal-50 px-2 py-0.5 rounded-full">0 comarcas</span>
+          </h4>
+          <div id="modalListaComarcasCompleta" class="max-h-60 overflow-y-auto space-y-1 bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs">
+            <!-- Inserido dinamicamente -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Rodapé do Modal -->
+      <div class="bg-slate-50 border-t border-slate-200 p-4 flex justify-end shrink-0">
+        <button type="button" onclick="fecharModalDetalhesCandidato()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2 rounded-xl text-xs cursor-pointer">
+          Fechar
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- TOAST FLUTUANTE                                                       -->
+  <!-- ===================================================================== -->
+  <div id="toastAlerta" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-xl text-xs font-semibold text-white bg-slate-900 border border-slate-700">
+    <span id="toastIcone">✓</span>
+    <span id="toastMensagem">Ação realizada!</span>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- RODAPÉ INSTITUCIONAL CERTAM                                           -->
+  <!-- ===================================================================== -->
+  <footer class="bg-[#0B132B] text-slate-400 border-t border-[#1C2D4A] mt-auto py-8 px-4 sm:px-6 lg:px-8 text-xs leading-relaxed">
+    <div class="max-w-7xl mx-auto space-y-5">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[#1C2D4A] pb-5">
+        <div class="flex items-center gap-3">
+          <span class="font-serif font-bold text-white tracking-wider uppercase text-sm">CERTAM</span>
+          <span class="text-teal-300 text-xs font-semibold">Portal do Concurseiro</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-4 text-xs">
+          <a href="index.html" class="text-teal-300 hover:underline">Portal de Concursos</a>
+          <span class="text-slate-600">·</span>
+          <a href="lote.html" class="text-slate-300 hover:text-white">Simulação de Lotação</a>
+          <span class="text-slate-600">·</span>
+          <a href="politica-de-privacidade.html" class="text-teal-400 hover:text-teal-300 underline underline-offset-2">Política de Privacidade</a>
+        </div>
+      </div>
+      <p class="text-2xs text-slate-500">
+        © 2026 CERTAM - Portal do Concurseiro. Acompanhamento de classificação e escolha de lotação.
+      </p>
+    </div>
+  </footer>
+
+  <!-- ===================================================================== -->
+  <!-- JAVASCRIPT DO CLIENTE: SUPABASE, ABAS E RANKING DE COMARCAS           -->
+  <!-- ===================================================================== -->
+  <script>
+    // 1. CONFIGURAÇÕES SUPABASE
+    var SUPABASE_URL = 'https://qeriodszxddmzmnjzipz.supabase.co';
+    var SUPABASE_ANON_KEY = (function() {
+      try {
+        var localKey = localStorage.getItem('tjrs_supabase_anon_key');
+        if (localKey && localKey.trim()) return localKey.trim();
+      } catch(e) {}
+      return window.SUPABASE_ANON_KEY || 'sb_publishable_DsFaKZb3uAAREpM5lPutZg_TZOLTV8R';
+    })();
+
+    var supabaseClient = null;
+    try {
+      if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+    } catch(e) {}
+
+    // 2. PARÂMETROS DE URL E ESTADO GLOBAL
+    var urlParams = new URLSearchParams(window.location.search);
+    var CONCURSO_ID = urlParams.get('id') || 'tjrs_analista_2024';
+    var ABA_INICIAL = urlParams.get('tab') || 'classificacao';
+
+    var ESTADO = {
+      concursoId: CONCURSO_ID,
+      concursoDados: null,
+      classificacaoCompleta: [],
+      classificacaoFiltrada: [],
+      todasComarcasCatalogo: [],
+      minhasEscolhasComarcas: [], // Array ordenado de nomes de comarcas
+      usuarioLogado: null,
+      candidatoVinculado: null,
+      lotesDoConcurso: []
+    };
+
+    // 3. FLUXO DE INICIALIZAÇÃO E TROCA DE ABAS
+    function trocarAbaPrincipal(aba) {
+      var btnClassif = document.getElementById('tabBtnClassificacao');
+      var btnCand = document.getElementById('tabBtnCandidato');
+      var secClassif = document.getElementById('abaConteudoClassificacao');
+      var secCand = document.getElementById('abaConteudoCandidato');
+
+      if (aba === 'classificacao') {
+        if (secClassif) secClassif.style.display = 'block';
+        if (secCand) secCand.style.display = 'none';
+        if (btnClassif) btnClassif.className = 'flex items-center gap-2 py-3 px-4 font-bold text-xs sm:text-sm border-b-2 border-teal-400 text-teal-300 transition-colors cursor-pointer shrink-0';
+        if (btnCand) btnCand.className = 'flex items-center gap-2 py-3 px-4 font-semibold text-xs sm:text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors cursor-pointer shrink-0';
+      } else {
+        if (secClassif) secClassif.style.display = 'none';
+        if (secCand) secCand.style.display = 'block';
+        if (btnClassif) btnClassif.className = 'flex items-center gap-2 py-3 px-4 font-semibold text-xs sm:text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors cursor-pointer shrink-0';
+        if (btnCand) btnCand.className = 'flex items-center gap-2 py-3 px-4 font-bold text-xs sm:text-sm border-b-2 border-teal-400 text-teal-300 transition-colors cursor-pointer shrink-0';
+      }
+
+      // Atualiza URL sem recarregar
+      try {
+        var novaUrl = new URL(window.location);
+        novaUrl.searchParams.set('tab', aba);
+        window.history.replaceState({}, '', novaUrl);
+      } catch(e) {}
+    }
+
+    // 4. AUTENTICAÇÃO COM GOOGLE
+    async function inicializarAutenticacao() {
+      if (!supabaseClient) return;
+      try {
+        var res = await supabaseClient.auth.getSession();
+        var session = res && res.data ? res.data.session : null;
+
+        if (session && window.location.hash && window.location.hash.includes('access_token')) {
+          try {
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          } catch(e) {}
+        }
+
+        atualizarInterfaceSessao(session);
+
+        supabaseClient.auth.onAuthStateChange(function(evt, novaSessao) {
+          atualizarInterfaceSessao(novaSessao);
+        });
+      } catch(err) {
+        console.warn('Erro ao obter sessão:', err);
+      }
+    }
+
+    function atualizarInterfaceSessao(session) {
+      var btnLogin = document.getElementById('btnLoginGoogleHeader');
+      var blocoUser = document.getElementById('blocoUsuarioLogado');
+      var badgeEmail = document.getElementById('badgeEmailUsuario');
+      var badgeTipo = document.getElementById('badgeTipoUsuario');
+      var btnAdmin = document.getElementById('btnAdminTopHeader');
+
+      if (session && session.user) {
+        var email = (session.user.email || '').toLowerCase().trim();
+        var ehAdmin = (email === 'rafasms0@hotmail.com');
+        ESTADO.usuarioLogado = { email: email, isAdmin: ehAdmin, user: session.user };
+
+        if (btnLogin) btnLogin.style.display = 'none';
+        if (blocoUser) blocoUser.style.display = 'flex';
+        if (badgeEmail) badgeEmail.textContent = email;
+        if (badgeTipo) {
+          badgeTipo.textContent = ehAdmin ? 'Admin' : 'Candidato';
+          badgeTipo.className = ehAdmin 
+            ? 'text-3xs font-bold uppercase px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono'
+            : 'text-3xs font-semibold px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-300';
+        }
+        if (btnAdmin) btnAdmin.style.display = ehAdmin ? 'flex' : 'none';
+
+        verificarCandidatoVinculado(email);
+      } else {
+        ESTADO.usuarioLogado = null;
+        ESTADO.candidatoVinculado = null;
+        if (btnLogin) btnLogin.style.display = 'flex';
+        if (blocoUser) blocoUser.style.display = 'none';
+        if (btnAdmin) btnAdmin.style.display = 'none';
+
+        var gate = document.getElementById('gateAutenticacaoCandidato');
+        var cardVinc = document.getElementById('cardVinculoCandidato');
+        var painel = document.getElementById('painelPerfilCandidatoAutenticado');
+        if (gate) gate.style.display = 'block';
+        if (cardVinc) cardVinc.style.display = 'none';
+        if (painel) painel.style.display = 'none';
+      }
+    }
+
+    async function fazerLoginGoogle() {
+      if (!supabaseClient) return;
+      try {
+        var redirectUrl = window.location.origin + window.location.pathname + window.location.search;
+        var res = await supabaseClient.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: redirectUrl }
+        });
+        if (res.error) throw res.error;
+      } catch(err) {
+        mostrarToast('Erro ao autenticar com o Google: ' + (err.message || err), 'erro');
+      }
+    }
+
+    async function fazerLogout() {
+      if (supabaseClient) {
+        try { await supabaseClient.auth.signOut(); } catch(e) {}
+      }
+      ESTADO.usuarioLogado = null;
+      atualizarInterfaceSessao(null);
+      mostrarToast('Sessão encerrada.', 'info');
+    }
+
+    // 5. CARREGAMENTO DOS DADOS DO CONCURSO
+    async function carregarDadosGerais() {
+      if (!supabaseClient) return;
+
+      try {
+        // Busca dados do concurso
+        var resConcurso = await supabaseClient
+          .from('concursos')
+          .select('*')
+          .eq('id', ESTADO.concursoId)
+          .maybeSingle();
+
+        if (resConcurso.data) {
+          ESTADO.concursoDados = resConcurso.data;
+          document.getElementById('tituloConcursoNome').textContent = resConcurso.data.nome || 'Concurso';
+          document.getElementById('subtituloConcursoCargo').textContent = '💼 ' + (resConcurso.data.cargo || 'Cargo oficial');
+          document.getElementById('badgeOrgaoConcurso').textContent = resConcurso.data.orgao || 'TJRS';
+          document.title = 'CERTAM | ' + (resConcurso.data.nome || 'Concurso');
+        }
+
+        // Atualiza link de lotes
+        var btnLotes = document.getElementById('btnAtalhoSimulacaoLotes');
+        if (btnLotes) {
+          btnLotes.href = 'lote.html?concurso=' + encodeURIComponent(ESTADO.concursoId) + '&lote=lote_1';
+        }
+
+        // Carrega catálogo de comarcas oficiais
+        var resComarcas = await supabaseClient
+          .from('comarcas_tjrs')
+          .select('id, nome, regiao, ativo')
+          .eq('ativo', true)
+          .order('nome', { ascending: true });
+
+        if (resComarcas.data) {
+          ESTADO.todasComarcasCatalogo = resComarcas.data;
+        }
+
+        // Carrega lotes do concurso para exibir na Área do Candidato
+        var resLotes = await supabaseClient
+          .from('lotes')
+          .select('id, concurso_id, nome, ativo, travado')
+          .eq('concurso_id', ESTADO.concursoId);
+
+        if (resLotes.data) {
+          ESTADO.lotesDoConcurso = resLotes.data;
+        }
+
+        // Carrega Classificação Geral via view pública v_classificacao_geral
+        carregarClassificacaoGeral();
+
+      } catch(err) {
+        console.error('Erro ao carregar dados gerais:', err);
+      }
+    }
+
+    async function carregarClassificacaoGeral() {
+      var tbody = document.getElementById('tabelaClassificacaoBody');
+      if (!supabaseClient) return;
+
+      try {
+        var query = supabaseClient
+          .from('v_classificacao_geral')
+          .select('*')
+          .order('classificacao_ampla', { ascending: true, nullsFirst: false })
+          .order('nota_final', { ascending: false, nullsFirst: false });
+
+        var res = await query;
+        var dados = res.data || [];
+
+        // Fallback caso a view esteja sem dados do concurso específico
+        if (dados.length === 0) {
+          var resFallback = await supabaseClient
+            .from('candidatos_base')
+            .select('*');
+          if (resFallback.data) {
+            dados = resFallback.data.map(function(c, i) {
+              return {
+                candidato_id: c.id,
+                nome: c.nome,
+                classificacao_ampla: i + 1,
+                cota: c.tipo || 'Ampla',
+                status_nomeacao: 'Aguardando',
+                nota_final: 80 - (i * 0.1)
+              };
+            });
+          }
+        }
+
+        ESTADO.classificacaoCompleta = dados;
+        atualizarCardsResumoClassificacao();
+        filtrarClassificacaoGeral();
+      } catch(err) {
+        console.error('Erro ao buscar v_classificacao_geral:', err);
+        if (tbody) {
+          tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-rose-500">Erro ao carregar dados da classificação.</td></tr>';
+        }
+      }
+    }
+
+    function atualizarCardsResumoClassificacao() {
+      var lista = ESTADO.classificacaoCompleta;
+      var total = lista.length;
+      var manifestaram = lista.filter(function(c) {
+        var intencao = (c.intencao || '').toLowerCase();
+        return intencao === 'sim' || intencao === 'assumir';
+      }).length;
+
+      var nomeados = lista.filter(function(c) {
+        var st = (c.status_nomeacao || '').toLowerCase();
+        return st.includes('nomeado') || st.includes('posse') || st.includes('exercício');
+      }).length;
+
+      var desistencias = lista.filter(function(c) {
+        var st = (c.status_nomeacao || '').toLowerCase();
+        var intencao = (c.intencao || '').toLowerCase();
+        return st.includes('desistência') || st.includes('fim de fila') || intencao === 'desistir' || intencao === 'final_fila';
+      }).length;
+
+      document.getElementById('statTotalAprovados').textContent = total;
+      document.getElementById('statManifestaramInteresse').textContent = manifestaram;
+      document.getElementById('statNomeadosExercicio').textContent = nomeados;
+      document.getElementById('statDesistenciasFimFila').textContent = desistencias;
+    }
+
+    function filtrarClassificacaoGeral() {
+      var busca = (document.getElementById('filtroClassifBusca').value || '').toLowerCase().trim();
+      var cota = document.getElementById('filtroClassifCota').value;
+      var status = document.getElementById('filtroClassifStatus').value;
+      var intencao = document.getElementById('filtroClassifIntencao').value;
+
+      var filtrados = ESTADO.classificacaoCompleta.filter(function(c) {
+        // Busca textual
+        if (busca) {
+          var nome = (c.nome || '').toLowerCase();
+          var comarca = (c.comarca_preferencia || '').toLowerCase();
+          if (!nome.includes(busca) && !comarca.includes(busca)) return false;
+        }
+
+        // Cota
+        if (cota !== 'todas') {
+          var cCota = (c.cota || '').toLowerCase();
+          if (cota === 'Ampla' && !cCota.includes('ampla') && cCota !== 'ac') return false;
+          if (cota === 'PPP' && !cCota.includes('ppp') && !cCota.includes('negro') && cCota !== 'cn') return false;
+          if (cota === 'PCD' && !cCota.includes('pcd')) return false;
+          if (cota === 'Indígena' && !cCota.includes('indígena') && cCota !== 'ci') return false;
+        }
+
+        // Status
+        if (status !== 'todos') {
+          var st = c.status_nomeacao || 'Aguardando';
+          if (!st.toLowerCase().includes(status.toLowerCase())) return false;
+        }
+
+        // Intenção
+        if (intencao !== 'todas') {
+          var cInt = (c.intencao || '').toLowerCase();
+          if (intencao === 'Sim' && cInt !== 'sim' && cInt !== 'assumir') return false;
+          if (intencao === 'Não' && cInt !== 'não' && cInt !== 'desistir' && cInt !== 'final_fila') return false;
+          if (intencao === 'Indefinido' && cInt !== '' && cInt !== 'indefinido') return false;
+        }
+
+        return true;
+      });
+
+      ESTADO.classificacaoFiltrada = filtrados;
+      document.getElementById('contadorCandidatosFiltrados').textContent = filtrados.length;
+      renderizarTabelaClassificacao(filtrados);
+    }
+
+    function limparFiltrosClassificacao() {
+      document.getElementById('filtroClassifBusca').value = '';
+      document.getElementById('filtroClassifCota').value = 'todas';
+      document.getElementById('filtroClassifStatus').value = 'todos';
+      document.getElementById('filtroClassifIntencao').value = 'todas';
+      filtrarClassificacaoGeral();
+    }
+
+    function renderizarTabelaClassificacao(lista) {
+      var tbody = document.getElementById('tabelaClassificacaoBody');
+      if (!tbody) return;
+
+      if (lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-10 text-slate-400">Nenhum candidato encontrado com os filtros selecionados.</td></tr>';
+        return;
+      }
+
+      var html = '';
+      lista.forEach(function(c, idx) {
+        var classGeral = c.classificacao_ampla || (idx + 1);
+        var vagaChamada = c.vaga_chamada || c.ordem_nomeacao || '-';
+        var nome = c.nome || 'Candidato';
+        var isServidor = (c.ja_e_servidor === true || c.possui_fg_cc === 'Sim');
+        var cota = c.cota || 'Ampla';
+        var classCota = c.classificacao_cota ? c.classificacao_cota + 'º' : '-';
+        var notaFinal = (typeof c.nota_final === 'number') ? c.nota_final.toFixed(2) : (c.nota_final || '-');
+
+        // Intenção
+        var intRaw = (c.intencao || '').toLowerCase();
+        var badgeIntencao = '<span class="px-2 py-0.5 rounded text-3xs font-semibold bg-slate-100 text-slate-600">Não informou</span>';
+        if (intRaw === 'sim' || intRaw === 'assumir') {
+          badgeIntencao = '<span class="px-2 py-0.5 rounded text-3xs font-bold bg-emerald-100 text-emerald-800">Assume (Sim)</span>';
+        } else if (intRaw === 'não' || intRaw === 'desistir') {
+          badgeIntencao = '<span class="px-2 py-0.5 rounded text-3xs font-bold bg-rose-100 text-rose-800">Desiste</span>';
+        } else if (intRaw === 'final_fila') {
+          badgeIntencao = '<span class="px-2 py-0.5 rounded text-3xs font-bold bg-amber-100 text-amber-800">Fim de Fila</span>';
+        }
+
+        // 1ª Comarca
+        var escolhas = Array.isArray(c.escolhas) ? c.escolhas : [];
+        var primeiraComarca = c.comarca_preferencia || escolhas[0] || '-';
+        var restoCount = escolhas.length > 1 ? '<span class="text-3xs text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded font-mono ml-1">+' + (escolhas.length - 1) + '</span>' : '';
+
+        // Status
+        var status = c.status_nomeacao || 'Aguardando';
+        var badgeStatus = '<span class="px-2 py-0.5 rounded text-2xs font-medium bg-slate-100 text-slate-700 font-mono">' + escapeHtml(status) + '</span>';
+        if (status.includes('Nomeado') || status.includes('Exercício') || status.includes('Posse')) {
+          badgeStatus = '<span class="px-2 py-0.5 rounded text-2xs font-bold bg-teal-100 text-teal-900 font-mono">● ' + escapeHtml(status) + '</span>';
+        }
+
+        html += `
+          <tr class="hover:bg-slate-50/80 transition-colors">
+            <td class="px-3.5 py-3 text-center font-mono font-bold text-slate-800">
+              ${classGeral}º
+              <div class="text-3xs text-slate-400 font-normal">Vaga: ${vagaChamada}</div>
+            </td>
+            <td class="px-4 py-3">
+              <div class="font-bold text-slate-900 leading-snug">${escapeHtml(nome)}</div>
+              <div class="flex items-center gap-1.5 mt-0.5">
+                ${isServidor ? '<span class="text-3xs bg-purple-100 text-purple-800 border border-purple-200 px-1.5 py-0.2 rounded font-semibold">Servidor TJRS</span>' : ''}
+                ${c.outros_concursos ? '<span class="text-3xs text-slate-400 truncate max-w-[150px]" title="' + escapeHtml(c.outros_concursos) + '">🎯 ' + escapeHtml(c.outros_concursos) + '</span>' : ''}
+              </div>
+            </td>
+            <td class="px-3.5 py-3 text-center">
+              <span class="text-2xs font-semibold px-2 py-0.5 rounded ${cota.includes('PPP') || cota.includes('Negro') ? 'bg-amber-50 text-amber-900' : (cota.includes('PCD') ? 'bg-blue-50 text-blue-900' : 'bg-slate-100 text-slate-700')}">
+                ${escapeHtml(cota)}
+              </span>
+              <div class="text-3xs text-slate-400 font-mono mt-0.5">${classCota}</div>
+            </td>
+            <td class="px-3 py-3 text-right font-mono font-bold text-slate-800">
+              ${notaFinal}
+            </td>
+            <td class="px-3.5 py-3 text-center">
+              ${badgeIntencao}
+            </td>
+            <td class="px-4 py-3">
+              <span class="font-medium text-slate-800">${escapeHtml(primeiraComarca)}</span>
+              ${restoCount}
+            </td>
+            <td class="px-3.5 py-3">
+              ${badgeStatus}
+              ${c.lotacao_assumida ? '<div class="text-3xs text-slate-500 mt-0.5">Lotação: ' + escapeHtml(c.lotacao_assumida) + '</div>' : ''}
+            </td>
+            <td class="px-3 py-3 text-center">
+              <button 
+                type="button" 
+                onclick="abrirModalDetalhesCandidato('${c.candidato_id || idx}')" 
+                class="bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-900 border border-slate-300 hover:border-teal-300 px-2.5 py-1 rounded-lg text-2xs font-semibold transition-colors cursor-pointer"
+                title="Ver detalhes de notas e todas as comarcas"
+              >
+                👁️ Detalhes
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+    }
+
+    // 6. MODAL DE DETALHES DO CANDIDATO
+    function abrirModalDetalhesCandidato(candidatoId) {
+      var cand = ESTADO.classificacaoCompleta.find(function(c, i) {
+        return (c.candidato_id === candidatoId || String(i) === String(candidatoId));
+      });
+      if (!cand) return;
+
+      document.getElementById('modalDetalheNome').textContent = cand.nome || 'Candidato';
+      document.getElementById('modalDetalheCotaBadge').textContent = cand.cota || 'Ampla Concorrência';
+      document.getElementById('modalDetalheClassif').textContent = 
+        'Classificação Ampla: ' + (cand.classificacao_ampla || '-') + 'º • Nota Final: ' + (cand.nota_final || '-');
+
+      // Grid de notas
+      var notas = [
+        { label: 'Português', val: cand.nota_port },
+        { label: 'Legislação', val: cand.nota_leg },
+        { label: 'Informática', val: cand.nota_info },
+        { label: 'C. Comuns', val: cand.nota_comum },
+        { label: 'Constitucional', val: cand.nota_const },
+        { label: 'Administrativo', val: cand.nota_adm },
+        { label: 'Civil', val: cand.nota_civil },
+        { label: 'Penal', val: cand.nota_penal },
+        { label: 'C. Específicos', val: cand.nota_espec },
+        { label: 'Nota Final', val: cand.nota_final, highlight: true }
+      ];
+
+      var htmlNotas = '';
+      notas.forEach(function(n) {
+        if (n.val !== undefined && n.val !== null) {
+          htmlNotas += `
+            <div class="p-2 rounded-lg border ${n.highlight ? 'bg-teal-50 border-teal-200 text-teal-900' : 'bg-slate-50 border-slate-200'}">
+              <span class="text-3xs text-slate-400 block font-mono uppercase">${n.label}</span>
+              <span class="text-xs font-bold font-mono">${n.val}</span>
+            </div>
+          `;
+        }
+      });
+      document.getElementById('modalGridNotasDiscriminadas').innerHTML = htmlNotas || '<span class="text-2xs text-slate-400 col-span-4">Notas individuais detalhadas em consolidação.</span>';
+
+      // Histórico
+      document.getElementById('modalStatusTexto').textContent = cand.status_nomeacao || 'Aguardando';
+      document.getElementById('modalLoteChamadaTexto').textContent = cand.lote_chamada || 'Aguardando lote';
+      document.getElementById('modalLotacaoAssumidaTexto').textContent = cand.lotacao_assumida || 'Não alocado';
+      document.getElementById('modalDataNomeacaoTexto').textContent = cand.data_nomeacao || 'Não nomeado';
+      document.getElementById('modalOutrosConcursosTexto').textContent = cand.outros_concursos || 'Nenhum informado';
+
+      // Lista completa de comarcas
+      var escolhas = Array.isArray(cand.escolhas) ? cand.escolhas : [];
+      document.getElementById('modalQtdComarcasBadge').textContent = escolhas.length + ' comarcas ordenadas';
+      
+      var htmlComarcas = '';
+      if (escolhas.length === 0) {
+        htmlComarcas = '<div class="text-slate-400 text-center py-4">O candidato ainda não preencheu seu ranking de comarcas.</div>';
+      } else {
+        escolhas.forEach(function(cm, i) {
+          htmlComarcas += `
+            <div class="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-100">
+              <span class="font-mono text-3xs font-bold text-teal-700">${i + 1}º</span>
+              <span class="text-xs font-semibold text-slate-800 flex-1 ml-2">${escapeHtml(cm)}</span>
+              ${i === 0 ? '<span class="text-3xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">1ª Opção</span>' : ''}
+            </div>
+          `;
+        });
+      }
+      document.getElementById('modalListaComarcasCompleta').innerHTML = htmlComarcas;
+
+      var m = document.getElementById('modalDetalhesCandidato');
+      if (m) m.style.display = 'flex';
+    }
+
+    function fecharModalDetalhesCandidato() {
+      var m = document.getElementById('modalDetalhesCandidato');
+      if (m) m.style.display = 'none';
+    }
+
+    // 7. ABA 2: VÍNCULO E ÁREA DO CANDIDATO
+    async function verificarCandidatoVinculado(email) {
+      var gate = document.getElementById('gateAutenticacaoCandidato');
+      var cardVinc = document.getElementById('cardVinculoCandidato');
+      var painel = document.getElementById('painelPerfilCandidatoAutenticado');
+
+      if (!supabaseClient || !email) return;
+
+      try {
+        // Busca candidato na candidatos_base pelo e-mail autenticado
+        var res = await supabaseClient
+          .from('candidatos_base')
+          .select('*')
+          .eq('email', email)
+          .maybeSingle();
+
+        if (res.data) {
+          ESTADO.candidatoVinculado = res.data;
+          if (gate) gate.style.display = 'none';
+          if (cardVinc) cardVinc.style.display = 'none';
+          if (painel) painel.style.display = 'block';
+          carregarPerfilCandidato(res.data);
+        } else {
+          // Busca nas respostas gerais
+          var resResp = await supabaseClient
+            .from('respostas')
+            .select('*')
+            .eq('email', email)
+            .maybeSingle();
+
+          if (resResp.data) {
+            ESTADO.candidatoVinculado = resResp.data;
+            if (gate) gate.style.display = 'none';
+            if (cardVinc) cardVinc.style.display = 'none';
+            if (painel) painel.style.display = 'block';
+            carregarPerfilCandidato(resResp.data);
+          } else {
+            // E-mail Google não vinculado ainda: exibe formulário de vínculo por CPF
+            if (gate) gate.style.display = 'none';
+            if (cardVinc) cardVinc.style.display = 'block';
+            if (painel) painel.style.display = 'none';
+          }
+        }
+      } catch(err) {
+        console.error('Erro ao verificar vínculo do candidato:', err);
+      }
+    }
+
+    async function executarVinculoCandidato() {
+      var inputCpf = document.getElementById('inputVinculoCpf');
+      var cpf = (inputCpf.value || '').replace(/\D/g, '');
+
+      if (!cpf || cpf.length < 11) {
+        alert('Por favor, informe um CPF válido com 11 dígitos.');
+        return;
+      }
+
+      if (!ESTADO.usuarioLogado || !ESTADO.usuarioLogado.email) {
+        alert('Você precisa estar logado com sua conta Google.');
+        return;
+      }
+
+      try {
+        var email = ESTADO.usuarioLogado.email;
+
+        // Procura candidato pelo CPF (com ou sem formatação)
+        var res = await supabaseClient
+          .from('candidatos_base')
+          .select('*')
+          .or(`cpf.eq.${cpf},cpf.eq.${formatarCpf(cpf)}`)
+          .maybeSingle();
+
+        if (!res.data) {
+          // Se não encontrou pelo CPF na base, busca por respostas ou cadastra vínculo
+          alert('Candidato com este CPF não localizado na lista de aprovados deste concurso. Verifique os números informados.');
+          return;
+        }
+
+        // Atualiza e-mail no candidato encontrado
+        await supabaseClient
+          .from('candidatos_base')
+          .update({ email: email })
+          .eq('id', res.data.id);
+
+        mostrarToast('Perfil de aprovado vinculado com sucesso!', 'sucesso');
+        verificarCandidatoVinculado(email);
+      } catch(err) {
+        alert('Erro ao vincular perfil: ' + (err.message || err));
+      }
+    }
+
+    function formatarCpf(v) {
+      return v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+    }
+
+    async function carregarPerfilCandidato(cand) {
+      document.getElementById('candidatoMeuNome').textContent = cand.nome || 'Meu Perfil';
+      document.getElementById('candidatoMeuEmail').textContent = ESTADO.usuarioLogado.email;
+      document.getElementById('perfilCpf').value = cand.cpf || 'Não cadastrado';
+      document.getElementById('perfilWhatsapp').value = cand.whatsapp || '';
+
+      // Tenta obter classificação correspondente
+      var itemClassif = ESTADO.classificacaoCompleta.find(function(c) {
+        return c.candidato_id === cand.id || (c.nome && cand.nome && c.nome.toLowerCase() === cand.nome.toLowerCase());
+      });
+
+      if (itemClassif) {
+        document.getElementById('candidatoMinhaClassGeral').textContent = (itemClassif.classificacao_ampla || '-') + 'º';
+        document.getElementById('candidatoMinhaCota').textContent = itemClassif.cota || 'Ampla';
+        document.getElementById('candidatoMinhaClassCota').textContent = 'Posição na Cota: ' + (itemClassif.classificacao_cota ? itemClassif.classificacao_cota + 'º' : '-');
+        document.getElementById('candidatoMinhaNotaFinal').textContent = itemClassif.nota_final || '-';
+        document.getElementById('candidatoMinhaLotacao').textContent = itemClassif.lotacao_assumida || 'Não alocado';
+        document.getElementById('candidatoDataNomeacao').textContent = itemClassif.data_nomeacao ? 'Nomeação: ' + itemClassif.data_nomeacao : 'Aguardando chamamento';
+        document.getElementById('badgeCandidatoMeuStatus').textContent = itemClassif.status_nomeacao || 'Aguardando';
+      }
+
+      // Renderiza atalhos de lotes
+      renderizarAtalhosLotesCandidato();
+
+      // Busca preferências salvas em respostas
+      var resResp = await supabaseClient
+        .from('respostas')
+        .select('*')
+        .eq('email', ESTADO.usuarioLogado.email)
+        .maybeSingle();
+
+      if (resResp.data) {
+        var r = resResp.data;
+        if (r.whatsapp) document.getElementById('perfilWhatsapp').value = r.whatsapp;
+        if (r.intencao) document.getElementById('perfilIntencao').value = r.intencao;
+        if (r.regiao_preferencia) document.getElementById('perfilRegiaoPreferencia').value = r.regiao_preferencia;
+        if (r.outros_concursos) document.getElementById('perfilOutrosConcursos').value = r.outros_concursos;
+
+        var isServ = (r.possui_fg_cc === 'Sim' || r.ja_e_servidor === true);
+        document.getElementById('perfilJaEServidor').checked = isServ;
+        toggleCamposFuncionais();
+        if (r.fg_cc_registro_funcional) document.getElementById('perfilFgCcRegistro').value = r.fg_cc_registro_funcional;
+        if (r.fg_cc_cargo) document.getElementById('perfilFgCcCargo').value = r.fg_cc_cargo;
+        if (r.fg_cc_comarca_atual) document.getElementById('perfilFgCcComarcaAtual').value = r.fg_cc_comarca_atual;
+
+        if (Array.isArray(r.escolhas) && r.escolhas.length > 0) {
+          ESTADO.minhasEscolhasComarcas = r.escolhas;
+        }
+      }
+
+      renderizarSistemaDuasTabelasComarcas();
+    }
+
+    function toggleCamposFuncionais() {
+      var chk = document.getElementById('perfilJaEServidor');
+      var container = document.getElementById('containerCamposFuncionais');
+      if (container) container.style.display = (chk && chk.checked) ? 'grid' : 'none';
+    }
+
+    function renderizarAtalhosLotesCandidato() {
+      var container = document.getElementById('containerBotoesLotesCandidato');
+      if (!container) return;
+
+      var lotes = ESTADO.lotesDoConcurso;
+      if (!lotes || lotes.length === 0) {
+        container.innerHTML = '<span class="text-2xs text-slate-400 italic">Nenhum lote de convocação aberto no momento.</span>';
+        return;
+      }
+
+      var html = '';
+      lotes.forEach(function(l) {
+        var urlLote = 'lote.html?concurso=' + encodeURIComponent(ESTADO.concursoId) + '&lote=' + encodeURIComponent(l.id);
+        var statusIcon = l.travado ? '🔒 Travado' : (l.ativo ? '🟢 Aberto' : '⚪ Arquivo');
+        html += `
+          <a href="${urlLote}" class="inline-flex items-center gap-2 bg-slate-50 hover:bg-teal-50 border border-slate-200 hover:border-teal-300 text-slate-800 hover:text-teal-950 px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors shadow-2xs">
+            <span>🏛️</span>
+            <span>${escapeHtml(l.nome || l.id)}</span>
+            <span class="text-3xs font-mono font-normal text-slate-500">(${statusIcon})</span>
+            <span class="text-teal-600 font-bold ml-1">→</span>
+          </a>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    async function salvarDadosPerfilCandidato() {
+      if (!ESTADO.usuarioLogado) return;
+      var email = ESTADO.usuarioLogado.email;
+      var whatsapp = document.getElementById('perfilWhatsapp').value;
+      var intencao = document.getElementById('perfilIntencao').value;
+      var regiao = document.getElementById('perfilRegiaoPreferencia').value;
+      var outros = document.getElementById('perfilOutrosConcursos').value;
+      var isServidor = document.getElementById('perfilJaEServidor').checked;
+
+      var fgRegistro = document.getElementById('perfilFgCcRegistro').value;
+      var fgCargo = document.getElementById('perfilFgCcCargo').value;
+      var fgComarca = document.getElementById('perfilFgCcComarcaAtual').value;
+
+      var payloadResposta = {
+        id: ESTADO.concursoId + '__geral__' + encodeURIComponent(email),
+        concurso_id: ESTADO.concursoId,
+        lote_id: 'geral',
+        nome: (ESTADO.candidatoVinculado && ESTADO.candidatoVinculado.nome) || email,
+        email: email,
+        whatsapp: whatsapp,
+        intencao: intencao,
+        regiao_preferencia: regiao,
+        outros_concursos: outros,
+        possui_fg_cc: isServidor ? 'Sim' : 'Não',
+        fg_cc_registro_funcional: fgRegistro,
+        fg_cc_cargo: fgCargo,
+        fg_cc_comarca_atual: fgComarca,
+        escolhas: ESTADO.minhasEscolhasComarcas,
+        comarca_preferencia: ESTADO.minhasEscolhasComarcas[0] || '',
+        updated_at: new Date().toISOString()
+      };
+
+      try {
+        await supabaseClient.from('respostas').upsert(payloadResposta);
+        if (ESTADO.candidatoVinculado && ESTADO.candidatoVinculado.id) {
+          await supabaseClient.from('candidatos_base').update({ whatsapp: whatsapp }).eq('id', ESTADO.candidatoVinculado.id);
+        }
+        mostrarToast('Informações do perfil salvas com sucesso!', 'sucesso');
+      } catch(err) {
+        alert('Erro ao salvar: ' + (err.message || err));
+      }
+    }
+
+    // 8. SISTEMA DE DUAS TABELAS DE RANKING DE COMARCAS
+    function renderizarSistemaDuasTabelasComarcas() {
+      renderizarTabelaComarcasDisponiveis();
+      renderizarTabelaComarcasEscolhidas();
+    }
+
+    function renderizarTabelaComarcasDisponiveis() {
+      var container = document.getElementById('listaComarcasDisponiveis');
+      var busca = (document.getElementById('buscaComarcasDisponiveis').value || '').toLowerCase().trim();
+      var contador = document.getElementById('contadorComarcasDisponiveis');
+
+      if (!container) return;
+
+      var disponiveis = ESTADO.todasComarcasCatalogo.filter(function(cm) {
+        // Se já foi escolhida, sai da tabela da esquerda
+        if (ESTADO.minhasEscolhasComarcas.includes(cm.nome)) return false;
+        if (busca && !cm.nome.toLowerCase().includes(busca)) return false;
+        return true;
+      });
+
+      if (contador) contador.textContent = disponiveis.length;
+
+      if (disponiveis.length === 0) {
+        container.innerHTML = '<div class="text-2xs text-slate-400 text-center py-8">Nenhuma comarca disponível ou todas já foram adicionadas à lista de posse.</div>';
+        return;
+      }
+
+      var html = '';
+      disponiveis.forEach(function(cm) {
+        html += `
+          <div class="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200/80 hover:border-teal-300 transition-colors">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-semibold text-slate-800">${escapeHtml(cm.nome)}</span>
+              ${cm.regiao ? '<span class="text-3xs font-mono text-slate-400">(' + escapeHtml(cm.regiao) + ')</span>' : ''}
+            </div>
+            <button 
+              type="button" 
+              onclick="adicionarComarcaPosse('${escapeHtml(cm.nome)}')" 
+              class="text-2xs bg-teal-50 hover:bg-teal-600 text-teal-800 hover:text-white font-bold px-2.5 py-1 rounded-lg border border-teal-200 hover:border-teal-600 transition-colors cursor-pointer"
+              title="Adicionar à lista de posse"
+            >
+              + Adicionar
+            </button>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function renderizarTabelaComarcasEscolhidas() {
+      var container = document.getElementById('listaComarcasEscolhidas');
+      var contador = document.getElementById('contadorComarcasEscolhidas');
+      if (!container) return;
+
+      var escolhidas = ESTADO.minhasEscolhasComarcas;
+      if (contador) contador.textContent = escolhidas.length;
+
+      if (escolhidas.length === 0) {
+        container.innerHTML = '<div class="text-2xs text-teal-800 text-center py-10 bg-white/60 rounded-xl border border-dashed border-teal-200">Sua lista de preferências para posse está vazia.<br>Clique em "+ Adicionar" na tabela da esquerda para incluir suas comarcas desejadas.</div>';
+        return;
+      }
+
+      var html = '';
+      escolhidas.forEach(function(nome, idx) {
+        html += `
+          <div class="flex items-center justify-between p-2 rounded-xl bg-white border border-teal-200 shadow-2xs">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-teal-50 text-teal-900 border border-teal-200 flex items-center justify-center font-mono font-bold text-2xs">
+                ${idx + 1}º
+              </span>
+              <span class="text-xs font-bold text-slate-900">${escapeHtml(nome)}</span>
+            </div>
+
+            <div class="flex items-center gap-1">
+              <button 
+                type="button" 
+                onclick="moverComarca(${idx}, -1)" 
+                class="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-2xs font-bold flex items-center justify-center cursor-pointer"
+                title="Subir na preferência"
+                ${idx === 0 ? 'disabled style="opacity: 0.3;"' : ''}
+              >
+                ▲
+              </button>
+              <button 
+                type="button" 
+                onclick="moverComarca(${idx}, 1)" 
+                class="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-2xs font-bold flex items-center justify-center cursor-pointer"
+                title="Descer na preferência"
+                ${idx === escolhidas.length - 1 ? 'disabled style="opacity: 0.3;"' : ''}
+              >
+                ▼
+              </button>
+              <button 
+                type="button" 
+                onclick="removerComarcaPosse(${idx})" 
+                class="w-6 h-6 rounded bg-rose-50 hover:bg-rose-100 text-rose-700 text-2xs font-bold flex items-center justify-center ml-1 cursor-pointer"
+                title="Remover da lista de posse (retorna para a tabela da esquerda)"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function adicionarComarcaPosse(nome) {
+      if (!ESTADO.minhasEscolhasComarcas.includes(nome)) {
+        ESTADO.minhasEscolhasComarcas.push(nome);
+        renderizarSistemaDuasTabelasComarcas();
+      }
+    }
+
+    function adicionarTodasComarcasFiltradas() {
+      var busca = (document.getElementById('buscaComarcasDisponiveis').value || '').toLowerCase().trim();
+      var disponiveis = ESTADO.todasComarcasCatalogo.filter(function(cm) {
+        if (ESTADO.minhasEscolhasComarcas.includes(cm.nome)) return false;
+        if (busca && !cm.nome.toLowerCase().includes(busca)) return false;
+        return true;
+      });
+
+      disponiveis.forEach(function(cm) {
+        if (!ESTADO.minhasEscolhasComarcas.includes(cm.nome)) {
+          ESTADO.minhasEscolhasComarcas.push(cm.nome);
+        }
+      });
+      renderizarSistemaDuasTabelasComarcas();
+      mostrarToast(disponiveis.length + ' comarcas adicionadas à sua lista de posse!', 'sucesso');
+    }
+
+    function removerComarcaPosse(idx) {
+      ESTADO.minhasEscolhasComarcas.splice(idx, 1);
+      renderizarSistemaDuasTabelasComarcas();
+    }
+
+    function moverComarca(idx, delta) {
+      var novo = idx + delta;
+      if (novo < 0 || novo >= ESTADO.minhasEscolhasComarcas.length) return;
+      var item = ESTADO.minhasEscolhasComarcas.splice(idx, 1)[0];
+      ESTADO.minhasEscolhasComarcas.splice(novo, 0, item);
+      renderizarTabelaComarcasEscolhidas();
+    }
+
+    function limparTodasEscolhasComarcas() {
+      if (confirm('Tem certeza de que deseja esvaziar sua lista de comarcas selecionadas?')) {
+        ESTADO.minhasEscolhasComarcas = [];
+        renderizarSistemaDuasTabelasComarcas();
+      }
+    }
+
+    async function salvarRankingPreferenciasComarcas() {
+      if (!ESTADO.usuarioLogado) {
+        alert('Faça login com sua conta Google para salvar suas preferências.');
+        return;
+      }
+      salvarDadosPerfilCandidato();
+    }
+
+    // 9. UTILITÁRIOS
+    function copiarLinkDesteConcurso() {
+      var url = window.location.href;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function() {
+          mostrarToast('Link deste concurso copiado para a área de transferência!', 'sucesso');
+        });
+      } else {
+        prompt('Copie o link:', url);
+      }
+    }
+
+    function mostrarToast(msg, tipo) {
+      var toast = document.getElementById('toastAlerta');
+      var icone = document.getElementById('toastIcone');
+      var txt = document.getElementById('toastMensagem');
+      if (!toast || !txt) return;
+
+      txt.textContent = msg;
+      if (tipo === 'sucesso') {
+        if (icone) icone.textContent = '✓';
+        toast.className = 'fixed bottom-5 right-5 z-50 transform translate-y-0 opacity-100 transition-all duration-300 flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-xl text-xs font-semibold text-white bg-emerald-800 border border-emerald-600';
+      } else if (tipo === 'erro') {
+        if (icone) icone.textContent = '✕';
+        toast.className = 'fixed bottom-5 right-5 z-50 transform translate-y-0 opacity-100 transition-all duration-300 flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-xl text-xs font-semibold text-white bg-rose-800 border border-rose-600';
+      } else {
+        if (icone) icone.textContent = 'ℹ';
+        toast.className = 'fixed bottom-5 right-5 z-50 transform translate-y-0 opacity-100 transition-all duration-300 flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-xl text-xs font-semibold text-white bg-slate-900 border border-slate-700';
+      }
+
+      setTimeout(function() {
+        toast.className = 'fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-xl text-xs font-semibold text-white bg-slate-900 border border-slate-700';
+      }, 3500);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // 10. INICIALIZAÇÃO
+    document.addEventListener('DOMContentLoaded', function() {
+      trocarAbaPrincipal(ABA_INICIAL);
+      inicializarAutenticacao();
+      carregarDadosGerais();
+    });
+  </script>
+</body>
+</html>

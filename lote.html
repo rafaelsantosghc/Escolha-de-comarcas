@@ -26,6 +26,8 @@
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
   <!-- Supabase JS Client via CDN (v2) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- SheetJS (xlsx) via CDN para leitura e processamento de planilhas Excel / CSV -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Source+Serif+4:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
@@ -670,6 +672,18 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2.5 sm:gap-3 text-xs">
+          <!-- Atalhos de Navegação: Voltar ao Concurso / Portal -->
+          <a id="linkVoltarConcursoHeader" href="concurso.html?id=tjrs_analista_2024" class="inline-flex items-center gap-1.5 text-xs text-slate-300 hover:text-white bg-[#0F1E3D] hover:bg-[#1C2D4A] border border-teal-500/30 px-3 py-1.5 rounded-lg transition-colors shrink-0 shadow-2xs" title="Voltar à página de classificação do concurso">
+            <span>←</span>
+            <span class="hidden sm:inline">Página do Concurso</span>
+            <span class="sm:hidden">Concurso</span>
+          </a>
+
+          <a href="index.html" class="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-teal-300 px-2 py-1.5 rounded-lg transition-colors shrink-0" title="Voltar ao Portal de Concursos">
+            <span>🏛️</span>
+            <span class="hidden md:inline">Portal</span>
+          </a>
+
           <!-- Metadados em formato limpo (Sem pills pesadas) -->
           <div class="hidden xl:flex items-center gap-2 text-xs text-slate-400 font-medium border-r border-[#1C2D4A] pr-3">
             <span><strong id="headerTotalVagasBadge" class="text-slate-200">166</strong> vagas</span>
@@ -1633,7 +1647,7 @@
         </div>
 
         <!-- Navegação de Sub-Abas do Painel do Administrador (Clean Segmented Control) -->
-        <div class="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200/80 mb-6">
+        <div class="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200/80 mb-6 flex-wrap">
           <button type="button" id="subAbaBtnCadastros" onclick="trocarSubAbaAdmin('cadastros')" class="px-4 py-2 rounded-lg text-xs font-semibold transition-all bg-white text-slate-900 shadow-xs cursor-pointer flex items-center gap-1.5">
             <span>📋</span> Cadastros & Respostas
           </button>
@@ -1644,6 +1658,9 @@
           <button type="button" id="subAbaBtnCentralCandidatos" onclick="trocarSubAbaAdmin('central_candidatos')" class="px-4 py-2 rounded-lg text-xs font-medium transition-all text-slate-600 hover:text-slate-900 cursor-pointer flex items-center gap-1.5">
             <span>👥</span> Central de Candidatos
             <span id="badgeTotalCentralCandidatos" class="ml-1 text-2xs font-mono font-bold text-slate-500">0</span>
+          </button>
+          <button type="button" id="subAbaBtnImportar" onclick="trocarSubAbaAdmin('importar')" class="px-4 py-2 rounded-lg text-xs font-medium transition-all text-slate-600 hover:text-slate-900 cursor-pointer flex items-center gap-1.5">
+            <span>📊</span> Importar Planilha (Excel/CSV)
           </button>
         </div>
 
@@ -2347,6 +2364,159 @@
           </button>
         </div>
       </div> <!-- Fim de conteudoSubAbaCentralCandidatos -->
+
+      <!-- ============================================================== -->
+      <!-- Conteúdo da Sub-Aba 4: Importar Planilha (Excel/CSV) -->
+      <!-- ============================================================== -->
+      <div id="conteudoSubAbaImportar" style="display: none;" class="space-y-6">
+        <!-- Banner Informativo -->
+        <div class="bg-gradient-to-r from-emerald-900 to-slate-900 rounded-2xl p-6 text-white shadow-sm border border-emerald-800/40">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-2xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 mb-2">
+                ⚡ Processamento Client-side com SheetJS
+              </span>
+              <h3 class="text-lg sm:text-xl font-bold font-serif text-white">Importar Planilha de Classificação Geral (Excel/CSV)</h3>
+              <p class="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                Importe os aprovados da aba <strong>Lista geral</strong> (lendo a partir da linha 3) cruzados com a aba <strong>Ordem de Nomeação</strong>. Você pode sincronizar diretamente no Supabase em lotes de 300 ou baixar os CSVs limpos formatados.
+              </p>
+            </div>
+            <div class="shrink-0 flex items-center gap-2">
+              <span class="text-3xl">📊</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seletor de Concurso e Upload -->
+        <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/90 shadow-2xs space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">1. Selecione o Concurso Destino:</label>
+              <select id="importarConcursoSelect" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <option value="tjrs_analista_2024">Concurso TJRS - Analista Judiciário (tjrs_analista_2024)</option>
+              </select>
+              <span class="text-3xs text-slate-500 mt-1 block">Os registros de <code class="text-slate-700">candidatos_base</code> receberão ID no padrão <code class="text-emerald-700 font-mono font-bold">${concurso_id}-${classificacao_ampla}</code></span>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">2. Selecione a Planilha (.xlsx, .xls ou .csv):</label>
+              <div class="relative">
+                <input type="file" id="arquivoExcelInput" accept=".xlsx, .xls, .csv" onchange="aoSelecionarArquivoExcel(event)" class="block w-full text-xs text-slate-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-700 file:text-white hover:file:bg-emerald-800 cursor-pointer border border-slate-300 rounded-xl bg-slate-50 p-1">
+              </div>
+              <span class="text-3xs text-slate-500 mt-1 block">O leitor processa a aba <strong>Lista geral</strong> (a partir da linha 3) cruzando com <strong>Ordem de Nomeação</strong></span>
+            </div>
+          </div>
+
+          <!-- Status do Arquivo & Abas Detectadas -->
+          <div id="boxStatusAbasExcel" style="display: none;" class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2 flex-wrap text-slate-700">
+              <span class="font-bold text-slate-900" id="nomeArquivoDetectado">arquivo.xlsx</span>
+              <span class="text-slate-300">|</span>
+              <span id="badgeAbaGeralStatus" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-2xs font-semibold bg-emerald-100 text-emerald-800">
+                ✓ Aba 'Lista geral'
+              </span>
+              <span id="badgeAbaNomeacaoStatus" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-2xs font-semibold bg-emerald-100 text-emerald-800">
+                ✓ Aba 'Ordem de Nomeação'
+              </span>
+            </div>
+            <button type="button" onclick="limparImportadorExcel()" class="text-2xs text-slate-500 hover:text-red-600 font-bold cursor-pointer">
+              ✕ Limpar arquivo
+            </button>
+          </div>
+        </div>
+
+        <!-- Painel de Preview e Métricas (Visível após carregar) -->
+        <div id="painelPreviewImportacao" style="display: none;" class="space-y-6">
+          <!-- Cards de Métricas do Arquivo -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs text-center">
+              <span class="text-2xs font-bold text-slate-500 block uppercase tracking-wider">Candidatos lidos</span>
+              <div class="text-2xl font-extrabold text-slate-900 mt-1" id="importadorTotalLidos">0</div>
+              <span class="text-3xs text-slate-400">Linhas processadas</span>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-emerald-200 shadow-2xs text-center">
+              <span class="text-2xs font-bold text-emerald-700 block uppercase tracking-wider">Cruzados c/ Nomeação</span>
+              <div class="text-2xl font-extrabold text-emerald-700 mt-1" id="importadorTotalNomeados">0</div>
+              <span class="text-3xs text-emerald-600">Com ordem / status</span>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs text-center">
+              <span class="text-2xs font-bold text-slate-500 block uppercase tracking-wider">Ampla Concorrência</span>
+              <div class="text-2xl font-extrabold text-slate-800 mt-1" id="importadorTotalAmpla">0</div>
+              <span class="text-3xs text-slate-400">Classificação AC</span>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-amber-200 shadow-2xs text-center">
+              <span class="text-2xs font-bold text-amber-700 block uppercase tracking-wider">Cotas (PPP + PCD)</span>
+              <div class="text-2xl font-extrabold text-amber-800 mt-1" id="importadorTotalCotas">0</div>
+              <span class="text-3xs text-amber-600">Aprovados cotistas</span>
+            </div>
+          </div>
+
+          <!-- Barra de Ações Principais -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h4 class="font-bold text-slate-900 text-sm">Ações de Sincronização e Exportação</h4>
+                <p class="text-2xs text-slate-500">Escolha como deseja aplicar os dados lidos na planilha.</p>
+              </div>
+              <div class="flex items-center gap-2.5 flex-wrap">
+                <button type="button" id="btnBaixarCsvsImportador" onclick="baixarCsvsLimposImportador()" class="px-4 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 font-bold text-xs shadow-2xs cursor-pointer flex items-center gap-1.5 transition-all">
+                  <span>📥</span> Baixar CSVs Limpos (.csv)
+                </button>
+                <button type="button" id="btnSincronizarSupabaseImportador" onclick="sincronizarSupabaseLotes300()" class="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white font-extrabold text-xs shadow-md cursor-pointer flex items-center gap-2 transition-all">
+                  <span>🚀</span> Sincronizar Direto no Supabase (Upsert em Lotes de 300)
+                </button>
+              </div>
+            </div>
+
+            <!-- Barra de Progresso Real-time -->
+            <div id="containerProgressoImportador" style="display: none;" class="space-y-2 pt-2 border-t border-slate-100">
+              <div class="flex items-center justify-between text-xs font-bold text-slate-700">
+                <span id="labelStatusProgressoImportador">Iniciando sincronização...</span>
+                <span id="porcentagemProgressoImportador" class="font-mono text-emerald-800">0%</span>
+              </div>
+              <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden border border-slate-200">
+                <div id="barraProgressoImportador" class="bg-gradient-to-r from-emerald-600 to-teal-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+              </div>
+              <div class="text-3xs text-slate-500 flex items-center justify-between">
+                <span id="detalheProgressoImportador">Aguardando...</span>
+                <span class="text-slate-400">Upsert chunked de 300 registros</span>
+              </div>
+            </div>
+
+            <!-- Mensagem de Sucesso ou Erro -->
+            <div id="alertaResultadoImportador" style="display: none;" class="p-4 rounded-xl text-xs font-medium"></div>
+          </div>
+
+          <!-- Tabela de Pré-visualização dos 10 Primeiros Registros -->
+          <div class="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden">
+            <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-800 text-xs">Pré-visualização dos Primeiros Registros (Amostra de 10)</span>
+                <span class="text-3xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-mono font-bold">10 / <span id="contadorPreviewTotal">0</span></span>
+              </div>
+              <span class="text-3xs text-slate-500">Confira as notas e o cruzamento com a ordem de nomeação</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-600 font-semibold text-2xs uppercase tracking-wider border-b border-slate-200">
+                  <tr>
+                    <th class="py-2.5 px-3">Class. Ampla</th>
+                    <th class="py-2.5 px-3">Nome do Candidato</th>
+                    <th class="py-2.5 px-3 text-center">Cota</th>
+                    <th class="py-2.5 px-3 text-center">Nota Final</th>
+                    <th class="py-2.5 px-3 text-center">Ordem Nomeação</th>
+                    <th class="py-2.5 px-3">Status Nomeação</th>
+                    <th class="py-2.5 px-3">Lote / Lotação</th>
+                    <th class="py-2.5 px-3 text-center">CPF</th>
+                  </tr>
+                </thead>
+                <tbody id="tabelaPreviewImportadorBody" class="divide-y divide-slate-100 font-normal">
+                  <!-- Inserido dinamicamente -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div> <!-- Fim de conteudoSubAbaImportar -->
       </div>
     </section>
 
@@ -3321,10 +3491,11 @@
       try {
         var localKey = localStorage.getItem('tjrs_supabase_anon_key');
         if (localKey && localKey.trim()) return localKey.trim();
-      } catch(e) {}
       return window.SUPABASE_ANON_KEY || 'sb_publishable_DsFaKZb3uAAREpM5lPutZg_TZOLTV8R';
     })();
-    var CONCURSO_ID_PADRAO = 'tjrs_analista_2024';
+    var URL_PARAMS_LOTE = new URLSearchParams(window.location.search);
+    var CONCURSO_ID_PADRAO = URL_PARAMS_LOTE.get('concurso') || URL_PARAMS_LOTE.get('concurso_id') || URL_PARAMS_LOTE.get('id') || 'tjrs_analista_2024';
+    var LOTE_URL_PARAM = URL_PARAMS_LOTE.get('lote') || URL_PARAMS_LOTE.get('lote_id') || '';
 
     var supabaseClient = null;
     try {
@@ -3598,8 +3769,21 @@
     async function carregarDadosSupabase() {
       if (!supabaseClient) return;
       try {
-        // 1. Carrega os lotes cadastrados no Supabase
-        var resLotes = await supabaseClient.from('lotes').select('*').order('created_at', { ascending: true });
+        // 1. Carrega os lotes cadastrados no Supabase filtrados pelo concurso atual
+        var queryLotes = supabaseClient.from('lotes').select('*').order('created_at', { ascending: true });
+        if (CONCURSO_ID_PADRAO) {
+          queryLotes = queryLotes.eq('concurso_id', CONCURSO_ID_PADRAO);
+        }
+        var resLotes = await queryLotes;
+        if (!resLotes.data || resLotes.data.length === 0) {
+          resLotes = await supabaseClient.from('lotes').select('*').order('created_at', { ascending: true });
+        }
+
+        var linkVoltar = document.getElementById('linkVoltarConcursoHeader');
+        if (linkVoltar) {
+          linkVoltar.href = 'concurso.html?id=' + encodeURIComponent(CONCURSO_ID_PADRAO);
+        }
+
         if (resLotes && resLotes.data && Array.isArray(resLotes.data) && resLotes.data.length > 0) {
           var listaLotesFormatada = resLotes.data.map(function(l) {
             return {
@@ -3618,7 +3802,7 @@
 
           LOTE_ESTADO.listaLotes = listaLotesFormatada;
           var loteAtivoDb = listaLotesFormatada.find(function(l) { return l.ativo; }) || listaLotesFormatada[0];
-          var loteAlvoId = ESTADO.loteSelecionadoId || ESTADO.loteAtivoId || (loteAtivoDb ? loteAtivoDb.id : 'lote_1');
+          var loteAlvoId = LOTE_URL_PARAM || ESTADO.loteSelecionadoId || ESTADO.loteAtivoId || (loteAtivoDb ? loteAtivoDb.id : 'lote_1');
           var loteCarregar = listaLotesFormatada.find(function(l) { return l.id === loteAlvoId; }) || loteAtivoDb;
 
           ESTADO.loteAtivoId = loteAtivoDb.id;
@@ -6173,6 +6357,32 @@
       atualizarPreviaInstantanea();
     }
 
+    // VERIFICA SE A COMARCA PERTENCE AO LOTE ATUAL
+    function comarcaPertenceAoLoteAtual(nomeComarca) {
+      if (!nomeComarca) return true;
+      var nomeNorm = String(nomeComarca).trim().toLowerCase().replace(/\*/g, '');
+
+      var loteComarcas = null;
+      if (typeof LOTE_ESTADO !== 'undefined' && LOTE_ESTADO && Array.isArray(LOTE_ESTADO.comarcas) && LOTE_ESTADO.comarcas.length > 0) {
+        loteComarcas = LOTE_ESTADO.comarcas;
+      } else if (typeof ESTADO !== 'undefined' && ESTADO && Array.isArray(ESTADO.comarcas) && ESTADO.comarcas.length > 0) {
+        loteComarcas = ESTADO.comarcas;
+      }
+
+      if (!loteComarcas || loteComarcas.length === 0) return true;
+
+      var encontrada = loteComarcas.find(function(c) {
+        var cNome = typeof c === 'string' ? c : (c && c.nome ? c.nome : '');
+        return String(cNome).trim().toLowerCase().replace(/\*/g, '') === nomeNorm;
+      });
+
+      if (!encontrada) return false;
+      if (typeof encontrada === 'object' && encontrada !== null && typeof encontrada.vagas === 'number' && encontrada.vagas <= 0) {
+        return false;
+      }
+      return true;
+    }
+
     // RENDERIZA A LISTA DA ESQUERDA (TODAS AS COMARCAS DISPONÍVEIS)
     function renderizarListaTodasComarcas() {
       var container = document.getElementById('listaTodasComarcas');
@@ -6186,8 +6396,28 @@
       var metro = ['Porto Alegre', 'Alvorada', 'Cachoeirinha', 'Gravataí', 'Guaíba', 'Viamão', 'Sapucaia do Sul', 'São Leopoldo', 'Sapiranga', 'Estância Velha', 'Campo Bom', 'Portão', 'Montenegro', 'Triunfo', 'São Sebastião do Caí'];
       var serra = ['Caxias do Sul', 'Farroupilha', 'Gramado', 'Canela', 'Nova Petrópolis', 'Carlos Barbosa', 'Antônio Prado', 'São Marcos', 'Vacaria', 'Bom Jesus*'];
 
+      var listaBase = (window.DADOS_COMARCAS_BASE && window.DADOS_COMARCAS_BASE.length > 0) ? window.DADOS_COMARCAS_BASE : ESTADO.comarcas;
+      var mapaNomes = {};
+      var listaCompleta = [];
+      if (Array.isArray(listaBase)) {
+        listaBase.forEach(function(c) {
+          if (c && c.nome && !mapaNomes[c.nome]) {
+            mapaNomes[c.nome] = true;
+            listaCompleta.push(c);
+          }
+        });
+      }
+      if (Array.isArray(ESTADO.comarcas)) {
+        ESTADO.comarcas.forEach(function(c) {
+          if (c && c.nome && !mapaNomes[c.nome]) {
+            mapaNomes[c.nome] = true;
+            listaCompleta.push(c);
+          }
+        });
+      }
+
       var count = 0;
-      ESTADO.comarcas.forEach(function(c) {
+      listaCompleta.forEach(function(c) {
         // Ignora se já estiver nas escolhas
         if (ESTADO.escolhasSelecionadas.indexOf(c.nome) !== -1) return;
 
@@ -6205,13 +6435,17 @@
         var nomeLimpo = c.nome.replace(/\*/g, '');
         var nomeEscapado = c.nome.replace(/'/g, "\\'");
         var estaSelecionadoLote = modoLote && (ESTADO.comarcasSelecionadasLote.indexOf(c.nome) !== -1);
+        var noLote = comarcaPertenceAoLoteAtual(c.nome);
 
         var item = document.createElement('div');
         item.setAttribute('data-nome', c.nome);
 
+        var badgeLote = !noLote ? '<span class="text-3xs bg-amber-50 text-amber-900 px-1.5 py-0.2 rounded font-semibold border border-amber-300 shrink-0 inline-block">Fora deste lote</span>' : '';
+        var classeFora = !noLote ? 'opacity-60 bg-slate-50/80 border-dashed border-slate-300 hover:opacity-90' : '';
+
         if (modoLote) {
           item.className = 'p-2 sm:p-2.5 rounded-xl border transition-all flex items-center justify-between cursor-pointer shadow-2xs select-none gap-2 ' +
-            (estaSelecionadoLote ? 'bg-emerald-50/90 border-emerald-500 ring-2 ring-emerald-400' : 'bg-white border-slate-200 hover:border-emerald-300');
+            (estaSelecionadoLote ? 'bg-emerald-50/90 border-emerald-500 ring-2 ring-emerald-400' : (classeFora || 'bg-white border-slate-200 hover:border-emerald-300'));
           item.setAttribute('onclick', "toggleSelecaoLoteItem('" + nomeEscapado + "')");
 
           item.innerHTML = '<div class="flex items-center gap-2 min-w-0 pr-1 flex-1">' +
@@ -6221,12 +6455,14 @@
             '<div class="flex items-center gap-1.5 flex-wrap">' +
             '<span class="text-xs sm:text-sm font-bold text-slate-800 leading-snug break-words">' + nomeLimpo + '</span>' +
             (isDificil ? '<span class="text-3xs bg-amber-50 text-amber-900 px-1 py-0.2 rounded font-semibold border border-amber-300 shrink-0 inline-block">Difícil</span>' : '') +
+            badgeLote +
             '</div>' +
-            '<span class="text-3xs text-slate-500 font-medium block mt-0.5">' + c.vagas + ' ' + (c.vagas === 1 ? 'vaga' : 'vagas') + '</span>' +
+            '<span class="text-3xs text-slate-500 font-medium block mt-0.5">' + (noLote ? (c.vagas + ' ' + (c.vagas === 1 ? 'vaga' : 'vagas')) : '0 vagas neste lote') + '</span>' +
             '</div>' +
             '</div>';
         } else {
-          item.className = 'bg-white p-2 sm:p-2.5 rounded-xl border border-slate-200 hover:border-emerald-400 active:bg-emerald-50/60 flex items-center justify-between cursor-pointer transition-all shadow-2xs group touch-manipulation select-none gap-2';
+          item.className = 'p-2 sm:p-2.5 rounded-xl border flex items-center justify-between cursor-pointer transition-all shadow-2xs group touch-manipulation select-none gap-2 ' +
+            (classeFora ? classeFora : 'bg-white border-slate-200 hover:border-emerald-400 active:bg-emerald-50/60');
           item.setAttribute('onclick', "adicionarComarcaDireta('" + nomeEscapado + "', 'fim')");
 
           var dificilBadge = isDificil ? '<span class="text-3xs bg-amber-50 text-amber-900 px-1.5 py-0.5 rounded font-semibold border border-amber-300 shrink-0 inline-block">Difícil</span>' : '';
@@ -6235,8 +6471,9 @@
             '<div class="flex items-center gap-1.5 flex-wrap">' +
             '<span class="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-800 leading-snug break-words">' + nomeLimpo + '</span>' +
             dificilBadge +
+            badgeLote +
             '</div>' +
-            '<span class="text-3xs text-slate-500 font-medium block mt-0.5">' + c.vagas + ' ' + (c.vagas === 1 ? 'vaga' : 'vagas') + '</span>' +
+            '<span class="text-3xs text-slate-500 font-medium block mt-0.5">' + (noLote ? (c.vagas + ' ' + (c.vagas === 1 ? 'vaga' : 'vagas')) : '0 vagas neste lote') + '</span>' +
             '</div>' +
             '<div class="flex items-center shrink-0" onclick="event.stopPropagation();">' +
             '<!-- Botão Adicionar: + -->' +
@@ -6358,30 +6595,36 @@
       var modoCompacto = ESTADO.modoCompactoMobile;
 
       ESTADO.escolhasSelecionadas.forEach(function(nome, idx) {
-        var comarcaObj = ESTADO.comarcas.find(function(c) { return c.nome === nome; }) || { vagas: 1 };
+        var comarcaObj = (ESTADO.comarcas || []).find(function(c) { return c.nome === nome; }) ||
+                         (window.DADOS_COMARCAS_BASE || []).find(function(c) { return c.nome === nome; }) ||
+                         { vagas: 0 };
         var item = document.createElement('div');
         item.setAttribute('data-nome', nome);
         var nomeEscapado = nome.replace(/'/g, "\\'");
         var isDificil = nome.indexOf('*') !== -1;
         var nomeLimpo = nome.replace(/\*/g, '');
         var total = ESTADO.escolhasSelecionadas.length;
+        var noLote = comarcaPertenceAoLoteAtual(nome);
+        var badgeLote = !noLote ? '<span class="text-3xs bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded font-semibold border border-amber-300 shrink-0 inline-block">Fora deste lote</span>' : '';
+        var classeFora = !noLote ? 'opacity-75 bg-slate-50/90 border-dashed border-slate-300 hover:opacity-95' : 'bg-white border-emerald-200 hover:border-emerald-400';
 
         if (modoCompacto) {
           // VISÃO COMPACTA (Ultra-eficiente para reordenar muitas comarcas na tela do celular)
-          item.className = 'bg-white px-2 py-1.5 rounded-xl border border-emerald-200 hover:border-emerald-400 flex items-center justify-between shadow-2xs transition-all touch-manipulation group select-none gap-1';
+          item.className = 'px-2 py-1.5 rounded-xl border flex items-center justify-between shadow-2xs transition-all touch-manipulation group select-none gap-1 ' + classeFora;
           item.innerHTML = '<div class="flex items-center gap-1.5 min-w-0 flex-1 pr-1">' +
             '<!-- Alça tátil de arrasto compacta -->' +
             '<div class="drag-handle touch-none cursor-grab active:cursor-grabbing w-7 h-7 rounded-lg bg-slate-100 active:bg-emerald-200 text-slate-500 active:text-emerald-900 flex items-center justify-center shrink-0" title="Arrastar">' +
             '<span class="text-sm font-mono select-none pointer-events-none">⠿</span>' +
             '</div>' +
             '<!-- Botão de posição -->' +
-            '<button type="button" onclick="abrirModalMoverPosicao(' + idx + ')" class="min-w-[26px] h-7 px-1 rounded-lg bg-emerald-700 active:scale-90 text-white font-bold text-2xs flex items-center justify-center shrink-0 cursor-pointer shadow-2xs" title="Mudar posição">' +
+            '<button type="button" onclick="abrirModalMoverPosicao(' + idx + ')" class="min-w-[26px] h-7 px-1 rounded-lg ' + (noLote ? 'bg-emerald-700' : 'bg-slate-500') + ' active:scale-90 text-white font-bold text-2xs flex items-center justify-center shrink-0 cursor-pointer shadow-2xs" title="Mudar posição">' +
             (idx + 1) + 'º' +
             '</button>' +
             '<div class="min-w-0 flex-1">' +
             '<div class="flex items-center gap-1 flex-wrap">' +
             '<span class="text-xs font-bold text-slate-900 leading-tight break-words">' + nomeLimpo + '</span>' +
             (isDificil ? '<span class="text-3xs bg-amber-50 text-amber-900 px-1 py-0.2 rounded font-bold border border-amber-200 shrink-0 inline-block">Difícil</span>' : '') +
+            badgeLote +
             '</div>' +
             '</div>' +
             '</div>' +
@@ -6393,7 +6636,7 @@
             '</div>';
         } else {
           // VISÃO PADRÃO TOUCH (Confortável, espaçosa, sem cortes de texto)
-          item.className = 'bg-white p-2 sm:p-2.5 rounded-xl border border-emerald-200 hover:border-emerald-400 flex items-center justify-between shadow-2xs hover:shadow-xs transition-all touch-manipulation group select-none gap-1 sm:gap-2';
+          item.className = 'p-2 sm:p-2.5 rounded-xl border flex items-center justify-between shadow-2xs hover:shadow-xs transition-all touch-manipulation group select-none gap-1 sm:gap-2 ' + classeFora;
           var dificilBadge = isDificil ? '<span class="text-3xs bg-amber-50 text-amber-900 px-1.5 py-0.5 rounded font-semibold border border-amber-300 shrink-0 inline-block">Difícil</span>' : '';
 
           item.innerHTML = '<div class="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 pr-1">' +
@@ -6402,15 +6645,16 @@
             '<span class="text-sm font-mono pointer-events-none select-none">⠿</span>' +
             '</div>' +
             '<!-- Botão da posição (Toque abre o modal de salto direto) -->' +
-            '<button type="button" onclick="abrirModalMoverPosicao(' + idx + ')" class="min-w-[28px] h-7 sm:h-8 px-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 active:scale-90 text-white font-extrabold text-2xs sm:text-xs flex items-center justify-center shrink-0 cursor-pointer shadow-2xs transition-transform" title="Toque para mudar a posição">' +
+            '<button type="button" onclick="abrirModalMoverPosicao(' + idx + ')" class="min-w-[28px] h-7 sm:h-8 px-1.5 rounded-lg ' + (noLote ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-slate-500 hover:bg-slate-600') + ' active:scale-90 text-white font-extrabold text-2xs sm:text-xs flex items-center justify-center shrink-0 cursor-pointer shadow-2xs transition-transform" title="Toque para mudar a posição">' +
             (idx + 1) + 'º' +
             '</button>' +
             '<div class="min-w-0 flex-1 px-0.5">' +
             '<div class="flex items-center gap-1 flex-wrap">' +
             '<span class="text-xs sm:text-sm font-bold text-slate-900 leading-snug break-words">' + nomeLimpo + '</span>' +
             dificilBadge +
+            badgeLote +
             '</div>' +
-            '<span class="text-3xs text-slate-500 font-medium block mt-0.5">' + comarcaObj.vagas + ' ' + (comarcaObj.vagas === 1 ? 'vaga' : 'vagas') + '</span>' +
+            '<span class="text-3xs text-slate-500 font-medium block mt-0.5">' + (noLote ? (comarcaObj.vagas + ' ' + (comarcaObj.vagas === 1 ? 'vaga' : 'vagas')) : '0 vagas neste lote') + '</span>' +
             '</div>' +
             '</div>' +
             '<!-- Botões de ação rápida no celular -->' +
@@ -10760,14 +11004,17 @@
       var btnCadastros = document.getElementById('subAbaBtnCadastros');
       var btnLote = document.getElementById('subAbaBtnLote');
       var btnCentral = document.getElementById('subAbaBtnCentralCandidatos');
+      var btnImportar = document.getElementById('subAbaBtnImportar');
       var boxCadastros = document.getElementById('conteudoSubAbaCadastros');
       var boxLote = document.getElementById('conteudoSubAbaLote');
       var boxCentral = document.getElementById('conteudoSubAbaCentralCandidatos');
+      var boxImportar = document.getElementById('conteudoSubAbaImportar');
 
       // Oculta todas as sub-abas
       if (boxCadastros) boxCadastros.style.display = 'none';
       if (boxLote) boxLote.style.display = 'none';
       if (boxCentral) boxCentral.style.display = 'none';
+      if (boxImportar) boxImportar.style.display = 'none';
 
       var btnInativoClass = 'px-4 py-2 rounded-lg text-xs font-medium transition-all text-slate-600 hover:text-slate-900 cursor-pointer flex items-center gap-1.5';
       var btnAtivoClass = 'px-4 py-2 rounded-lg text-xs font-semibold transition-all bg-white text-slate-900 shadow-xs cursor-pointer flex items-center gap-1.5';
@@ -10775,6 +11022,7 @@
       if (btnCadastros) btnCadastros.className = btnInativoClass;
       if (btnLote) btnLote.className = btnInativoClass;
       if (btnCentral) btnCentral.className = btnInativoClass;
+      if (btnImportar) btnImportar.className = btnInativoClass;
 
       if (subAba === 'lote') {
         if (boxLote) boxLote.style.display = 'block';
@@ -10789,11 +11037,617 @@
         if (boxCentral) boxCentral.style.display = 'block';
         if (btnCentral) btnCentral.className = btnAtivoClass;
         carregarCandidatosCentral();
+      } else if (subAba === 'importar') {
+        if (boxImportar) boxImportar.style.display = 'block';
+        if (btnImportar) btnImportar.className = btnAtivoClass;
+        carregarConcursosImportador();
       } else {
         if (boxCadastros) boxCadastros.style.display = 'block';
         if (btnCadastros) btnCadastros.className = btnAtivoClass;
         renderizarTabelaAdmin();
       }
+    }
+
+    // ===================================================================
+    // IMPORTADOR DE PLANILHA EXCEL / CSV (.XLSX) - ADMIN
+    // ===================================================================
+    var IMPORTADOR_ESTADO = {
+      candidatos: [],
+      arquivoNome: '',
+      abaGeralNome: '',
+      abaNomeacaoNome: '',
+      emProcessamento: false
+    };
+
+    async function carregarConcursosImportador() {
+      var select = document.getElementById('importarConcursoSelect');
+      if (!select) return;
+
+      if (!supabaseClient) return;
+
+      try {
+        var res = await supabaseClient
+          .from('concursos')
+          .select('*')
+          .order('ativo', { ascending: false })
+          .order('created_at', { ascending: false });
+
+        if (res && res.data && res.data.length > 0) {
+          select.innerHTML = '';
+          res.data.forEach(function(c) {
+            var opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = (c.nome || c.id) + ' (' + c.id + ')' + (c.ativo ? ' [Ativo]' : ' [Inativo]');
+            if (c.id === (URL_PARAMS_LOTE.concurso || CONCURSO_ID_PADRAO)) {
+              opt.selected = true;
+            }
+            select.appendChild(opt);
+          });
+        }
+      } catch(err) {
+        console.warn('Erro ao carregar lista de concursos no importador:', err);
+      }
+    }
+
+    function normTxtImportador(t) {
+      return (t || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    }
+
+    function parseNumeroImportador(val) {
+      if (val === null || val === undefined || val === '') return null;
+      if (typeof val === 'number') return isNaN(val) ? null : val;
+      var str = String(val).replace(/\s+/g, '').replace(',', '.');
+      var num = parseFloat(str);
+      return isNaN(num) ? null : num;
+    }
+
+    function normalizarCotaImportador(val) {
+      var s = normTxtImportador(val);
+      if (s.includes('negro') || s.includes('ppp') || s.includes('afro') || s.includes('pardo') || s.includes('preto')) return 'PPP';
+      if (s.includes('pcd') || s.includes('defic')) return 'PCD';
+      if (s.includes('indig')) return 'Indígena';
+      return 'Ampla';
+    }
+
+    function formatarDataImportador(val) {
+      if (!val) return '';
+      if (val instanceof Date) {
+        return val.toLocaleDateString('pt-BR');
+      }
+      if (typeof val === 'number') {
+        try {
+          var dataJs = new Date(Math.round((val - 25569) * 86400 * 1000));
+          return dataJs.toLocaleDateString('pt-BR');
+        } catch(e) {}
+      }
+      return String(val).trim();
+    }
+
+    function aoSelecionarArquivoExcel(e) {
+      var file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      if (typeof XLSX === 'undefined') {
+        alert('A biblioteca SheetJS ainda está carregando. Por favor, aguarde alguns segundos e tente novamente.');
+        return;
+      }
+
+      IMPORTADOR_ESTADO.arquivoNome = file.name;
+      var reader = new FileReader();
+
+      reader.onload = function(evt) {
+        try {
+          var data = new Uint8Array(evt.target.result);
+          var workbook = XLSX.read(data, { type: 'array' });
+
+          var sheetNames = workbook.SheetNames || [];
+          if (sheetNames.length === 0) {
+            alert('A planilha selecionada está vazia.');
+            return;
+          }
+
+          // 1. Identifica aba 'Lista geral' e aba 'Ordem de Nomeação'
+          var nomeAbaGeral = sheetNames.find(function(n) {
+            var sn = normTxtImportador(n);
+            return sn.includes('lista geral') || sn.includes('classificacao') || sn.includes('geral');
+          }) || sheetNames[0];
+
+          var nomeAbaNomeacao = sheetNames.find(function(n) {
+            var sn = normTxtImportador(n);
+            return sn.includes('nomeacao') || sn.includes('convocacao') || sn.includes('chamada') || sn.includes('ordem');
+          });
+
+          IMPORTADOR_ESTADO.abaGeralNome = nomeAbaGeral;
+          IMPORTADOR_ESTADO.abaNomeacaoNome = nomeAbaNomeacao || '';
+
+          // 2. Lê a aba 'Lista geral' a partir da linha 3 (índice 2)
+          var wsGeral = workbook.Sheets[nomeAbaGeral];
+          var rawRowsGeral = XLSX.utils.sheet_to_json(wsGeral, { header: 1, range: 2 });
+
+          if (!rawRowsGeral || rawRowsGeral.length === 0) {
+            alert('Nenhum dado encontrado na aba ' + nomeAbaGeral + ' a partir da linha 3.');
+            return;
+          }
+
+          // Analisa linha de cabeçalho na aba Lista Geral
+          var headerRow = rawRowsGeral[0] || [];
+          var colClass = -1, colInscricao = -1, colNome = -1, colCota = -1, colClassCota = -1;
+          var colNotaFinal = -1, colNotaPort = -1, colNotaLeg = -1, colNotaInfo = -1, colNotaEspec = -1;
+          var colCpf = -1, colEmail = -1, colWhats = -1;
+
+          headerRow.forEach(function(h, idx) {
+            var ht = normTxtImportador(h);
+            if (colClass === -1 && (ht.includes('class') || ht === 'pos' || ht === 'ordem' || ht === 'posicao')) {
+              colClass = idx;
+            } else if (colInscricao === -1 && (ht.includes('inscr') || ht.includes('insc'))) {
+              colInscricao = idx;
+            } else if (colNome === -1 && (ht.includes('nome') || ht.includes('candidato'))) {
+              colNome = idx;
+            } else if (colClassCota === -1 && ht.includes('cota') && (ht.includes('class') || ht.includes('pos'))) {
+              colClassCota = idx;
+            } else if (colCota === -1 && (ht.includes('cota') || ht === 'tipo' || ht.includes('vaga') || ht.includes('modalidade'))) {
+              colCota = idx;
+            } else if (colNotaFinal === -1 && (ht.includes('final') || ht.includes('total') || ht === 'nota' || ht.includes('pontos'))) {
+              colNotaFinal = idx;
+            } else if (colNotaPort === -1 && (ht.includes('port') || ht === 'lp' || ht.includes('lingua'))) {
+              colNotaPort = idx;
+            } else if (colNotaLeg === -1 && (ht.includes('leg') || ht.includes('dir'))) {
+              colNotaLeg = idx;
+            } else if (colNotaInfo === -1 && (ht.includes('info') || ht === 'ti')) {
+              colNotaInfo = idx;
+            } else if (colNotaEspec === -1 && (ht.includes('espec') || ht === 'ce')) {
+              colNotaEspec = idx;
+            } else if (colCpf === -1 && ht.includes('cpf')) {
+              colCpf = idx;
+            } else if (colEmail === -1 && (ht.includes('email') || ht.includes('mail'))) {
+              colEmail = idx;
+            } else if (colWhats === -1 && (ht.includes('whats') || ht.includes('tel') || ht.includes('cel') || ht.includes('fone'))) {
+              colWhats = idx;
+            }
+          });
+
+          // Se cabeçalho não foi encontrado por nomes conhecidos, adota colunas posicionais padrão
+          var inicioDados = 1;
+          if (colNome === -1) {
+            if (typeof headerRow[0] === 'number' || (headerRow[1] && typeof headerRow[1] === 'string' && headerRow[1].length > 3)) {
+              inicioDados = 0;
+            }
+            colClass = 0;
+            colInscricao = 1;
+            colNome = 2;
+            colCota = 3;
+            colNotaFinal = 4;
+          }
+
+          var candidatos = [];
+          var contadorGeralSeq = 1;
+
+          for (var i = inicioDados; i < rawRowsGeral.length; i++) {
+            var r = rawRowsGeral[i];
+            if (!r || r.length === 0) continue;
+
+            var rawNome = (colNome !== -1 && r[colNome]) ? String(r[colNome]).trim() : '';
+            if (!rawNome) continue;
+
+            var rawClass = (colClass !== -1 && r[colClass] !== undefined) ? parseNumeroImportador(r[colClass]) : contadorGeralSeq;
+            var classAmpla = rawClass ? Math.round(rawClass) : contadorGeralSeq;
+            contadorGeralSeq++;
+
+            var rawCota = (colCota !== -1 && r[colCota]) ? r[colCota] : 'Ampla';
+            var cotaNormalizada = normalizarCotaImportador(rawCota);
+
+            var cand = {
+              classificacao_ampla: classAmpla,
+              nome: rawNome,
+              inscricao: (colInscricao !== -1 && r[colInscricao]) ? String(r[colInscricao]).trim() : '',
+              cota: cotaNormalizada,
+              classificacao_cota: (colClassCota !== -1 && r[colClassCota] !== undefined) ? parseNumeroImportador(r[colClassCota]) : null,
+              nota_final: (colNotaFinal !== -1 && r[colNotaFinal] !== undefined) ? parseNumeroImportador(r[colNotaFinal]) : null,
+              nota_port: (colNotaPort !== -1 && r[colNotaPort] !== undefined) ? parseNumeroImportador(r[colNotaPort]) : null,
+              nota_leg: (colNotaLeg !== -1 && r[colNotaLeg] !== undefined) ? parseNumeroImportador(r[colNotaLeg]) : null,
+              nota_info: (colNotaInfo !== -1 && r[colNotaInfo] !== undefined) ? parseNumeroImportador(r[colNotaInfo]) : null,
+              nota_espec: (colNotaEspec !== -1 && r[colNotaEspec] !== undefined) ? parseNumeroImportador(r[colNotaEspec]) : null,
+              cpf: (colCpf !== -1 && r[colCpf]) ? String(r[colCpf]).replace(/\D/g, '') : '',
+              email: (colEmail !== -1 && r[colEmail]) ? String(r[colEmail]).trim().toLowerCase() : '',
+              whatsapp: (colWhats !== -1 && r[colWhats]) ? String(r[colWhats]).replace(/\D/g, '') : '',
+              status_nomeacao: 'Aguardando',
+              ordem_nomeacao: null,
+              vaga_chamada: null,
+              lote_chamada: null,
+              lotacao_assumida: null,
+              data_nomeacao: null,
+              intencao: 'assumir',
+              escolhas: []
+            };
+
+            candidatos.push(cand);
+          }
+
+          // 3. Lê e Cruza com a aba 'Ordem de Nomeação' (se existir)
+          var totalNomeados = 0;
+          if (nomeAbaNomeacao && workbook.Sheets[nomeAbaNomeacao]) {
+            var wsNomeacao = workbook.Sheets[nomeAbaNomeacao];
+            var rawRowsNomeacao = XLSX.utils.sheet_to_json(wsNomeacao, { header: 1 });
+
+            if (rawRowsNomeacao && rawRowsNomeacao.length > 0) {
+              var idxHeaderNom = 0;
+              for (var h = 0; h < Math.min(5, rawRowsNomeacao.length); h++) {
+                var rowH = rawRowsNomeacao[h] || [];
+                var temHeader = rowH.some(function(cell) {
+                  var cNorm = normTxtImportador(cell);
+                  return cNorm.includes('class') || cNorm.includes('nome') || cNorm.includes('geral') || cNorm.includes('ordem');
+                });
+                if (temHeader) {
+                  idxHeaderNom = h;
+                  break;
+                }
+              }
+
+              var headerNom = rawRowsNomeacao[idxHeaderNom] || [];
+              var colNomOrdem = -1, colNomClassGeral = -1, colNomNome = -1, colNomStatus = -1;
+              var colNomLote = -1, colNomLotacao = -1, colNomData = -1;
+
+              headerNom.forEach(function(h, idx) {
+                var ht = normTxtImportador(h);
+                if (colNomClassGeral === -1 && (ht.includes('lista geral') || ht.includes('class. geral') || ht.includes('class geral') || ht.includes('na lista geral') || (ht.includes('geral') && ht.includes('class')))) {
+                  colNomClassGeral = idx;
+                } else if (colNomOrdem === -1 && (ht === 'class.' || ht === 'class' || ht.includes('ordem') || ht.includes('vaga') || ht === 'pos' || ht === 'chamada')) {
+                  colNomOrdem = idx;
+                } else if (colNomNome === -1 && (ht.includes('nome') || ht.includes('candidato'))) {
+                  colNomNome = idx;
+                } else if (colNomStatus === -1 && (ht.includes('status') || ht.includes('situa') || ht.includes('fase'))) {
+                  colNomStatus = idx;
+                } else if (colNomLote === -1 && (ht.includes('lote') || ht.includes('convocacao'))) {
+                  colNomLote = idx;
+                } else if (colNomLotacao === -1 && (ht.includes('lotacao') || ht.includes('comarca') || ht.includes('unidade'))) {
+                  colNomLotacao = idx;
+                } else if (colNomData === -1 && (ht.includes('data') || ht.includes('publicacao') || ht.includes('diario'))) {
+                  colNomData = idx;
+                }
+              });
+
+              var mapaPorClass = {};
+              var mapaPorNome = {};
+              candidatos.forEach(function(c) {
+                mapaPorClass[c.classificacao_ampla] = c;
+                mapaPorNome[normTxtImportador(c.nome)] = c;
+              });
+
+              for (var j = idxHeaderNom + 1; j < rawRowsNomeacao.length; j++) {
+                var rN = rawRowsNomeacao[j];
+                if (!rN || rN.length === 0) continue;
+
+                var refClassGeral = (colNomClassGeral !== -1 && rN[colNomClassGeral] !== undefined) ? parseNumeroImportador(rN[colNomClassGeral]) : null;
+                var refNome = (colNomNome !== -1 && rN[colNomNome]) ? normTxtImportador(rN[colNomNome]) : '';
+
+                var matchCand = (refClassGeral && mapaPorClass[refClassGeral]) ? mapaPorClass[refClassGeral] : (refNome && mapaPorNome[refNome] ? mapaPorNome[refNome] : null);
+
+                if (matchCand) {
+                  totalNomeados++;
+                  var ordemVal = (colNomOrdem !== -1 && rN[colNomOrdem] !== undefined) ? parseNumeroImportador(rN[colNomOrdem]) : null;
+                  if (ordemVal) {
+                    matchCand.ordem_nomeacao = Math.round(ordemVal);
+                    matchCand.vaga_chamada = matchCand.ordem_nomeacao;
+                  }
+                  if (colNomStatus !== -1 && rN[colNomStatus]) {
+                    matchCand.status_nomeacao = String(rN[colNomStatus]).trim();
+                  } else {
+                    matchCand.status_nomeacao = 'Convocado Titular';
+                  }
+                  if (colNomLote !== -1 && rN[colNomLote]) matchCand.lote_chamada = String(rN[colNomLote]).trim();
+                  if (colNomLotacao !== -1 && rN[colNomLotacao]) matchCand.lotacao_assumida = String(rN[colNomLotacao]).trim();
+                  if (colNomData !== -1 && rN[colNomData]) matchCand.data_nomeacao = formatarDataImportador(rN[colNomData]);
+                }
+              }
+            }
+          }
+
+          IMPORTADOR_ESTADO.candidatos = candidatos;
+          exibirPreviewImportador(file.name, nomeAbaGeral, nomeAbaNomeacao, candidatos, totalNomeados);
+
+        } catch(err) {
+          console.error('Erro ao processar planilha Excel:', err);
+          alert('Erro ao ler a planilha: ' + (err.message || err));
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+    }
+
+    function exibirPreviewImportador(nomeArquivo, abaGeral, abaNomeacao, candidatos, totalNomeados) {
+      var boxStatus = document.getElementById('boxStatusAbasExcel');
+      var nomeArqEl = document.getElementById('nomeArquivoDetectado');
+      var badgeGeral = document.getElementById('badgeAbaGeralStatus');
+      var badgeNomeacao = document.getElementById('badgeAbaNomeacaoStatus');
+      var painelPreview = document.getElementById('painelPreviewImportacao');
+
+      if (boxStatus) boxStatus.style.display = 'flex';
+      if (nomeArqEl) nomeArqEl.textContent = nomeArquivo;
+      if (badgeGeral) badgeGeral.textContent = '✓ Aba: ' + abaGeral;
+      if (badgeNomeacao) {
+        if (abaNomeacao) {
+          badgeNomeacao.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded text-2xs font-semibold bg-emerald-100 text-emerald-800';
+          badgeNomeacao.textContent = '✓ Aba: ' + abaNomeacao;
+        } else {
+          badgeNomeacao.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded text-2xs font-semibold bg-amber-100 text-amber-800';
+          badgeNomeacao.textContent = '⚠️ Aba de Nomeação ausente (usando status padrão)';
+        }
+      }
+
+      var totalLidos = candidatos.length;
+      var totalAmpla = candidatos.filter(function(c) { return c.cota === 'Ampla'; }).length;
+      var totalCotas = totalLidos - totalAmpla;
+
+      document.getElementById('importadorTotalLidos').textContent = totalLidos.toLocaleString('pt-BR');
+      document.getElementById('importadorTotalNomeados').textContent = totalNomeados.toLocaleString('pt-BR');
+      document.getElementById('importadorTotalAmpla').textContent = totalAmpla.toLocaleString('pt-BR');
+      document.getElementById('importadorTotalCotas').textContent = totalCotas.toLocaleString('pt-BR');
+      document.getElementById('contadorPreviewTotal').textContent = totalLidos.toLocaleString('pt-BR');
+
+      var tbody = document.getElementById('tabelaPreviewImportadorBody');
+      if (tbody) {
+        tbody.innerHTML = '';
+        var amostra = candidatos.slice(0, 10);
+        amostra.forEach(function(c) {
+          var tr = document.createElement('tr');
+          tr.className = 'hover:bg-slate-50 transition-colors';
+          tr.innerHTML = '<td class="py-2.5 px-3 font-mono font-bold text-slate-800">' + c.classificacao_ampla + 'º</td>' +
+            '<td class="py-2.5 px-3 font-semibold text-slate-900">' + c.nome + '</td>' +
+            '<td class="py-2.5 px-3 text-center">' +
+              '<span class="px-2 py-0.5 rounded-full text-2xs font-bold ' + (c.cota === 'Ampla' ? 'bg-slate-100 text-slate-700' : 'bg-amber-100 text-amber-800') + '">' + c.cota + '</span>' +
+            '</td>' +
+            '<td class="py-2.5 px-3 text-center font-mono font-bold text-slate-700">' + (c.nota_final !== null ? c.nota_final.toFixed(2) : '-') + '</td>' +
+            '<td class="py-2.5 px-3 text-center font-mono ' + (c.ordem_nomeacao ? 'font-bold text-emerald-800' : 'text-slate-400') + '">' + (c.ordem_nomeacao ? (c.ordem_nomeacao + 'º') : '-') + '</td>' +
+            '<td class="py-2.5 px-3">' +
+              '<span class="px-2 py-0.5 rounded text-2xs font-medium ' + (c.status_nomeacao === 'Aguardando' ? 'bg-slate-100 text-slate-600' : 'bg-emerald-100 text-emerald-800') + '">' + c.status_nomeacao + '</span>' +
+            '</td>' +
+            '<td class="py-2.5 px-3 text-slate-600 text-2xs">' +
+              (c.lotacao_assumida || c.lote_chamada || '-') +
+            '</td>' +
+            '<td class="py-2.5 px-3 text-center font-mono text-2xs text-slate-500">' + (c.cpf || '-') + '</td>';
+          tbody.appendChild(tr);
+        });
+      }
+
+      if (painelPreview) painelPreview.style.display = 'block';
+    }
+
+    function limparImportadorExcel() {
+      IMPORTADOR_ESTADO.candidatos = [];
+      IMPORTADOR_ESTADO.arquivoNome = '';
+      var inp = document.getElementById('arquivoExcelInput');
+      if (inp) inp.value = '';
+      var boxStatus = document.getElementById('boxStatusAbasExcel');
+      if (boxStatus) boxStatus.style.display = 'none';
+      var painelPreview = document.getElementById('painelPreviewImportacao');
+      if (painelPreview) painelPreview.style.display = 'none';
+      var containerProgresso = document.getElementById('containerProgressoImportador');
+      if (containerProgresso) containerProgresso.style.display = 'none';
+      var alerta = document.getElementById('alertaResultadoImportador');
+      if (alerta) alerta.style.display = 'none';
+    }
+
+    async function sincronizarSupabaseLotes300() {
+      if (!IMPORTADOR_ESTADO.candidatos || IMPORTADOR_ESTADO.candidatos.length === 0) {
+        alert('Carregue uma planilha antes de sincronizar.');
+        return;
+      }
+
+      if (!supabaseClient) {
+        alert('Cliente Supabase não está configurado.');
+        return;
+      }
+
+      var selConcurso = document.getElementById('importarConcursoSelect');
+      var concursoId = (selConcurso && selConcurso.value) ? selConcurso.value : (URL_PARAMS_LOTE.concurso || CONCURSO_ID_PADRAO);
+
+      var btnSinc = document.getElementById('btnSincronizarSupabaseImportador');
+      var containerProg = document.getElementById('containerProgressoImportador');
+      var barraProg = document.getElementById('barraProgressoImportador');
+      var labelStatus = document.getElementById('labelStatusProgressoImportador');
+      var porcentagem = document.getElementById('porcentagemProgressoImportador');
+      var detalhe = document.getElementById('detalheProgressoImportador');
+      var alerta = document.getElementById('alertaResultadoImportador');
+
+      if (btnSinc) {
+        btnSinc.disabled = true;
+        btnSinc.classList.add('opacity-50', 'cursor-not-allowed');
+      }
+      if (containerProg) containerProg.style.display = 'block';
+      if (alerta) alerta.style.display = 'none';
+
+      var total = IMPORTADOR_ESTADO.candidatos.length;
+      var TAMANHO_LOTE = 300;
+      var processados = 0;
+
+      var candidatosBaseRows = [];
+      var respostasRows = [];
+
+      IMPORTADOR_ESTADO.candidatos.forEach(function(cand) {
+        var baseId = concursoId + '-' + cand.classificacao_ampla;
+        candidatosBaseRows.push({
+          id: baseId,
+          nome: cand.nome,
+          cpf: cand.cpf || '',
+          email: cand.email || '',
+          whatsapp: cand.whatsapp || '',
+          tipo: cand.cota || 'Ampla'
+        });
+
+        respostasRows.push({
+          id: concursoId + '-geral-' + cand.classificacao_ampla,
+          concurso_id: concursoId,
+          lote_id: 'geral',
+          ambiente: 'prod',
+          nome: cand.nome,
+          cpf: cand.cpf || '',
+          email: cand.email || '',
+          whatsapp: cand.whatsapp || '',
+          intencao: cand.intencao || 'assumir',
+          escolhas: cand.escolhas || [],
+          bloqueado: true,
+          dados_cadastrais_bloqueados: true,
+          dados_completos: {
+            classificacao_ampla: cand.classificacao_ampla,
+            classificacao_cota: cand.classificacao_cota,
+            cota: cand.cota,
+            nota_final: cand.nota_final,
+            ordem_nomeacao: cand.ordem_nomeacao,
+            vaga_chamada: cand.vaga_chamada,
+            status_nomeacao: cand.status_nomeacao || 'Aguardando',
+            lote_chamada: cand.lote_chamada,
+            lotacao_assumida: cand.lotacao_assumida,
+            data_nomeacao: cand.data_nomeacao,
+            nota_port: cand.nota_port,
+            nota_leg: cand.nota_leg,
+            nota_info: cand.nota_info,
+            nota_espec: cand.nota_espec,
+            inscricao: cand.inscricao
+          }
+        });
+      });
+
+      var totalLotes = Math.ceil(total / TAMANHO_LOTE);
+
+      try {
+        for (var loteIdx = 0; loteIdx < totalLotes; loteIdx++) {
+          var start = loteIdx * TAMANHO_LOTE;
+          var end = Math.min(start + TAMANHO_LOTE, total);
+
+          var chunkCandidatos = candidatosBaseRows.slice(start, end);
+          var chunkRespostas = respostasRows.slice(start, end);
+
+          if (labelStatus) labelStatus.textContent = 'Sincronizando lote ' + (loteIdx + 1) + ' de ' + totalLotes + '...';
+          if (detalhe) detalhe.textContent = 'Processando registros de ' + (start + 1) + ' a ' + end + ' no concurso ' + concursoId;
+
+          var res1 = await supabaseClient.from('candidatos_base').upsert(chunkCandidatos, { onConflict: 'id' });
+          if (res1.error) throw res1.error;
+
+          var res2 = await supabaseClient.from('respostas').upsert(chunkRespostas, { onConflict: 'id' });
+          if (res2.error) throw res2.error;
+
+          processados = end;
+          var pct = Math.round((processados / total) * 100);
+          if (barraProg) barraProg.style.width = pct + '%';
+          if (porcentagem) porcentagem.textContent = pct + '%';
+        }
+
+        if (labelStatus) labelStatus.textContent = '✓ Sincronização concluída com sucesso!';
+        if (detalhe) detalhe.textContent = total.toLocaleString('pt-BR') + ' registros sincronizados em public.candidatos_base e public.respostas';
+
+        if (alerta) {
+          alerta.className = 'p-4 rounded-xl text-xs font-semibold bg-emerald-50 border border-emerald-300 text-emerald-950 flex items-center gap-2';
+          alerta.innerHTML = '<span class="text-xl">🎉</span> <span>' + total.toLocaleString('pt-BR') + ' candidatos sincronizados com sucesso no Supabase para o concurso <strong>' + concursoId + '</strong>!</span>';
+          alerta.style.display = 'flex';
+        }
+
+        mostrarToastMobile('✓ ' + total.toLocaleString('pt-BR') + ' candidatos sincronizados com sucesso!', true);
+
+      } catch(err) {
+        console.error('Erro na sincronização em lotes:', err);
+        if (alerta) {
+          alerta.className = 'p-4 rounded-xl text-xs font-semibold bg-red-50 border border-red-300 text-red-950';
+          alerta.innerHTML = '<strong>Erro ao sincronizar:</strong> ' + (err.message || JSON.stringify(err));
+          alerta.style.display = 'block';
+        }
+      } finally {
+        if (btnSinc) {
+          btnSinc.disabled = false;
+          btnSinc.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+      }
+    }
+
+    function escaparCsv(val) {
+      if (val === null || val === undefined) return '""';
+      var str = String(val).replace(/"/g, '""');
+      return '"' + str + '"';
+    }
+
+    function baixarCsvsLimposImportador() {
+      if (!IMPORTADOR_ESTADO.candidatos || IMPORTADOR_ESTADO.candidatos.length === 0) {
+        alert('Carregue uma planilha antes de baixar os CSVs.');
+        return;
+      }
+
+      var selConcurso = document.getElementById('importarConcursoSelect');
+      var concursoId = (selConcurso && selConcurso.value) ? selConcurso.value : (URL_PARAMS_LOTE.concurso || CONCURSO_ID_PADRAO);
+
+      // 1. candidatos_base.csv
+      var cabecalhoBase = ['id', 'nome', 'cpf', 'email', 'whatsapp', 'tipo'];
+      var linhasBase = [cabecalhoBase.join(',')];
+
+      IMPORTADOR_ESTADO.candidatos.forEach(function(cand) {
+        var baseId = concursoId + '-' + cand.classificacao_ampla;
+        var r = [
+          escaparCsv(baseId),
+          escaparCsv(cand.nome),
+          escaparCsv(cand.cpf || ''),
+          escaparCsv(cand.email || ''),
+          escaparCsv(cand.whatsapp || ''),
+          escaparCsv(cand.cota || 'Ampla')
+        ];
+        linhasBase.push(r.join(','));
+      });
+
+      // 2. respostas.csv
+      var cabecalhoResp = [
+        'id', 'concurso_id', 'lote_id', 'ambiente', 'nome', 'cpf', 'email', 'whatsapp',
+        'intencao', 'bloqueado', 'dados_cadastrais_bloqueados', 'classificacao_ampla', 'cota',
+        'status_nomeacao', 'ordem_nomeacao', 'lote_chamada', 'lotacao_assumida', 'data_nomeacao',
+        'nota_final', 'nota_port', 'nota_leg', 'nota_info', 'nota_espec', 'inscricao'
+      ];
+      var linhasResp = [cabecalhoResp.join(',')];
+
+      IMPORTADOR_ESTADO.candidatos.forEach(function(cand) {
+        var respId = concursoId + '-geral-' + cand.classificacao_ampla;
+        var r = [
+          escaparCsv(respId),
+          escaparCsv(concursoId),
+          escaparCsv('geral'),
+          escaparCsv('prod'),
+          escaparCsv(cand.nome),
+          escaparCsv(cand.cpf || ''),
+          escaparCsv(cand.email || ''),
+          escaparCsv(cand.whatsapp || ''),
+          escaparCsv(cand.intencao || 'assumir'),
+          escaparCsv('true'),
+          escaparCsv('true'),
+          escaparCsv(cand.classificacao_ampla),
+          escaparCsv(cand.cota || 'Ampla'),
+          escaparCsv(cand.status_nomeacao || 'Aguardando'),
+          escaparCsv(cand.ordem_nomeacao || ''),
+          escaparCsv(cand.lote_chamada || ''),
+          escaparCsv(cand.lotacao_assumida || ''),
+          escaparCsv(cand.data_nomeacao || ''),
+          escaparCsv(cand.nota_final !== null ? cand.nota_final : ''),
+          escaparCsv(cand.nota_port !== null ? cand.nota_port : ''),
+          escaparCsv(cand.nota_leg !== null ? cand.nota_leg : ''),
+          escaparCsv(cand.nota_info !== null ? cand.nota_info : ''),
+          escaparCsv(cand.nota_espec !== null ? cand.nota_espec : ''),
+          escaparCsv(cand.inscricao || '')
+        ];
+        linhasResp.push(r.join(','));
+      });
+
+      downloadCsvArquivo(linhasBase.join('\r\n'), 'candidatos_base.csv');
+      setTimeout(function() {
+        downloadCsvArquivo(linhasResp.join('\r\n'), 'respostas.csv');
+      }, 500);
+
+      mostrarToastMobile('✓ Arquivos candidatos_base.csv e respostas.csv gerados!', true);
+    }
+
+    function downloadCsvArquivo(conteudo, nomeArquivo) {
+      var blob = new Blob(['\uFEFF' + conteudo], { type: 'text/csv;charset=utf-8;' });
+      var link = document.createElement('a');
+      var url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', nomeArquivo);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
     }
 
     // ===================================================================
