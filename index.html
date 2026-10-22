@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CERTAM | Portal do Concurseiro - Concursos e Escolha de Lotação</title>
+  <meta name="description" content="CERTAM - Portal do Concurseiro. Acompanhamento em tempo real de convocações, simulação de escolha de comarcas e classificação de concursos públicos.">
+  <meta property="og:title" content="CERTAM | Portal do Concurseiro">
+  <meta property="og:description" content="Nunca é apenas uma prova. Portal de acompanhamento, simulação de lotação e classificação de concursos públicos.">
+  <meta property="og:type" content="website">
+
+  <!-- Fontes Oficiais do Design System CERTAM -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+  <!-- Supabase JS Client v2 Oficial -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .font-serif {
+      font-family: 'Merriweather', Georgia, serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Estilização suave da barra de rolagem */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-teal-500 selection:text-white">
+
+  <!-- ===================================================================== -->
+  <!-- CABEÇALHO INSTITUCIONAL CERTAM                                        -->
+  <!-- ===================================================================== -->
+  <header class="bg-[#0B132B] text-white shadow-xs border-b border-[#1C2D4A] sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3.5">
+        
+        <!-- Logo e Naming Oficial -->
+        <a href="index.html" class="flex items-center space-x-3 group">
+          <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-[#0F1E3D] to-[#0A1128] border border-teal-500/30 flex items-center justify-center p-2 shadow-sm shrink-0 group-hover:border-teal-400 transition-colors">
+            <svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
+              <defs>
+                <linearGradient id="certamHeaderGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#0E4A5B" />
+                  <stop offset="50%" stop-color="#0E7490" />
+                  <stop offset="100%" stop-color="#2DD4BF" />
+                </linearGradient>
+                <linearGradient id="certamHeaderCheck" x1="20%" y1="80%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#0891B2" />
+                  <stop offset="100%" stop-color="#34D399" />
+                </linearGradient>
+              </defs>
+              <path d="M 68 18 C 38 10 12 30 12 56 C 12 80 34 94 58 92 C 76 90 90 76 90 58" stroke="url(#certamHeaderGrad)" stroke-width="11" stroke-linecap="round" fill="none"/>
+              <path d="M 32 53 L 48 69 L 88 23" stroke="url(#certamHeaderCheck)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xl sm:text-2xl font-bold tracking-wider text-white font-serif uppercase">
+                CERTAM
+              </span>
+              <span class="text-xs sm:text-sm font-semibold text-teal-300">Portal do Concurseiro</span>
+            </div>
+            <p class="text-2xs sm:text-xs text-slate-400 italic">"Nunca é apenas uma prova."</p>
+          </div>
+        </a>
+
+        <!-- Área de Ações e Autenticação -->
+        <div class="flex items-center gap-2.5 sm:gap-3 flex-wrap">
+          
+          <!-- Indicador de Status do Supabase -->
+          <div class="hidden md:flex items-center gap-1.5 bg-teal-500/10 text-teal-300 border border-teal-500/20 px-2.5 py-1 rounded-lg text-2xs font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></span>
+            <span>Base Oficial Conectada</span>
+          </div>
+
+          <!-- Botão Atalho Painel Admin (visível para administradores) -->
+          <a id="btnAtalhoAdminHeader" href="lote.html?admin=1" style="display: none;" class="flex items-center gap-1.5 bg-purple-900/60 hover:bg-purple-800 text-purple-200 border border-purple-500/40 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors shadow-2xs">
+            <span>⚙️</span>
+            <span>Painel Admin</span>
+          </a>
+
+          <!-- Botão Entrar com Google (quando deslogado) -->
+          <button id="btnLoginGoogleHeader" type="button" onclick="fazerLoginGoogle()" class="flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-800 font-medium px-3.5 py-1.5 rounded-lg text-xs shadow-2xs transition-colors cursor-pointer border border-slate-200">
+            <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <span>Entrar com Google</span>
+          </button>
+
+          <!-- Bloco do Usuário Logado -->
+          <div id="blocoUsuarioLogado" style="display: none;" class="flex items-center gap-2 bg-[#0F1E3D] px-2.5 py-1 rounded-lg border border-teal-500/30 text-xs">
+            <div class="flex items-center gap-1.5">
+              <span id="iconeTipoUsuario">👤</span>
+              <span id="badgeEmailUsuario" class="font-mono text-2xs font-medium text-slate-200 max-w-[130px] sm:max-w-[180px] truncate" title="E-mail autenticado"></span>
+              <span id="badgeTipoUsuario" class="text-3xs font-semibold px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-300">Candidato</span>
+            </div>
+            <button type="button" onclick="fazerLogout()" class="text-2xs text-rose-300 hover:text-rose-100 hover:underline border-l border-slate-700 pl-2 cursor-pointer font-medium" title="Encerrar sessão">
+              Sair
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================================================================== -->
+  <!-- HERO SECTION: APRESENTAÇÃO INSTITUCIONAL & BUSCA EM TEMPO REAL        -->
+  <!-- ===================================================================== -->
+  <section class="bg-gradient-to-b from-[#0B132B] via-[#0D1F3C] to-slate-900 text-white py-10 sm:py-14 border-b border-[#1C2D4A] relative overflow-hidden">
+    <!-- Efeito de brilho de fundo -->
+    <div class="absolute inset-0 pointer-events-none opacity-20">
+      <div class="absolute -top-24 -left-24 w-96 h-96 bg-teal-500 rounded-full blur-3xl"></div>
+      <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-blue-600 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="max-w-3xl">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/15 border border-teal-500/30 text-teal-300 text-xs font-semibold mb-4">
+          <span>🏛️</span>
+          <span>Portal Oficial de Certames Judiciais e Administrativos</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold font-serif tracking-tight text-white leading-tight">
+          Portal de Concursos e Escolha de Lotação
+        </h1>
+        <p class="mt-4 text-sm sm:text-base text-slate-300 leading-relaxed font-light">
+          Acompanhe em tempo real a classificação geral oficial, as manifestações de preferência de comarcas e as simulações algorítmicas de alocação por colocação e cotas.
+        </p>
+      </div>
+
+      <!-- Barra de Pesquisa e Filtros Rápidos -->
+      <div class="mt-8 bg-white/10 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-white/15 shadow-xl max-w-4xl space-y-3">
+        <div class="flex flex-col sm:flex-row gap-2.5">
+          <!-- Campo de Busca em Tempo Real -->
+          <div class="relative flex-1">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </span>
+            <input 
+              type="text" 
+              id="inputBuscaConcursos" 
+              oninput="filtrarConcursos()" 
+              placeholder="Buscar por nome do concurso, cargo ou órgão (ex: TJRS, Analista)..." 
+              class="w-full pl-10 pr-10 py-2.5 bg-slate-900/80 text-white placeholder-slate-400 border border-slate-700 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all"
+            >
+            <button 
+              type="button" 
+              id="btnLimparBusca" 
+              onclick="limparBusca()" 
+              style="display: none;" 
+              class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+
+          <!-- Filtros de Status (Abas rápidas) -->
+          <div class="flex items-center gap-1.5 bg-slate-900/80 p-1 rounded-xl border border-slate-700 shrink-0">
+            <button 
+              type="button" 
+              id="filtroStatusTodos" 
+              onclick="setFiltroStatus('todos')" 
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors bg-teal-500 text-slate-950 shadow-xs"
+            >
+              Todos (<span id="contagemStatusTodos">0</span>)
+            </button>
+            <button 
+              type="button" 
+              id="filtroStatusAtivos" 
+              onclick="setFiltroStatus('ativos')" 
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors text-slate-300 hover:text-white"
+            >
+              Ativos (<span id="contagemStatusAtivos">0</span>)
+            </button>
+            <button 
+              type="button" 
+              id="filtroStatusEncerrados" 
+              onclick="setFiltroStatus('encerrados')" 
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors text-slate-300 hover:text-white"
+            >
+              Encerrados (<span id="contagemStatusEncerrados">0</span>)
+            </button>
+          </div>
+        </div>
+
+        <!-- Indicador de Resultados da Busca -->
+        <div class="flex items-center justify-between text-2xs text-slate-300 px-1 pt-1 border-t border-white/10">
+          <span id="textoStatusResultados">Carregando certames do Supabase...</span>
+          <span class="text-teal-300 font-mono">TJRS • Analista Judiciário</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- CONTEÚDO PRINCIPAL: GRID DE CARDS DE CONCURSOS                        -->
+  <!-- ===================================================================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    
+    <!-- Cabeçalho da Seção de Certames -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 sm:mb-8 pb-4 border-b border-slate-200">
+      <div>
+        <h2 class="text-xl sm:text-2xl font-bold font-serif text-slate-900 flex items-center gap-2.5">
+          <span>📋</span>
+          <span>Certames Disponíveis</span>
+        </h2>
+        <p class="text-xs sm:text-sm text-slate-500 mt-1">
+          Selecione um concurso para acessar sua classificação geral de candidatos ou acompanhar as rodadas de lotação.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2 shrink-0">
+        <button 
+          type="button" 
+          onclick="carregarDadosPortal(true)" 
+          class="flex items-center gap-1.5 text-xs font-medium text-slate-600 bg-white hover:bg-slate-50 border border-slate-300 px-3 py-1.5 rounded-xl shadow-2xs transition-colors cursor-pointer"
+          title="Recarregar dados atualizados do Supabase"
+        >
+          <span>🔄</span>
+          <span>Atualizar</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- SKELETON / LOADING STATE (Exibido enquanto carrega) -->
+    <div id="portalLoadingSkeleton" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 shadow-sm animate-pulse">
+        <div class="flex justify-between items-center">
+          <div class="h-6 w-20 bg-slate-200 rounded-md"></div>
+          <div class="h-6 w-16 bg-slate-200 rounded-full"></div>
+        </div>
+        <div class="h-6 w-3/4 bg-slate-200 rounded"></div>
+        <div class="h-4 w-1/2 bg-slate-200 rounded"></div>
+        <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
+          <div class="h-10 bg-slate-100 rounded-xl"></div>
+          <div class="h-10 bg-slate-100 rounded-xl"></div>
+        </div>
+        <div class="h-10 bg-slate-200 rounded-xl mt-4"></div>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 shadow-sm animate-pulse hidden md:block">
+        <div class="flex justify-between items-center">
+          <div class="h-6 w-20 bg-slate-200 rounded-md"></div>
+          <div class="h-6 w-16 bg-slate-200 rounded-full"></div>
+        </div>
+        <div class="h-6 w-3/4 bg-slate-200 rounded"></div>
+        <div class="h-4 w-1/2 bg-slate-200 rounded"></div>
+        <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
+          <div class="h-10 bg-slate-100 rounded-xl"></div>
+          <div class="h-10 bg-slate-100 rounded-xl"></div>
+        </div>
+        <div class="h-10 bg-slate-200 rounded-xl mt-4"></div>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 shadow-sm animate-pulse hidden lg:block">
+        <div class="flex justify-between items-center">
+          <div class="h-6 w-20 bg-slate-200 rounded-md"></div>
+          <div class="h-6 w-16 bg-slate-200 rounded-full"></div>
+        </div>
+        <div class="h-6 w-3/4 bg-slate-200 rounded"></div>
+        <div class="h-4 w-1/2 bg-slate-200 rounded"></div>
+        <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
+          <div class="h-10 bg-slate-100 rounded-xl"></div>
+          <div class="h-10 bg-slate-100 rounded-xl"></div>
+        </div>
+        <div class="h-10 bg-slate-200 rounded-xl mt-4"></div>
+      </div>
+    </div>
+
+    <!-- EMPTY STATE (Quando nenhum concurso corresponder aos filtros) -->
+    <div id="portalEmptyState" style="display: none;" class="bg-white rounded-2xl border-2 border-dashed border-slate-200 p-10 sm:p-14 text-center max-w-xl mx-auto space-y-4">
+      <div class="w-14 h-14 mx-auto rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-2xl">
+        🔍
+      </div>
+      <div>
+        <h3 class="text-base sm:text-lg font-bold font-serif text-slate-800">Nenhum concurso encontrado</h3>
+        <p class="text-xs sm:text-sm text-slate-500 mt-1">
+          Não localizamos certames com os termos ou filtros selecionados. Tente ajustar a busca.
+        </p>
+      </div>
+      <button 
+        type="button" 
+        onclick="limparFiltrosCompletos()" 
+        class="bg-slate-800 hover:bg-slate-900 text-white font-medium text-xs px-4 py-2 rounded-xl transition-colors cursor-pointer shadow-xs inline-flex items-center gap-1.5"
+      >
+        <span>✕</span>
+        <span>Redefinir filtros e exibir todos</span>
+      </button>
+    </div>
+
+    <!-- GRID DINÂMICO DE CONCURSOS -->
+    <div id="portalGridConcursos" style="display: none;" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Renderizado via JavaScript a partir do Supabase -->
+    </div>
+
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- TOAST DE FEEDBACK FLUTUANTE                                           -->
+  <!-- ===================================================================== -->
+  <div id="toastAlerta" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-xl text-xs font-semibold text-white bg-slate-900 border border-slate-700">
+    <span id="toastIcone">✓</span>
+    <span id="toastMensagem">Ação realizada com sucesso!</span>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- RODAPÉ INSTITUCIONAL CERTAM                                           -->
+  <!-- ===================================================================== -->
+  <footer class="bg-[#0B132B] text-slate-400 border-t border-[#1C2D4A] mt-auto py-8 px-4 sm:px-6 lg:px-8 text-xs leading-relaxed">
+    <div class="max-w-7xl mx-auto space-y-5">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[#1C2D4A] pb-5">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-[#0F1E3D] to-[#0A1128] border border-teal-500/30 flex items-center justify-center p-1.5 shrink-0">
+            <svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
+              <path d="M 68 18 C 38 10 12 30 12 56 C 12 80 34 94 58 92 C 76 90 90 76 90 58" stroke="#2DD4BF" stroke-width="11" stroke-linecap="round" fill="none"/>
+              <path d="M 32 53 L 48 69 L 88 23" stroke="#34D399" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-serif font-bold text-white tracking-wider uppercase text-sm">CERTAM</span>
+              <span class="text-teal-300 text-xs font-semibold">Portal do Concurseiro</span>
+            </div>
+            <p class="text-teal-200/70 italic text-2xs">"Nunca é apenas uma prova."</p>
+          </div>
+        </div>
+        
+        <div class="flex flex-wrap items-center gap-4 text-xs">
+          <a href="index.html" class="text-teal-300 font-semibold hover:underline">Portal de Concursos</a>
+          <span class="text-slate-600">·</span>
+          <a href="concurso.html?id=tjrs_analista_2024" class="text-slate-300 hover:text-white transition-colors">Classificação Geral TJRS</a>
+          <span class="text-slate-600">·</span>
+          <a href="lote.html" class="text-slate-300 hover:text-white transition-colors">Simulação de Lotes</a>
+          <span class="text-slate-600">·</span>
+          <a href="politica-de-privacidade.html" class="text-teal-400 hover:text-teal-300 underline underline-offset-2 transition-colors">
+            Política de Privacidade
+          </a>
+        </div>
+      </div>
+
+      <div class="space-y-1.5 text-2xs text-slate-400">
+        <p>
+          <strong class="text-slate-300">CERTAM - Portal do Concurseiro:</strong> Plataforma comunitária independente voltada à transparência, organização coletiva de escolhas de comarcas e simulações públicas para candidatos aprovados em concursos públicos.
+        </p>
+        <p>
+          <strong class="text-slate-300">Autenticação Segura via Google Identity:</strong> O acesso utiliza autenticação federada OAuth 2.0 apenas para identificação unívoca de cada candidato com Row Level Security (RLS) no PostgreSQL.
+        </p>
+        <p class="text-slate-500 pt-1">
+          © 2026 CERTAM - Portal do Concurseiro. Todos os direitos reservados. Aplicação sem vínculo de representação direta com o Poder Judiciário.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===================================================================== -->
+  <!-- JAVASCRIPT DO CLIENTE: SUPABASE, AUTH & GESTÃO DO PORTAL             -->
+  <!-- ===================================================================== -->
+  <script>
+    // 1. CONFIGURAÇÃO OFICIAL DO SUPABASE JS
+    var SUPABASE_URL = 'https://qeriodszxddmzmnjzipz.supabase.co';
+    var SUPABASE_ANON_KEY = (function() {
+      try {
+        var localKey = localStorage.getItem('tjrs_supabase_anon_key');
+        if (localKey && localKey.trim()) return localKey.trim();
+      } catch(e) {}
+      return window.SUPABASE_ANON_KEY || 'sb_publishable_DsFaKZb3uAAREpM5lPutZg_TZOLTV8R';
+    })();
+
+    var supabaseClient = null;
+    try {
+      if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+    } catch(eSb) {
+      console.warn('Erro ao inicializar cliente Supabase:', eSb);
+    }
+
+    // 2. ESTADO GLOBAL DA APLICAÇÃO
+    var ESTADO_PORTAL = {
+      concursos: [],
+      lotes: [],
+      contagemCandidatosPorConcurso: {},
+      contagemLotesPorConcurso: {},
+      usuarioLogado: null,
+      filtroTexto: '',
+      filtroStatus: 'todos' // 'todos', 'ativos', 'encerrados'
+    };
+
+    // 3. FLUXO DE AUTENTICAÇÃO COM GOOGLE & ESTADO DE USUÁRIO
+    async function inicializarAutenticacao() {
+      if (!supabaseClient) return;
+
+      try {
+        var resSession = await supabaseClient.auth.getSession();
+        var session = resSession && resSession.data ? resSession.data.session : null;
+
+        // Limpa access_token da URL caso tenha retornado do OAuth
+        if (session && window.location.hash && window.location.hash.includes('access_token')) {
+          try {
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          } catch(e) {}
+        }
+
+        atualizarInterfaceUsuario(session);
+
+        // Ouve mudanças de auth state
+        supabaseClient.auth.onAuthStateChange(function(event, novaSessao) {
+          atualizarInterfaceUsuario(novaSessao);
+        });
+      } catch(err) {
+        console.warn('Aviso de sessão de autenticação:', err);
+      }
+    }
+
+    function atualizarInterfaceUsuario(session) {
+      var btnLogin = document.getElementById('btnLoginGoogleHeader');
+      var blocoUser = document.getElementById('blocoUsuarioLogado');
+      var badgeEmail = document.getElementById('badgeEmailUsuario');
+      var badgeTipo = document.getElementById('badgeTipoUsuario');
+      var btnAdminHeader = document.getElementById('btnAtalhoAdminHeader');
+
+      if (session && session.user) {
+        var user = session.user;
+        var email = (user.email || '').toLowerCase().trim();
+        var ehAdmin = (email === 'rafasms0@hotmail.com');
+
+        ESTADO_PORTAL.usuarioLogado = { email: email, isAdmin: ehAdmin, user: user };
+
+        if (btnLogin) btnLogin.style.display = 'none';
+        if (blocoUser) blocoUser.style.display = 'flex';
+        if (badgeEmail) {
+          badgeEmail.textContent = email;
+          badgeEmail.title = 'Conectado como: ' + email;
+        }
+        if (badgeTipo) {
+          if (ehAdmin) {
+            badgeTipo.textContent = 'Admin';
+            badgeTipo.className = 'text-3xs font-bold uppercase px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono';
+          } else {
+            badgeTipo.textContent = 'Candidato';
+            badgeTipo.className = 'text-3xs font-semibold px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-300';
+          }
+        }
+        if (btnAdminHeader) {
+          btnAdminHeader.style.display = ehAdmin ? 'flex' : 'none';
+        }
+      } else {
+        ESTADO_PORTAL.usuarioLogado = null;
+        if (btnLogin) btnLogin.style.display = 'flex';
+        if (blocoUser) blocoUser.style.display = 'none';
+        if (btnAdminHeader) btnAdminHeader.style.display = 'none';
+      }
+    }
+
+    async function fazerLoginGoogle() {
+      if (!supabaseClient) {
+        alert('Cliente Supabase não está configurado.');
+        return;
+      }
+      try {
+        var redirectUrl = window.location.origin + window.location.pathname;
+        var res = await supabaseClient.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: redirectUrl
+          }
+        });
+        if (res.error) throw res.error;
+      } catch(err) {
+        console.error('Falha ao autenticar com Google:', err);
+        mostrarToast('Falha no login com Google: ' + (err.message || err), 'erro');
+      }
+    }
+
+    async function fazerLogout() {
+      if (supabaseClient) {
+        try {
+          await supabaseClient.auth.signOut();
+        } catch(e) {}
+      }
+      ESTADO_PORTAL.usuarioLogado = null;
+      atualizarInterfaceUsuario(null);
+      mostrarToast('Sessão encerrada com sucesso.', 'info');
+    }
+
+    // 4. CARREGAMENTO DE DADOS DO SUPABASE (CONCURSOS, LOTES E CANDIDATOS)
+    async function carregarDadosPortal(comAlerta) {
+      var skeleton = document.getElementById('portalLoadingSkeleton');
+      var grid = document.getElementById('portalGridConcursos');
+      var empty = document.getElementById('portalEmptyState');
+
+      if (skeleton) skeleton.style.display = 'grid';
+      if (grid) grid.style.display = 'none';
+      if (empty) empty.style.display = 'none';
+
+      try {
+        var concursos = [];
+        var lotes = [];
+        var totalCandidatosBase = 0;
+
+        if (supabaseClient) {
+          // Busca concursos cadastrados
+          var resConcursos = await supabaseClient
+            .from('concursos')
+            .select('*')
+            .order('ativo', { ascending: false })
+            .order('created_at', { ascending: false });
+
+          if (resConcursos.data && resConcursos.data.length > 0) {
+            concursos = resConcursos.data;
+          }
+
+          // Busca todos os lotes para métricas e atalhos rápidos
+          var resLotes = await supabaseClient
+            .from('lotes')
+            .select('id, concurso_id, nome, ativo, travado, comarcas, candidatos');
+
+          if (resLotes.data) {
+            lotes = resLotes.data;
+          }
+
+          // Busca total de candidatos cadastrados na base de referência
+          try {
+            var resCands = await supabaseClient
+              .from('candidatos_base')
+              .select('id', { count: 'exact', head: true });
+            if (resCands && typeof resCands.count === 'number') {
+              totalCandidatosBase = resCands.count;
+            }
+          } catch(eC) {}
+        }
+
+        // Se a tabela concursos estiver vazia por qualquer motivo, garante o concurso principal ativo do TJRS
+        if (!concursos || concursos.length === 0) {
+          concursos = [{
+            id: 'tjrs_analista_2024',
+            nome: 'Concurso TJRS - Analista Judiciário',
+            cargo: 'Analista Judiciário - Área Judiciária',
+            orgao: 'TJRS',
+            ativo: true,
+            created_at: new Date().toISOString()
+          }];
+        }
+
+        // Mapeia os lotes para contagens e atalhos
+        var lotesMap = {};
+        var contagemLotes = {};
+        (lotes || []).forEach(function(lote) {
+          var cId = lote.concurso_id || 'tjrs_analista_2024';
+          if (!lotesMap[cId]) lotesMap[cId] = [];
+          lotesMap[cId].push(lote);
+          contagemLotes[cId] = (contagemLotes[cId] || 0) + 1;
+        });
+
+        // Mapeia os candidatos por concurso
+        var contagemCandidatos = {};
+        concursos.forEach(function(c) {
+          // Se houver contagem específica da base de candidatos, associa
+          if (c.id === 'tjrs_analista_2024') {
+            contagemCandidatos[c.id] = totalCandidatosBase > 0 ? totalCandidatosBase : 305;
+          } else {
+            contagemCandidatos[c.id] = 0;
+          }
+        });
+
+        ESTADO_PORTAL.concursos = concursos;
+        ESTADO_PORTAL.lotes = lotes;
+        ESTADO_PORTAL.lotesPorConcurso = lotesMap;
+        ESTADO_PORTAL.contagemLotesPorConcurso = contagemLotes;
+        ESTADO_PORTAL.contagemCandidatosPorConcurso = contagemCandidatos;
+
+        atualizarContadoresStatus();
+        renderizarGridConcursos();
+
+        if (comAlerta) {
+          mostrarToast('Dados dos concursos atualizados em tempo real!', 'sucesso');
+        }
+      } catch(err) {
+        console.error('Erro ao carregar dados do portal:', err);
+        mostrarToast('Erro ao carregar certames: ' + (err.message || err), 'erro');
+        // Renderiza fallback seguro
+        if (ESTADO_PORTAL.concursos.length === 0) {
+          ESTADO_PORTAL.concursos = [{
+            id: 'tjrs_analista_2024',
+            nome: 'Concurso TJRS - Analista Judiciário',
+            cargo: 'Analista Judiciário - Área Judiciária',
+            orgao: 'TJRS',
+            ativo: true
+          }];
+          renderizarGridConcursos();
+        }
+      } finally {
+        if (skeleton) skeleton.style.display = 'none';
+      }
+    }
+
+    // 5. ATUALIZAÇÃO DE CONTADORES E FILTROS RÁPIDOS
+    function atualizarContadoresStatus() {
+      var todos = ESTADO_PORTAL.concursos.length;
+      var ativos = ESTADO_PORTAL.concursos.filter(function(c) { return c.ativo !== false; }).length;
+      var encerrados = todos - ativos;
+
+      var elTodos = document.getElementById('contagemStatusTodos');
+      var elAtivos = document.getElementById('contagemStatusAtivos');
+      var elEncerrados = document.getElementById('contagemStatusEncerrados');
+
+      if (elTodos) elTodos.textContent = todos;
+      if (elAtivos) elAtivos.textContent = ativos;
+      if (elEncerrados) elEncerrados.textContent = encerrados;
+    }
+
+    function setFiltroStatus(status) {
+      ESTADO_PORTAL.filtroStatus = status;
+
+      var btnTodos = document.getElementById('filtroStatusTodos');
+      var btnAtivos = document.getElementById('filtroStatusAtivos');
+      var btnEncerrados = document.getElementById('filtroStatusEncerrados');
+
+      var classesAtivo = 'px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors bg-teal-500 text-slate-950 shadow-xs';
+      var classesInativo = 'px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors text-slate-300 hover:text-white';
+
+      if (btnTodos) btnTodos.className = (status === 'todos') ? classesAtivo : classesInativo;
+      if (btnAtivos) btnAtivos.className = (status === 'ativos') ? classesAtivo : classesInativo;
+      if (btnEncerrados) btnEncerrados.className = (status === 'encerrados') ? classesAtivo : classesInativo;
+
+      renderizarGridConcursos();
+    }
+
+    function filtrarConcursos() {
+      var input = document.getElementById('inputBuscaConcursos');
+      var btnLimpar = document.getElementById('btnLimparBusca');
+      var texto = (input ? input.value : '').toLowerCase().trim();
+
+      ESTADO_PORTAL.filtroTexto = texto;
+      if (btnLimpar) {
+        btnLimpar.style.display = texto.length > 0 ? 'flex' : 'none';
+      }
+      renderizarGridConcursos();
+    }
+
+    function limparBusca() {
+      var input = document.getElementById('inputBuscaConcursos');
+      var btnLimpar = document.getElementById('btnLimparBusca');
+      if (input) input.value = '';
+      if (btnLimpar) btnLimpar.style.display = 'none';
+      ESTADO_PORTAL.filtroTexto = '';
+      renderizarGridConcursos();
+    }
+
+    function limparFiltrosCompletos() {
+      limparBusca();
+      setFiltroStatus('todos');
+    }
+
+    // 6. RENDERIZAÇÃO DO GRID DE CARDS
+    function renderizarGridConcursos() {
+      var grid = document.getElementById('portalGridConcursos');
+      var empty = document.getElementById('portalEmptyState');
+      var textoStatus = document.getElementById('textoStatusResultados');
+
+      if (!grid) return;
+
+      var lista = ESTADO_PORTAL.concursos.filter(function(concurso) {
+        // Filtro de status
+        var isAtivo = (concurso.ativo !== false);
+        if (ESTADO_PORTAL.filtroStatus === 'ativos' && !isAtivo) return false;
+        if (ESTADO_PORTAL.filtroStatus === 'encerrados' && isAtivo) return false;
+
+        // Filtro de busca textual
+        if (ESTADO_PORTAL.filtroTexto) {
+          var termo = ESTADO_PORTAL.filtroTexto;
+          var nome = (concurso.nome || '').toLowerCase();
+          var cargo = (concurso.cargo || '').toLowerCase();
+          var orgao = (concurso.orgao || '').toLowerCase();
+          var id = (concurso.id || '').toLowerCase();
+          if (!nome.includes(termo) && !cargo.includes(termo) && !orgao.includes(termo) && !id.includes(termo)) {
+            return false;
+          }
+        }
+        return true;
+      });
+
+      if (textoStatus) {
+        textoStatus.textContent = lista.length + ' concurso(s) encontrado(s)';
+      }
+
+      if (lista.length === 0) {
+        grid.style.display = 'none';
+        if (empty) empty.style.display = 'block';
+        return;
+      }
+
+      if (empty) empty.style.display = 'none';
+      grid.style.display = 'grid';
+
+      var htmlCards = '';
+      lista.forEach(function(concurso) {
+        var isAtivo = (concurso.ativo !== false);
+        var orgao = concurso.orgao || 'TJRS';
+        var cargo = concurso.cargo || 'Cargo não especificado';
+        var nome = concurso.nome || 'Concurso Público';
+        var id = concurso.id || 'tjrs_analista_2024';
+
+        var totalCands = ESTADO_PORTAL.contagemCandidatosPorConcurso[id] || 0;
+        var totalLotes = ESTADO_PORTAL.contagemLotesPorConcurso[id] || 0;
+        var lotesDoConcurso = (ESTADO_PORTAL.lotesPorConcurso && ESTADO_PORTAL.lotesPorConcurso[id]) || [];
+
+        // Links de direcionamento
+        var linkConcurso = 'concurso.html?id=' + encodeURIComponent(id);
+        var linkPrimeiroLote = 'lote.html?concurso=' + encodeURIComponent(id) + '&lote=lote_1';
+
+        // Badges de lotes ativos para atalhos rápidos
+        var htmlLotesChips = '';
+        if (lotesDoConcurso.length > 0) {
+          htmlLotesChips += '<div class="pt-3 border-t border-slate-100">';
+          htmlLotesChips += '  <span class="text-3xs font-bold uppercase tracking-wider text-slate-400 block mb-1.5 font-mono">Chamamentos &amp; Lotes Ativos:</span>';
+          htmlLotesChips += '  <div class="flex flex-wrap gap-1.5">';
+          lotesDoConcurso.slice(0, 3).forEach(function(lt) {
+            var urlLote = 'lote.html?concurso=' + encodeURIComponent(id) + '&lote=' + encodeURIComponent(lt.id);
+            var statusLt = lt.travado ? '🔒' : (lt.ativo ? '🟢' : '⚪');
+            htmlLotesChips += '<a href="' + urlLote + '" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-50 hover:bg-teal-50 border border-slate-200 hover:border-teal-300 text-2xs font-semibold text-slate-700 hover:text-teal-900 transition-colors" title="Acessar simulação de lotação deste lote">';
+            htmlLotesChips += '  <span>' + statusLt + '</span>';
+            htmlLotesChips += '  <span>' + escapeHtml(lt.nome || lt.id) + '</span>';
+            htmlLotesChips += '</a>';
+          });
+          if (lotesDoConcurso.length > 3) {
+            htmlLotesChips += '<span class="text-3xs text-slate-400 self-center font-medium">+' + (lotesDoConcurso.length - 3) + ' mais</span>';
+          }
+          htmlLotesChips += '  </div>';
+          htmlLotesChips += '</div>';
+        } else {
+          htmlLotesChips += '<div class="pt-3 border-t border-slate-100">';
+          htmlLotesChips += '  <span class="text-2xs text-slate-400 italic">Nenhum lote de chamada aberto no momento.</span>';
+          htmlLotesChips += '</div>';
+        }
+
+        htmlCards += `
+          <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md hover:border-teal-500/50 transition-all flex flex-col justify-between overflow-hidden group">
+            <!-- Cabeçalho do Card -->
+            <div class="p-5 sm:p-6 space-y-4">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
+                <span class="px-2.5 py-0.5 rounded-md text-2xs font-bold font-mono uppercase tracking-wider ${isAtivo ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200'}">
+                  ${isAtivo ? '● Concurso Ativo' : '○ Encerrado'}
+                </span>
+                <span class="px-2 py-0.5 rounded-md bg-[#0F1E3D] text-teal-300 text-2xs font-semibold font-mono tracking-wider border border-teal-500/30">
+                  ${escapeHtml(orgao)}
+                </span>
+              </div>
+
+              <!-- Títulos e Cargo -->
+              <div>
+                <h3 class="text-lg font-bold font-serif text-slate-900 group-hover:text-teal-900 transition-colors leading-snug">
+                  <a href="${linkConcurso}" class="hover:underline">
+                    ${escapeHtml(nome)}
+                  </a>
+                </h3>
+                <p class="text-xs text-slate-500 font-medium mt-1">
+                  💼 ${escapeHtml(cargo)}
+                </p>
+              </div>
+
+              <!-- Métricas Principais -->
+              <div class="grid grid-cols-2 gap-2.5 pt-2">
+                <div class="bg-slate-50 rounded-xl p-2.5 border border-slate-100">
+                  <span class="text-3xs font-bold uppercase tracking-wider text-slate-400 block font-mono">Aprovados</span>
+                  <span class="text-base font-bold text-slate-800 font-mono mt-0.5 block">
+                    ${totalCands > 0 ? totalCands + ' candidatos' : 'Base ativa'}
+                  </span>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-2.5 border border-slate-100">
+                  <span class="text-3xs font-bold uppercase tracking-wider text-slate-400 block font-mono">Lotes Criados</span>
+                  <span class="text-base font-bold text-slate-800 font-mono mt-0.5 block">
+                    ${totalLotes} chamamento(s)
+                  </span>
+                </div>
+              </div>
+
+              <!-- Atalhos rápidos para lotes -->
+              ${htmlLotesChips}
+            </div>
+
+            <!-- Rodapé de Ações do Card -->
+            <div class="bg-slate-50/80 border-t border-slate-100 p-4 sm:p-5 flex flex-col gap-2.5">
+              <a 
+                href="${linkConcurso}" 
+                class="w-full bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer text-center"
+              >
+                <span>Acessar Página do Concurso</span>
+                <span class="text-sm">→</span>
+              </a>
+
+              <div class="flex items-center gap-2">
+                <a 
+                  href="${linkPrimeiroLote}" 
+                  class="flex-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-semibold py-2 px-3 rounded-xl text-2xs transition-colors flex items-center justify-center gap-1 cursor-pointer text-center"
+                  title="Acessar simulação de lotação e escolha de comarcas"
+                >
+                  <span>🏛️</span>
+                  <span class="truncate">Simulação de Lotação</span>
+                </a>
+
+                <button 
+                  type="button" 
+                  onclick="copiarLinkConcurso('${id}', this)" 
+                  class="bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 font-semibold p-2 rounded-xl text-2xs transition-colors cursor-pointer shrink-0" 
+                  title="Copiar link direto para compartilhar este concurso"
+                >
+                  🔗
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      grid.innerHTML = htmlCards;
+    }
+
+    // 7. UTILITÁRIO DE COPIAR LINK COM FEEDBACK
+    function copiarLinkConcurso(concursoId, btnElement) {
+      var url = window.location.origin + '/concurso.html?id=' + encodeURIComponent(concursoId);
+      
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function() {
+          if (btnElement) {
+            var original = btnElement.innerHTML;
+            btnElement.innerHTML = '✓';
+            setTimeout(function() { btnElement.innerHTML = original; }, 2000);
+          }
+          mostrarToast('Link do concurso copiado para a área de transferência!', 'sucesso');
+        }).catch(function() {
+          prompt('Copie o link do concurso abaixo:', url);
+        });
+      } else {
+        prompt('Copie o link do concurso abaixo:', url);
+      }
+    }
+
+    function mostrarToast(mensagem, tipo) {
+      var toast = document.getElementById('toastAlerta');
+      var icone = document.getElementById('toastIcone');
+      var txt = document.getElementById('toastMensagem');
+      if (!toast || !txt) return;
+
+      txt.textContent = mensagem;
+      if (tipo === 'sucesso') {
+        if (icone) icone.textContent = '✓';
+        toast.className = 'fixed bottom-5 right-5 z-50 transform translate-y-0 opacity-100 transition-all duration-300 flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-xl text-xs font-semibold text-white bg-emerald-800 border border-emerald-600';
+      } else if (tipo === 'erro') {
+        if (icone) icone.textContent = '✕';
+        toast.className = 'fixed bottom-5 right-5 z-50 transform translate-y-0 opacity-100 transition-all duration-300 flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-xl text-xs font-semibold text-white bg-rose-800 border border-rose-600';
+      } else {
+        if (icone) icone.textContent = 'ℹ';
+        toast.className = 'fixed bottom-5 right-5 z-50 transform translate-y-0 opacity-100 transition-all duration-300 flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-xl text-xs font-semibold text-white bg-slate-900 border border-slate-700';
+      }
+
+      setTimeout(function() {
+        toast.className = 'fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-xl text-xs font-semibold text-white bg-slate-900 border border-slate-700';
+      }, 3500);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // 8. INICIALIZAÇÃO NA CARGA DO DOCUMENTO
+    document.addEventListener('DOMContentLoaded', function() {
+      inicializarAutenticacao();
+      carregarDadosPortal(false);
+    });
+  </script>
+</body>
+</html>
