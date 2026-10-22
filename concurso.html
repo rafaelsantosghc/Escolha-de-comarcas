@@ -341,6 +341,39 @@
             </tbody>
           </table>
         </div>
+
+        <!-- Barra de Paginação Oficial -->
+        <div class="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div class="text-slate-600 font-medium">
+            Exibindo <span id="paginacaoTextoIntervalo" class="font-bold text-slate-900">0 - 0</span> de <span id="paginacaoTextoTotal" class="font-bold text-slate-900">0</span> candidato(s) | Página <span id="paginacaoTextoPaginaAtual" class="font-bold text-slate-900">1</span> de <span id="paginacaoTextoTotalPaginas" class="font-bold text-slate-900">1</span>
+          </div>
+
+          <div class="flex items-center gap-2 flex-wrap">
+            <div class="flex items-center gap-1.5 text-2xs text-slate-500 mr-2">
+              <span>Por página:</span>
+              <select id="selectItensPorPaginaClassif" onchange="mudarItensPorPaginaClassificacao(this.value)" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-2xs font-semibold focus:ring-1 focus:ring-teal-500 cursor-pointer">
+                <option value="25">25</option>
+                <option value="50" selected>50</option>
+                <option value="100">100</option>
+                <option value="250">250</option>
+                <option value="todos">Todos</option>
+              </select>
+            </div>
+
+            <button type="button" id="btnPaginaPrimeiraClassif" onclick="irParaPrimeiraPaginaClassificacao()" class="px-2.5 py-1.5 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer" title="Primeira página">
+              «
+            </button>
+            <button type="button" id="btnPaginaAnteriorClassif" onclick="mudarPaginaClassificacao(-1)" class="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer">
+              ← Anterior
+            </button>
+            <button type="button" id="btnPaginaProximaClassif" onclick="mudarPaginaClassificacao(1)" class="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer">
+              Próxima →
+            </button>
+            <button type="button" id="btnPaginaUltimaClassif" onclick="irParaUltimaPaginaClassificacao()" class="px-2.5 py-1.5 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer" title="Última página">
+              »
+            </button>
+          </div>
+        </div>
       </div>
 
     </section>
@@ -810,6 +843,8 @@
       concursoDados: null,
       classificacaoCompleta: [],
       classificacaoFiltrada: [],
+      paginaAtual: 1,
+      itensPorPagina: 50,
       todasComarcasCatalogo: [],
       minhasEscolhasComarcas: [], // Array ordenado de nomes de comarcas
       usuarioLogado: null,
@@ -1084,46 +1119,209 @@
 
     async function carregarClassificacaoGeral() {
       var tbody = document.getElementById('tabelaClassificacaoBody');
-      if (!supabaseClient) return;
 
       try {
-        var query = supabaseClient
-          .from('v_classificacao_geral')
-          .select('*')
-          .order('classificacao_ampla', { ascending: true, nullsFirst: false })
-          .order('nota_final', { ascending: false, nullsFirst: false });
+        var todosCandidatos = [];
 
-        var res = await query;
-        var dados = res.data || [];
+        // 1. Carrega todos os candidatos cadastrados no Supabase em blocos de 1.000 (sem truncar no limite do PostgREST)
+        if (supabaseClient) {
+          var from = 0;
+          var step = 1000;
+          var continuar = true;
 
-        // Fallback caso a view esteja sem dados do concurso específico
-        if (dados.length === 0) {
-          var resFallback = await supabaseClient
-            .from('candidatos_base')
-            .select('*');
-          if (resFallback.data) {
-            dados = resFallback.data.map(function(c, i) {
-              return {
-                candidato_id: c.id,
-                nome: c.nome,
-                classificacao_ampla: i + 1,
-                cota: c.tipo || 'Ampla',
-                status_nomeacao: 'Aguardando',
-                nota_final: 80 - (i * 0.1)
-              };
-            });
+          while (continuar) {
+            var resChunk = await supabaseClient
+              .from('candidatos_base')
+              .select('*')
+              .order('classificacao_ampla', { ascending: true, nullsFirst: false })
+              .range(from, from + step - 1);
+
+            if (resChunk.error) {
+              console.warn('Erro ao consultar bloco de candidatos:', resChunk.error);
+              break;
+            }
+
+            var chunk = resChunk.data || [];
+            todosCandidatos = todosCandidatos.concat(chunk);
+
+            if (chunk.length < step) {
+              continuar = false;
+            } else {
+              from += step;
+            }
           }
         }
+
+        // 2. Se o Supabase estiver indisponível ou retornar vazio, carrega diretamente do arquivo CSV oficial do concurso
+        if (todosCandidatos.length === 0) {
+          try {
+            var resCsv = await fetch('/assets/aistudio/1_candidatos_base_supabase__1__29580ce2.csv');
+            if (resCsv.ok) {
+              var textoCsv = await resCsv.text();
+              todosCandidatos = parseCsvCandidatosLocal(textoCsv);
+            }
+          } catch(eCsv) {
+            console.warn('Fallback CSV local indisponível:', eCsv);
+          }
+        }
+
+        // 3. Carrega respostas de formulários e preferências para mesclar com os candidatos
+        var mapaRespostas = {};
+        if (supabaseClient) {
+          try {
+            var resResp = await supabaseClient
+              .from('respostas')
+              .select('*')
+              .eq('concurso_id', ESTADO.concursoId);
+            if (resResp.data && Array.isArray(resResp.data)) {
+              resResp.data.forEach(function(r) {
+                if (r.id) mapaRespostas[r.id] = r;
+                if (r.cpf) mapaRespostas[r.cpf.replace(/\D/g, '')] = r;
+                if (r.email) mapaRespostas[r.email.trim().toLowerCase()] = r;
+                if (r.nome) mapaRespostas[r.nome.trim().toLowerCase()] = r;
+              });
+            }
+          } catch(eResp) {
+            console.warn('Aviso ao consultar respostas personalizadas:', eResp);
+          }
+        }
+
+        // 4. Consolida lista final de candidatos com notas oficiais e dados completos
+        var dados = todosCandidatos.map(function(c, i) {
+          var emailCand = (c.email || '').trim().toLowerCase();
+          var cpfCand = (c.cpf || '').replace(/\D/g, '');
+          var nomeCand = (c.nome || '').trim().toLowerCase();
+
+          var resp = (emailCand && mapaRespostas[emailCand]) ||
+                     (cpfCand && mapaRespostas[cpfCand]) ||
+                     (nomeCand && mapaRespostas[nomeCand]) ||
+                     mapaRespostas[c.id] || {};
+
+          var escolhasResp = Array.isArray(resp.escolhas) ? resp.escolhas : (Array.isArray(c.escolhas) ? c.escolhas : []);
+          var primComarca = (escolhasResp && escolhasResp[0]) || c.lotacao_assumida || c.comarca_preferencia || '';
+
+          return {
+            candidato_id: c.id || ('tjrs_analista_2024-' + (c.classificacao_ampla || (i + 1))),
+            id: c.id,
+            concurso_id: c.concurso_id || ESTADO.concursoId,
+            nome: c.nome || 'Candidato',
+            cpf: c.cpf || '',
+            email: c.email || '',
+            whatsapp: c.whatsapp || '',
+            inscricao: c.inscricao || '',
+            data_nascimento: c.data_nascimento || '',
+            cota: c.cota || c.tipo || 'Ampla',
+            classificacao_ampla: c.classificacao_ampla || (i + 1),
+            classificacao_cota: c.classificacao_cota,
+            ordem_nomeacao: c.ordem_nomeacao,
+            vaga_chamada: c.vaga_chamada || (c.ordem_nomeacao ? (c.ordem_nomeacao + 'º ' + (c.cota || 'Ampla')) : '-'),
+            nota_port: c.nota_port,
+            nota_leg: c.nota_leg,
+            nota_info: c.nota_info,
+            nota_comum: c.nota_comum,
+            nota_const: c.nota_const,
+            nota_adm: c.nota_adm,
+            nota_civil: c.nota_civil,
+            nota_penal: c.nota_penal,
+            nota_espec: c.nota_espec,
+            nota_final: c.nota_final,
+            status_nomeacao: resp.status_nomeacao || c.status_nomeacao || 'Aguardando',
+            lote_chamada: resp.lote_chamada || c.lote_chamada || null,
+            lotacao_assumida: resp.lotacao_assumida || c.lotacao_assumida || null,
+            data_nomeacao: resp.data_nomeacao || c.data_nomeacao || null,
+            data_convocacao: c.data_convocacao || null,
+            intencao: resp.intencao || c.intencao || (c.status_nomeacao === 'Convocado Titular' ? 'assumir' : 'indefinido'),
+            escolhas: escolhasResp,
+            comarca_preferencia: primComarca,
+            ja_e_servidor: resp.possui_fg_cc === 'Sim' || c.ja_e_servidor === true,
+            outros_concursos: resp.outros_concursos || c.outros_concursos || ''
+          };
+        });
+
+        // Ordena com segurança por classificação ampla
+        dados.sort(function(a, b) {
+          var ca = (a.classificacao_ampla !== null && a.classificacao_ampla !== undefined) ? a.classificacao_ampla : 999999;
+          var cb = (b.classificacao_ampla !== null && b.classificacao_ampla !== undefined) ? b.classificacao_ampla : 999999;
+          if (ca !== cb) return ca - cb;
+          var na = typeof a.nota_final === 'number' ? a.nota_final : 0;
+          var nb = typeof b.nota_final === 'number' ? b.nota_final : 0;
+          return nb - na;
+        });
 
         ESTADO.classificacaoCompleta = dados;
         atualizarCardsResumoClassificacao();
         filtrarClassificacaoGeral();
       } catch(err) {
-        console.error('Erro ao buscar v_classificacao_geral:', err);
+        console.error('Erro ao carregar lista oficial de candidatos:', err);
         if (tbody) {
-          tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-rose-500">Erro ao carregar dados da classificação.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-rose-500 font-semibold">Erro ao processar dados dos candidatos: ' + (err.message || err) + '</td></tr>';
         }
       }
+    }
+
+    function parseCsvCandidatosLocal(csvTexto) {
+      var linhas = csvTexto.split(/\r?\n/).filter(function(l) { return l.trim().length > 0; });
+      if (linhas.length <= 1) return [];
+      var headerLine = linhas[0].replace(/^\uFEFF/, '');
+      var headers = headerLine.split(',').map(function(h) { return h.trim(); });
+
+      var resultado = [];
+      for (var i = 1; i < linhas.length; i++) {
+        var line = linhas[i];
+        var values = [];
+        var cur = '';
+        var inQuotes = false;
+        for (var c = 0; c < line.length; c++) {
+          var char = line[c];
+          if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            values.push(cur.trim());
+            cur = '';
+          } else {
+            cur += char;
+          }
+        }
+        values.push(cur.trim());
+
+        var obj = {};
+        headers.forEach(function(h, idx) {
+          obj[h] = values[idx] !== undefined ? values[idx] : '';
+        });
+
+        resultado.push({
+          id: obj.id,
+          concurso_id: obj.concurso_id || 'tjrs_analista_2024',
+          nome: obj.nome,
+          cpf: obj.cpf,
+          email: obj.email,
+          whatsapp: obj.whatsapp,
+          tipo: obj.tipo || obj.cota || 'Ampla',
+          cota: obj.cota || obj.tipo || 'Ampla',
+          inscricao: obj.inscricao,
+          data_nascimento: obj.data_nascimento,
+          classificacao_ampla: obj.classificacao_ampla ? parseInt(obj.classificacao_ampla) : i,
+          classificacao_cota: obj.classificacao_cota ? parseInt(obj.classificacao_cota) : null,
+          ordem_nomeacao: obj.ordem_nomeacao ? parseInt(obj.ordem_nomeacao) : null,
+          vaga_chamada: obj.vaga_chamada,
+          nota_port: obj.nota_port ? parseFloat(obj.nota_port.replace(',', '.')) : null,
+          nota_leg: obj.nota_leg ? parseFloat(obj.nota_leg.replace(',', '.')) : null,
+          nota_info: obj.nota_info ? parseFloat(obj.nota_info.replace(',', '.')) : null,
+          nota_comum: obj.nota_comum ? parseFloat(obj.nota_comum.replace(',', '.')) : null,
+          nota_const: obj.nota_const ? parseFloat(obj.nota_const.replace(',', '.')) : null,
+          nota_adm: obj.nota_adm ? parseFloat(obj.nota_adm.replace(',', '.')) : null,
+          nota_civil: obj.nota_civil ? parseFloat(obj.nota_civil.replace(',', '.')) : null,
+          nota_penal: obj.nota_penal ? parseFloat(obj.nota_penal.replace(',', '.')) : null,
+          nota_espec: obj.nota_espec ? parseFloat(obj.nota_espec.replace(',', '.')) : null,
+          nota_final: obj.nota_final ? parseFloat(obj.nota_final.replace(',', '.')) : null,
+          lote_chamada: obj.lote_chamada,
+          data_convocacao: obj.data_convocacao,
+          status_nomeacao: obj.status_nomeacao || 'Aguardando',
+          lotacao_assumida: obj.lotacao_assumida,
+          data_nomeacao: obj.data_nomeacao
+        });
+      }
+      return resultado;
     }
 
     function atualizarCardsResumoClassificacao() {
@@ -1136,7 +1334,7 @@
 
       var nomeados = lista.filter(function(c) {
         var st = (c.status_nomeacao || '').toLowerCase();
-        return st.includes('nomeado') || st.includes('posse') || st.includes('exercício');
+        return st.includes('convocado') || st.includes('nomeado') || st.includes('posse') || st.includes('exercício');
       }).length;
 
       var desistencias = lista.filter(function(c) {
@@ -1145,10 +1343,10 @@
         return st.includes('desistência') || st.includes('fim de fila') || intencao === 'desistir' || intencao === 'final_fila';
       }).length;
 
-      document.getElementById('statTotalAprovados').textContent = total;
-      document.getElementById('statManifestaramInteresse').textContent = manifestaram;
-      document.getElementById('statNomeadosExercicio').textContent = nomeados;
-      document.getElementById('statDesistenciasFimFila').textContent = desistencias;
+      document.getElementById('statTotalAprovados').textContent = total.toLocaleString('pt-BR');
+      document.getElementById('statManifestaramInteresse').textContent = manifestaram.toLocaleString('pt-BR');
+      document.getElementById('statNomeadosExercicio').textContent = nomeados.toLocaleString('pt-BR');
+      document.getElementById('statDesistenciasFimFila').textContent = desistencias.toLocaleString('pt-BR');
     }
 
     function filtrarClassificacaoGeral() {
@@ -1161,8 +1359,9 @@
         // Busca textual
         if (busca) {
           var nome = (c.nome || '').toLowerCase();
-          var comarca = (c.comarca_preferencia || '').toLowerCase();
-          if (!nome.includes(busca) && !comarca.includes(busca)) return false;
+          var comarca = (c.comarca_preferencia || c.lotacao_assumida || '').toLowerCase();
+          var insc = String(c.inscricao || '').toLowerCase();
+          if (!nome.includes(busca) && !comarca.includes(busca) && !insc.includes(busca)) return false;
         }
 
         // Cota
@@ -1176,8 +1375,8 @@
 
         // Status
         if (status !== 'todos') {
-          var st = c.status_nomeacao || 'Aguardando';
-          if (!st.toLowerCase().includes(status.toLowerCase())) return false;
+          var st = (c.status_nomeacao || 'Aguardando').toLowerCase();
+          if (!st.includes(status.toLowerCase())) return false;
         }
 
         // Intenção
@@ -1192,7 +1391,8 @@
       });
 
       ESTADO.classificacaoFiltrada = filtrados;
-      document.getElementById('contadorCandidatosFiltrados').textContent = filtrados.length;
+      ESTADO.paginaAtual = 1;
+      document.getElementById('contadorCandidatosFiltrados').textContent = filtrados.length.toLocaleString('pt-BR');
       renderizarTabelaClassificacao(filtrados);
     }
 
@@ -1204,19 +1404,86 @@
       filtrarClassificacaoGeral();
     }
 
+    function mudarItensPorPaginaClassificacao(val) {
+      if (val === 'todos') {
+        ESTADO.itensPorPagina = 999999;
+      } else {
+        ESTADO.itensPorPagina = parseInt(val) || 50;
+      }
+      ESTADO.paginaAtual = 1;
+      renderizarTabelaClassificacao(ESTADO.classificacaoFiltrada);
+    }
+
+    function mudarPaginaClassificacao(delta) {
+      var total = (ESTADO.classificacaoFiltrada || []).length;
+      var porPag = ESTADO.itensPorPagina || 50;
+      var maxPag = Math.max(1, Math.ceil(total / porPag));
+
+      var novaPag = ESTADO.paginaAtual + delta;
+      if (novaPag >= 1 && novaPag <= maxPag) {
+        ESTADO.paginaAtual = novaPag;
+        renderizarTabelaClassificacao(ESTADO.classificacaoFiltrada);
+      }
+    }
+
+    function irParaPrimeiraPaginaClassificacao() {
+      ESTADO.paginaAtual = 1;
+      renderizarTabelaClassificacao(ESTADO.classificacaoFiltrada);
+    }
+
+    function irParaUltimaPaginaClassificacao() {
+      var total = (ESTADO.classificacaoFiltrada || []).length;
+      var porPag = ESTADO.itensPorPagina || 50;
+      ESTADO.paginaAtual = Math.max(1, Math.ceil(total / porPag));
+      renderizarTabelaClassificacao(ESTADO.classificacaoFiltrada);
+    }
+
     function renderizarTabelaClassificacao(lista) {
       var tbody = document.getElementById('tabelaClassificacaoBody');
       if (!tbody) return;
 
-      if (lista.length === 0) {
+      var total = (lista || []).length;
+      var porPag = ESTADO.itensPorPagina || 50;
+      var maxPag = Math.max(1, Math.ceil(total / porPag));
+
+      if (ESTADO.paginaAtual > maxPag) ESTADO.paginaAtual = maxPag;
+      if (ESTADO.paginaAtual < 1) ESTADO.paginaAtual = 1;
+
+      var inicio = (ESTADO.paginaAtual - 1) * porPag;
+      var fim = Math.min(inicio + porPag, total);
+
+      // Atualiza textos da paginação
+      var elIntervalo = document.getElementById('paginacaoTextoIntervalo');
+      var elTotal = document.getElementById('paginacaoTextoTotal');
+      var elPaginaAtual = document.getElementById('paginacaoTextoPaginaAtual');
+      var elTotalPaginas = document.getElementById('paginacaoTextoTotalPaginas');
+
+      if (elIntervalo) elIntervalo.textContent = total > 0 ? ((inicio + 1).toLocaleString('pt-BR') + ' - ' + fim.toLocaleString('pt-BR')) : '0 - 0';
+      if (elTotal) elTotal.textContent = total.toLocaleString('pt-BR');
+      if (elPaginaAtual) elPaginaAtual.textContent = ESTADO.paginaAtual;
+      if (elTotalPaginas) elTotalPaginas.textContent = maxPag;
+
+      var btnPrimeira = document.getElementById('btnPaginaPrimeiraClassif');
+      var btnAnt = document.getElementById('btnPaginaAnteriorClassif');
+      var btnProx = document.getElementById('btnPaginaProximaClassif');
+      var btnUltima = document.getElementById('btnPaginaUltimaClassif');
+
+      if (btnPrimeira) btnPrimeira.disabled = (ESTADO.paginaAtual <= 1);
+      if (btnAnt) btnAnt.disabled = (ESTADO.paginaAtual <= 1);
+      if (btnProx) btnProx.disabled = (ESTADO.paginaAtual >= maxPag || total === 0);
+      if (btnUltima) btnUltima.disabled = (ESTADO.paginaAtual >= maxPag || total === 0);
+
+      if (total === 0) {
         tbody.innerHTML = '<tr><td colspan="8" class="text-center py-10 text-slate-400">Nenhum candidato encontrado com os filtros selecionados.</td></tr>';
         return;
       }
 
+      var paginaItens = lista.slice(inicio, fim);
       var html = '';
-      lista.forEach(function(c, idx) {
-        var classGeral = c.classificacao_ampla || (idx + 1);
-        var vagaChamada = c.vaga_chamada || c.ordem_nomeacao || '-';
+
+      paginaItens.forEach(function(c, idx) {
+        var classGeral = c.classificacao_ampla || (inicio + idx + 1);
+        var vagaChamada = c.vaga_chamada || (c.ordem_nomeacao ? (c.ordem_nomeacao + 'º') : '-');
         var nome = c.nome || 'Candidato';
         var isServidor = (c.ja_e_servidor === true || c.possui_fg_cc === 'Sim');
         var cota = c.cota || 'Ampla';
@@ -1236,13 +1503,13 @@
 
         // 1ª Comarca
         var escolhas = Array.isArray(c.escolhas) ? c.escolhas : [];
-        var primeiraComarca = c.comarca_preferencia || escolhas[0] || '-';
+        var primeiraComarca = c.lotacao_assumida || c.comarca_preferencia || escolhas[0] || '-';
         var restoCount = escolhas.length > 1 ? '<span class="text-3xs text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded font-mono ml-1">+' + (escolhas.length - 1) + '</span>' : '';
 
         // Status
         var status = c.status_nomeacao || 'Aguardando';
         var badgeStatus = '<span class="px-2 py-0.5 rounded text-2xs font-medium bg-slate-100 text-slate-700 font-mono">' + escapeHtml(status) + '</span>';
-        if (status.includes('Nomeado') || status.includes('Exercício') || status.includes('Posse')) {
+        if (status.includes('Convocado') || status.includes('Nomeado') || status.includes('Exercício') || status.includes('Posse')) {
           badgeStatus = '<span class="px-2 py-0.5 rounded text-2xs font-bold bg-teal-100 text-teal-900 font-mono">● ' + escapeHtml(status) + '</span>';
         }
 
@@ -1250,7 +1517,7 @@
           <tr class="hover:bg-slate-50/80 transition-colors">
             <td class="px-3.5 py-3 text-center font-mono font-bold text-slate-800">
               ${classGeral}º
-              <div class="text-3xs text-slate-400 font-normal">Vaga: ${vagaChamada}</div>
+              <div class="text-3xs text-slate-400 font-normal">Vaga: ${escapeHtml(String(vagaChamada))}</div>
             </td>
             <td class="px-4 py-3">
               <div class="font-bold text-slate-900 leading-snug">${escapeHtml(nome)}</div>
@@ -1282,7 +1549,7 @@
             <td class="px-3 py-3 text-center">
               <button 
                 type="button" 
-                onclick="abrirModalDetalhesCandidato('${c.candidato_id || idx}')" 
+                onclick="abrirModalDetalhesCandidato('${c.candidato_id || c.id || (inicio + idx)}')" 
                 class="bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-900 border border-slate-300 hover:border-teal-300 px-2.5 py-1 rounded-lg text-2xs font-semibold transition-colors cursor-pointer"
                 title="Ver detalhes de notas e todas as comarcas"
               >
@@ -1299,7 +1566,7 @@
     // 6. MODAL DE DETALHES DO CANDIDATO
     function abrirModalDetalhesCandidato(candidatoId) {
       var cand = ESTADO.classificacaoCompleta.find(function(c, i) {
-        return (c.candidato_id === candidatoId || String(i) === String(candidatoId));
+        return (c.candidato_id === candidatoId || c.id === candidatoId || String(c.classificacao_ampla) === String(candidatoId) || String(i) === String(candidatoId));
       });
       if (!cand) return;
 
